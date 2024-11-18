@@ -1,6 +1,10 @@
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-import { Column, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "src/user/entities/user.entity";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity({
+    name:'activity'
+})
 export class Activity extends Timestamp {
     
     @PrimaryGeneratedColumn()
@@ -40,4 +44,8 @@ export class Activity extends Timestamp {
         nullable:true
     })
     status:string
+
+    @ManyToOne(()=>User, (user)=>user.activities, {eager:true})
+    user:User
+    
 }

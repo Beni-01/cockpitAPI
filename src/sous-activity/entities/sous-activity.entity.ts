@@ -1,6 +1,11 @@
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-import { Column, PrimaryColumn } from "typeorm";
+import { User } from "src/user/entities/user.entity";
+import { Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
 
+
+@Entity({
+    name:'sousActivity'
+})
 export class SousActivity  extends Timestamp{
 
     @PrimaryColumn()
@@ -28,42 +33,42 @@ export class SousActivity  extends Timestamp{
     province:string;
 
     @Column({
-        name:'province',
+        name:'responsable',
         type:'varchar',
         nullable:false
     })
     responsable:string
 
     @Column({
-        name:'province',
+        name:'autreService',
         type:'varchar',
         nullable:true
     })
     autreService:string
 
     @Column({
-        name:'province',
+        name:'debut',
         type:'varchar',
         nullable:false
     })
     debut: string
 
     @Column({
-        name:'province',
+        name:'fin',
         type:'varchar',
         nullable:false
     })
     fin:string
 
     @Column({
-        name:'province',
+        name:'indicateur',
         type:'varchar',
         nullable:false
     })
     indicateur:string
 
     @Column({
-        name:'province',
+        name:'budget',
         type:'varchar',
         nullable:false
     })
@@ -75,5 +80,8 @@ export class SousActivity  extends Timestamp{
         nullable:false
     })
     livrable: string
+
+    @ManyToOne(()=>User, (user)=>user.subactivities, {eager:true})
+    user:User
 
 }

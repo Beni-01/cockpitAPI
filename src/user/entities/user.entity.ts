@@ -1,9 +1,8 @@
 import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import * as bcrypt from 'bcrypt';
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-
-
-
+import { Activity } from "src/activity/entities/activity.entity";
+import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
 
 
 @Entity({
@@ -166,6 +165,12 @@ export class User extends Timestamp {
     @JoinColumn()
     agentDelegue?: User; 
 
+
+    @OneToMany(()=>Activity, (activity)=>activity.user)
+    activities:Activity[]
+
+    @OneToMany(()=>SousActivity, (subactivity)=> subactivity.user)
+    subactivities:SousActivity[]
 
   
 }
