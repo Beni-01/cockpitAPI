@@ -1,7 +1,10 @@
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity({
+    name:"demandeProlongation"
+})
 export class DemandeProlongation extends Timestamp {
 
     @PrimaryGeneratedColumn()
