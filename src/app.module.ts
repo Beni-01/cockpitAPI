@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 import { ActivityModule } from './activity/activity.module';
 import { SousActivityModule } from './sous-activity/sous-activity.module';
 import { DemandeProlongationModule } from './demande-prolongation/demande-prolongation.module';
+import { AuditLogModule } from './audit-log/audit-log.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,6 +34,7 @@ import { DemandeProlongationModule } from './demande-prolongation/demande-prolon
     ActivityModule,
     SousActivityModule,
     DemandeProlongationModule,
+    AuditLogModule,
    
   ],
   controllers: [AppController],
