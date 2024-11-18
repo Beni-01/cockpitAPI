@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ActivityModule } from './activity/activity.module';
 import { SousActivityModule } from './sous-activity/sous-activity.module';
+import { DemandeProlongationModule } from './demande-prolongation/demande-prolongation.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +32,7 @@ import { SousActivityModule } from './sous-activity/sous-activity.module';
     PassportModule,
     ActivityModule,
     SousActivityModule,
+    DemandeProlongationModule,
    
   ],
   controllers: [AppController],
