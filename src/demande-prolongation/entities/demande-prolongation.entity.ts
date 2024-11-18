@@ -1,5 +1,6 @@
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-import { Column, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "src/user/entities/user.entity";
+import { Column, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 export class DemandeProlongation extends Timestamp {
 
@@ -35,5 +36,8 @@ export class DemandeProlongation extends Timestamp {
         type:'varchar'
     })
     commentaire: string
+
+    @ManyToOne(()=>User, (user)=>user.demandeProlongations, {eager:true})
+    user:User
 
 }

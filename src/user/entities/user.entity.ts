@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
+import { DemandeProlongation } from "src/demande-prolongation/entities/demande-prolongation.entity";
 
 
 @Entity({
@@ -172,7 +173,8 @@ export class User extends Timestamp {
     @OneToMany(()=>SousActivity, (subactivity)=> subactivity.user)
     subactivities:SousActivity[]
 
-  
+    @OneToMany(()=>DemandeProlongation, (demandeProlongations)=> demandeProlongations.user)
+    demandeProlongations:DemandeProlongation[]
 }
 
 
