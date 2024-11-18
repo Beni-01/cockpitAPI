@@ -1,3 +1,4 @@
+import { Activity } from "src/activity/entities/activity.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
 import { Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
@@ -82,7 +83,17 @@ export class SousActivity  extends Timestamp{
     })
     livrable: string
 
+    @Column({
+        name:'activityId',
+        type:'int',
+        nullable:false
+    })
+    activityId:number
+
     @ManyToOne(()=>User, (user)=>user.subactivities, {eager:true})
     user:User
+
+    @ManyToOne(()=>Activity, (activity)=>activity.subactivities)
+    activity:Activity
 
 }

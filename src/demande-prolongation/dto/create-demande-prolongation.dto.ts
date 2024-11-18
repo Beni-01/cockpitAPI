@@ -51,4 +51,11 @@ export class CreateDemandeProlongationDto {
   @IsNotEmpty()
   @IsNumber()
   userId: number; // Foreign key for the user
+
+
+
+  @ApiProperty({ description: 'ID  activité principale', example: 12 })
+  @IsNotEmpty()
+  @IsNumber()
+  activityId:number
 }

@@ -1,6 +1,6 @@
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsInt } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsInt, IsNumber } from 'class-validator';
 
 export class CreateSousActivityDto {
   @ApiProperty({ description: 'Titre de la sous-activité', example: 'Formation' })
@@ -45,11 +45,16 @@ export class CreateSousActivityDto {
 
   @ApiProperty({ description: 'Budget alloué à la sous-activité', example: 10000 })
   @IsNotEmpty()
-  @IsInt()
+  @IsNumber()
   budget: number;
 
   @ApiProperty({ description: 'Livrable attendu de la sous-activité', example: 'Rapport final' })
   @IsNotEmpty()
   @IsString()
   livrable: string;
+
+  @ApiProperty({ description: 'ID  activité principale', example: 12 })
+  @IsNotEmpty()
+  @IsNumber()
+  activityId:number
 }
