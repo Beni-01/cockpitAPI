@@ -5,7 +5,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 
 import { ApiTags } from '@nestjs/swagger';
-import { CreateAccessFormsDto } from './dto/create-access.dto';
+
 
 @ApiTags('user')
 @Controller('user')
@@ -63,15 +63,7 @@ export class UserController {
     return req['user'];
   }
 
-  @Post('access/forms')
-  createForms(@Body() createAccessFormsDto: CreateAccessFormsDto) {
-      return this.userService.createForms(createAccessFormsDto);
-  }
 
-  @Get('access/forms')
-  findAllForms() {
-      return this.userService.findAllForms();
-  }
 
 
 

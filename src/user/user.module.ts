@@ -7,12 +7,12 @@ import { User } from './entities/user.entity';
 import { UserEvent } from './user.subscriber';
 
 import { Dataformater } from 'src/utilities/data-formater.class';
-import { UserForms } from './entities/contrat.entity';
+
 
 
 
 @Module({
-  imports:[TypeOrmModule.forFeature([User, UserForms ])],
+  imports:[TypeOrmModule.forFeature([User])],
   controllers: [UserController],
   providers: [UserService, UserEvent, Dataformater],
   exports:[UserService]
