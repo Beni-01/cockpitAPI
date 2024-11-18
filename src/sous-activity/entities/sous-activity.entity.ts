@@ -90,6 +90,13 @@ export class SousActivity  extends Timestamp{
     })
     activityId:number
 
+    @Column({
+        name:'userId',
+        type:'int',
+        nullable:false
+    })
+    userId:number
+
     @ManyToOne(()=>User, (user)=>user.subactivities, {eager:true})
     user:User
 

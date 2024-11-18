@@ -53,6 +53,11 @@ export class CreateSousActivityDto {
   @IsString()
   livrable: string;
 
+  @ApiProperty({ description: 'User qui crée la sous activité', example: 12 })
+  @IsNotEmpty()
+  @IsNumber()
+  userId:number
+
   @ApiProperty({ description: 'ID  activité principale', example: 12 })
   @IsNotEmpty()
   @IsNumber()
