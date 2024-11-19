@@ -43,7 +43,8 @@ export class Activity extends Timestamp {
     @Column({
         name:'status',
         type:'varchar',
-        nullable:true
+        nullable:true,
+        default:'En attente'
     })
     status:string
 

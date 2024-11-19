@@ -1,7 +1,5 @@
-
-
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsEmpty } from 'class-validator';
 
 export class CreateDemandeProlongationDto {
   @ApiProperty({
@@ -32,7 +30,7 @@ export class CreateDemandeProlongationDto {
     description: 'Response to the extension request',
     example: 'Approved',
   })
-  @IsNotEmpty()
+  @IsEmpty()
   @IsString()
   reponse: string;
 
@@ -51,8 +49,6 @@ export class CreateDemandeProlongationDto {
   @IsNotEmpty()
   @IsNumber()
   userId: number; // Foreign key for the user
-
-
 
   @ApiProperty({ description: 'ID  activité principale', example: 12 })
   @IsNotEmpty()

@@ -31,7 +31,9 @@ export class DemandeProlongation extends Timestamp {
 
     @Column({
         name:'reponse',
-        type:'varchar'
+        type:'varchar',
+        nullable:false,
+        default:'En attente'
     })
     reponse:string
 
