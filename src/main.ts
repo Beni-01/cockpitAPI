@@ -60,10 +60,10 @@ async function bootstrap() {
 
   // Configuration de la documentation Swagger
   const config = new DocumentBuilder()
-    .setTitle('Identification')
-    .setDescription('API pour l\'identification ')
+    .setTitle('Fonarev 360')
+    .setDescription('API')
     .setVersion('1.0')
-    .addTag('FONAREV_ID')
+    .addTag('F360')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

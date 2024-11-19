@@ -1,6 +1,8 @@
 
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsOptional, IsInt, IsNumber } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsString, IsOptional, IsInt, IsNumber, IsArray, ValidateNested } from 'class-validator';
+import { UpdateSousActivityDto } from './update-sous-activity.dto';
 
 export class CreateSousActivityDto {
   @ApiProperty({ description: 'Titre de la sous-activité', example: 'Formation' })
@@ -62,4 +64,5 @@ export class CreateSousActivityDto {
   @IsNotEmpty()
   @IsNumber()
   activityId:number
+
 }

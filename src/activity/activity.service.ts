@@ -4,27 +4,54 @@ import { Repository } from 'typeorm';
 import { Activity } from './entities/activity.entity';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
+import { SousActivity } from 'src/sous-activity/entities/sous-activity.entity';
 
 @Injectable()
 export class ActivityService {
     constructor(
         @InjectRepository(Activity)
         private activityRepository: Repository<Activity>,
+
+        @InjectRepository(SousActivity)
+        private subActivityRepository: Repository<SousActivity>,
     ) {}
 
-    // Créer une nouvelle activité
     async create(createActivityDto: CreateActivityDto): Promise<Activity> {
-        try {
-            // Créer une nouvelle instance d'Activity à partir des données fournies
-            const activity = this.activityRepository.create(createActivityDto);
+      try {
+          const { subactivities, ...activityData } = createActivityDto;
 
-            // Enregistrer l'activité dans la base de données
-            return await this.activityRepository.save(activity);
-        } catch (error) {
-            // Gérer les erreurs lors de la création et les envoyer à l'appelant
-            throw new BadRequestException('Échec de la création de l\'activité', error.message);
-        }
-    }
+          // Créer une nouvelle instance d'Activity à partir des données fournies
+          const activity = this.activityRepository.create(activityData);
+
+          // Sauvegarder l'activité principale dans la base de données
+          const savedActivity = await this.activityRepository.save(activity);
+
+          // Gérer les sous-activités si elles sont présentes
+          if (subactivities && subactivities.length > 0) {
+              const sousActivityPromises = subactivities.map(async (subactivity) => {
+                  const sousActivity = this.subActivityRepository.create({
+                      ...subactivity,
+                      activity: savedActivity, // Associer la sous-activité à l'activité principale
+                  });
+                  await this.subActivityRepository.save(sousActivity);
+              });
+
+              // Attendre que toutes les sous-activités soient sauvegardées
+              await Promise.all(sousActivityPromises);
+          }
+
+          // Retourner l'activité complète, y compris les sous-activités
+          return await this.activityRepository.findOne({
+              where: { id: savedActivity.id },
+              relations: ['subactivities'],
+          });
+      } catch (error) {
+          // Gestion des erreurs avec un message explicite
+          throw new BadRequestException(
+              `Échec de la création de l'activité: ${error.message}`,
+          );
+      }
+  }
 
     // Récupérer toutes les activités
     async findAll(): Promise<Activity[]> {

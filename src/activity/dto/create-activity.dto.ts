@@ -1,5 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';  // Pour Swagger
-import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsNotEmpty } from 'class-validator';  // Pour class-validator
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';  // Pour Swagger
+import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsNotEmpty, IsArray, ValidateNested, IsNumber } from 'class-validator';  // Pour class-validator
+import { UpdateSousActivityDto } from 'src/sous-activity/dto/update-sous-activity.dto';
 
 export class CreateActivityDto {
     @ApiProperty({
@@ -58,8 +60,20 @@ export class CreateActivityDto {
         type: Number,
         example: 1,
     })
-    @IsInt()  // Vérifie que la valeur est un entier
+    @IsNumber()  // Vérifie que la valeur est un entier
     @Min(1)  // L\'ID doit être supérieur ou égal à 1
     userId: number;
+
+
+    @ApiPropertyOptional({
+        description: 'Les SousActivité',
+        type: [ UpdateSousActivityDto],
+    })
+    @IsOptional()
+    @ValidateNested({ each: true })
+    @IsArray()
+    @Type(() =>  UpdateSousActivityDto)
+    subactivities: UpdateSousActivityDto[]
+
 }
 
