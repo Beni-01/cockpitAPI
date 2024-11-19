@@ -4,6 +4,7 @@ import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
 import { DemandeProlongation } from "src/demande-prolongation/entities/demande-prolongation.entity";
+import { AnnotationActivity } from "src/annotation-activity/entities/annotation-activity.entity";
 
 
 @Entity({
@@ -175,6 +176,9 @@ export class User extends Timestamp {
 
     @OneToMany(()=>DemandeProlongation, (demandeProlongations)=> demandeProlongations.user)
     demandeProlongations:DemandeProlongation[]
+
+    @OneToMany(()=>AnnotationActivity, (annotation)=>annotation.user)
+    annotations:AnnotationActivity[]
 }
 
 
