@@ -27,6 +27,56 @@ export class Activity extends Timestamp {
     description:string
 
     @Column({
+        name:'resultat',
+        type:'varchar',
+        nullable:false
+    })
+    resultat:string
+
+
+    @Column({
+        name:'resultatObtenu',
+        type:'varchar',
+        nullable:true
+    })
+    resultatObtenu:string
+
+    @Column({
+        name:'province',
+        type:'varchar',
+        nullable:false
+    })
+    province:string;
+
+    @Column({
+        name:'responsable',
+        type:'varchar',
+        nullable:false
+    })
+    responsable:string
+
+    @Column({
+        name:'budget',
+        type:'int',
+        nullable:false
+    })
+    budget:number
+
+    @Column({
+        name:'budgetConsomme',
+        type:'int',
+        nullable:false
+    })
+    budgetConsomme:number
+
+    @Column({
+        name:'livrable',
+        type:'varchar',
+        nullable:false
+    })
+    livrable: string
+
+    @Column({
         name:'dateDebut',
         type:'date',
         nullable:true
@@ -41,12 +91,27 @@ export class Activity extends Timestamp {
     dateFin:string
 
     @Column({
+        name:'dateFinReel',
+        type:'date',
+        nullable:true
+    })
+    dateFinReel:string
+
+    @Column({
         name:'status',
         type:'varchar',
         nullable:true,
         default:'En attente'
     })
     status:string
+
+    @Column({
+        name:'etat',
+        type:'varchar',
+        nullable:true,
+        default:'En attente'
+    })
+    etat:string
 
     @ManyToOne(()=>User, (user)=>user.activities, {eager:true})
     user:User

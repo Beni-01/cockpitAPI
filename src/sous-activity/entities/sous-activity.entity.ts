@@ -63,18 +63,39 @@ export class SousActivity  extends Timestamp{
     fin:string
 
     @Column({
+        name:'dateFinReel',
+        type:'date',
+        nullable:true
+    })
+    dateFinReel:string
+
+    @Column({
         name:'indicateur',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     indicateur:string
 
     @Column({
-        name:'budget',
+        name:'resultatObtenu',
         type:'varchar',
+        nullable:true
+    })
+    resultatObtenu:string
+
+    @Column({
+        name:'budget',
+        type:'int',
         nullable:false
     })
     budget:number
+
+    @Column({
+        name:'budgetConsomme',
+        type:'int',
+        nullable:true
+    })
+    budgetConsomme:number
 
     @Column({
         name:'livrable',
@@ -86,14 +107,14 @@ export class SousActivity  extends Timestamp{
     @Column({
         name:'activityId',
         type:'int',
-        nullable:false
+        nullable:true
     })
     activityId:number
 
     @Column({
         name:'userId',
         type:'int',
-        nullable:false
+        nullable:true
     })
     userId:number
 
