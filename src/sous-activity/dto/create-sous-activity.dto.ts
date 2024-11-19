@@ -41,7 +41,7 @@ export class CreateSousActivityDto {
   fin: string;
 
   @ApiProperty({ description: 'Indicateur de la sous-activité', example: 'Achèvement' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   indicateur: string;
 
@@ -65,4 +65,18 @@ export class CreateSousActivityDto {
   @IsNumber()
   activityId:number
 
+  @ApiProperty({ description: 'Date fin réel sous activité'})
+  @IsOptional()
+  @IsString()
+  dateFinReel:string
+
+  @ApiProperty({ description: 'Resultat obtenus'})
+  @IsOptional()
+  @IsString()
+  resultatObtenu:string
+
+  @ApiProperty({ description: 'Budget consommé à la sous-activité', example: 5000 })
+  @IsOptional()
+  @IsString()
+  budgetConsomme:number
 }
