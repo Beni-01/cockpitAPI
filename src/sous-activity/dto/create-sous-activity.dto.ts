@@ -50,6 +50,16 @@ export class CreateSousActivityDto {
   @IsNumber()
   budget: number;
 
+  @ApiProperty({
+    description: 'Le statut de l\'activité',
+    type: String,
+    example: 'En cours',
+    required: false,  // Ce champ est optionnel
+})
+@IsOptional()  // Le champ est optionnel
+@IsString()  // Vérifie que c\'est une chaîne de caractères
+status?: string;
+
   @ApiProperty({ description: 'Livrable attendu de la sous-activité', example: 'Rapport final' })
   @IsNotEmpty()
   @IsString()

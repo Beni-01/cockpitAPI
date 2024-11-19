@@ -1,3 +1,5 @@
+import { ApiProperty } from "@nestjs/swagger";
+import { IsOptional, IsString } from "class-validator";
 import { Activity } from "src/activity/entities/activity.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
@@ -82,6 +84,14 @@ export class SousActivity  extends Timestamp{
         nullable:true
     })
     resultatObtenu:string
+
+    @Column({
+        name:'status',
+        type:'varchar',
+        nullable:true,
+        default:'En attente'
+    })
+    status:string
 
     @Column({
         name:'budget',
