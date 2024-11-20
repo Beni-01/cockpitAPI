@@ -59,14 +59,14 @@ export class Activity extends Timestamp {
     @Column({
         name:'budget',
         type:'int',
-        nullable:false
+        nullable:true
     })
     budget:number
 
     @Column({
         name:'budgetConsomme',
         type:'int',
-        nullable:false
+        nullable:true
     })
     budgetConsomme:number
 
