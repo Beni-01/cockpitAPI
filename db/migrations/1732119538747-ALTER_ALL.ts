@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class ALTERMIGRATION31732117645989 implements MigrationInterface {
-    name = 'ALTERMIGRATION31732117645989'
+export class ALTERALL1732119538747 implements MigrationInterface {
+    name = 'ALTERALL1732119538747'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`ALTER TABLE \`annotationActivity\` DROP FOREIGN KEY \`FK_79050c9930c98928590df36b1bc\``);
@@ -11,6 +11,7 @@ export class ALTERMIGRATION31732117645989 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP FOREIGN KEY \`FK_0b60e6cf85e054f08ab9c019a78\``);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP FOREIGN KEY \`FK_38e5f6d4a785ff0ec835c6fb943\``);
         await queryRunner.query(`ALTER TABLE \`activity\` DROP FOREIGN KEY \`FK_3571467bcbe021f66e2bdce96ea\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`nom\` varchar(255) NOT NULL`);
         await queryRunner.query(`ALTER TABLE \`annotationActivity\` DROP COLUMN \`type\``);
         await queryRunner.query(`ALTER TABLE \`annotationActivity\` ADD \`type\` varchar(255) NULL DEFAULT 'COMMENTAIRE'`);
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`description\``);
@@ -23,9 +24,6 @@ export class ALTERMIGRATION31732117645989 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`reponse\` varchar(255) NOT NULL DEFAULT 'En attente'`);
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`commentaire\``);
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`commentaire\` varchar(255) NOT NULL`);
-        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP PRIMARY KEY`);
-        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`id\``);
-        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`id\` int NOT NULL PRIMARY KEY AUTO_INCREMENT`);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`titre\``);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`titre\` varchar(255) NOT NULL`);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`resultat\``);
@@ -66,8 +64,24 @@ export class ALTERMIGRATION31732117645989 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`activity\` ADD \`status\` varchar(255) NULL DEFAULT 'En attente'`);
         await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`etat\``);
         await queryRunner.query(`ALTER TABLE \`activity\` ADD \`etat\` varchar(255) NULL DEFAULT 'En attente'`);
-        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`nom\``);
-      
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`postnom\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`postnom\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`prenom\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`prenom\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`email\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`email\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`telephone\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`telephone\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`username\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`username\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`password\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`password\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`direction\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`direction\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`fonction\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`fonction\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`grade\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`grade\` varchar(255) NULL`);
         await queryRunner.query(`ALTER TABLE \`annotationActivity\` ADD CONSTRAINT \`FK_c21c8b2f96df2aaa95bc9b3e852\` FOREIGN KEY (\`activityId\`) REFERENCES \`activity\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`annotationActivity\` ADD CONSTRAINT \`FK_79050c9930c98928590df36b1bc\` FOREIGN KEY (\`userId\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD CONSTRAINT \`FK_856efdd136dff1362f39e292a5d\` FOREIGN KEY (\`userId\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
@@ -75,7 +89,8 @@ export class ALTERMIGRATION31732117645989 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD CONSTRAINT \`FK_0b60e6cf85e054f08ab9c019a78\` FOREIGN KEY (\`userId\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD CONSTRAINT \`FK_38e5f6d4a785ff0ec835c6fb943\` FOREIGN KEY (\`activityId\`) REFERENCES \`activity\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`activity\` ADD CONSTRAINT \`FK_3571467bcbe021f66e2bdce96ea\` FOREIGN KEY (\`userId\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
-        
+        await queryRunner.query(`ALTER TABLE \`user\` ADD CONSTRAINT \`FK_85fe1974be2cafc824f151bf288\` FOREIGN KEY (\`directeurId\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD CONSTRAINT \`FK_f31746ae11a090306b0b2670b00\` FOREIGN KEY (\`agentDelegueId\`) REFERENCES \`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
@@ -106,8 +121,6 @@ export class ALTERMIGRATION31732117645989 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`user\` ADD \`prenom\` varchar(255) NOT NULL`);
         await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`postnom\``);
         await queryRunner.query(`ALTER TABLE \`user\` ADD \`postnom\` varchar(255) NULL`);
-        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`nom\``);
-        await queryRunner.query(`ALTER TABLE \`user\` ADD \`nom\` varchar(255) NOT NULL`);
         await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`etat\``);
         await queryRunner.query(`ALTER TABLE \`activity\` ADD \`etat\` varchar(255) NULL DEFAULT 'En attente'`);
         await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`status\``);
@@ -148,9 +161,6 @@ export class ALTERMIGRATION31732117645989 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`resultat\` varchar(255) NOT NULL`);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`titre\``);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`titre\` varchar(255) NOT NULL`);
-        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`id\``);
-        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`id\` int NOT NULL`);
-        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD PRIMARY KEY (\`id\`)`);
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`commentaire\``);
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`commentaire\` varchar(255) NOT NULL`);
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`reponse\``);
@@ -163,6 +173,7 @@ export class ALTERMIGRATION31732117645989 implements MigrationInterface {
         await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`description\` varchar(255) NOT NULL`);
         await queryRunner.query(`ALTER TABLE \`annotationActivity\` DROP COLUMN \`type\``);
         await queryRunner.query(`ALTER TABLE \`annotationActivity\` ADD \`type\` varchar(255) NULL DEFAULT 'COMMENTAIRE'`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`nom\``);
         await queryRunner.query(`ALTER TABLE \`activity\` ADD CONSTRAINT \`FK_3571467bcbe021f66e2bdce96ea\` FOREIGN KEY (\`userId\`) REFERENCES \`f360db\`.\`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD CONSTRAINT \`FK_38e5f6d4a785ff0ec835c6fb943\` FOREIGN KEY (\`activityId\`) REFERENCES \`f360db\`.\`activity\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
         await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD CONSTRAINT \`FK_0b60e6cf85e054f08ab9c019a78\` FOREIGN KEY (\`userId\`) REFERENCES \`f360db\`.\`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
