@@ -3,7 +3,7 @@ import { IsOptional, IsString } from "class-validator";
 import { Activity } from "src/activity/entities/activity.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 
 
 
@@ -12,7 +12,7 @@ import { Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
 })
 export class SousActivity  extends Timestamp{
 
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
     id:number;
 
     @Column({
