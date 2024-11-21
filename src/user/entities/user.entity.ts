@@ -120,6 +120,44 @@ export class User extends Timestamp {
 
     @Column(
         {
+           name:'serviceId',
+           type:'int',
+           nullable:true
+        }
+    )
+    serviceId:number
+
+    @Column(
+        {
+           name:'divisionId',
+           type:'int',
+           nullable:true
+        }
+    )
+    divisionId:number
+
+    @Column(
+        {
+            name:'division',
+            type:'varchar',
+            nullable:true
+        }
+    )
+    division?:string
+
+
+    @Column(
+        {
+            name:'service',
+            type:'varchar',
+            nullable:true
+        }
+    )
+    service?:string
+
+
+    @Column(
+        {
             name:'direction',
             type:'varchar',
             nullable:true
@@ -155,12 +193,6 @@ export class User extends Timestamp {
         }
     )
     directeurId:number
-
-    @ManyToOne(() => User, (directeur) => directeur.directedUsers, { nullable: true})
-    directeur?: User; 
-
-    @OneToMany(() => User, (user) => user.directeur)
-    directedUsers: User[];
 
 
     @OneToOne(() => User, (agentDelegue) => agentDelegue.agentDelegue, { nullable: true})
