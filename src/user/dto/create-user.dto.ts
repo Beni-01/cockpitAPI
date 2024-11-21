@@ -42,16 +42,12 @@ export class CreateUserDto {
   grade?:string;
 
   @IsOptional()
+  @IsNumber()
   directeurId?:number;
 
   @IsOptional()
+  @IsNumber()
   agentDelegueId?:number;
-
-  @IsNumber()
-  fonctionId:number;
-
-  @IsNumber()
-  gradeId:number;
 
   @IsString()
   @IsNotEmpty()
@@ -77,7 +73,7 @@ export class CreateUserDto {
   @IsOptional()
   signature?:string;
 
-  
+
   @IsOptional()
   @IsBoolean()
   status:boolean=true
