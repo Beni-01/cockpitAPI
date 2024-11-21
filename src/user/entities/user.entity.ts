@@ -194,10 +194,14 @@ export class User extends Timestamp {
     )
     directeurId:number
 
-
-    @OneToOne(() => User, (agentDelegue) => agentDelegue.agentDelegue, { nullable: true})
-    @JoinColumn()
-    agentDelegue?: User; 
+    @Column(
+        {
+            name:'agentDelegueId',
+            type:'int',
+            nullable:true
+        }
+    )
+    agentDelegueId?: number; 
 
 
     @OneToMany(()=>Activity, (activity)=>activity.user)
