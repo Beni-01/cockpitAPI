@@ -1,8 +1,11 @@
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-import { Column, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity({
+    name:'livrable'
+})
 export class Livrable extends Timestamp {
 
     @PrimaryGeneratedColumn()
@@ -18,63 +21,64 @@ export class Livrable extends Timestamp {
     @Column({
         name:'description',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     description:string;
 
     @Column({
         name:'status',
         type:'varchar',
-        nullable:false
+        nullable:true,
+        default:'En attente'
     })
     status:string;
 
     @Column({
         name:'responsable',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     responsable:string;
 
     @Column({
         name:'dateLivraisonAttendue',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     dateLivraisonAttendue:string;
 
     @Column({
         name:'dateLivraisonReelle',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     dateLivraisonReelle:string;
 
     @Column({
         name:'support',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     support:string;
 
     @Column({
         name:'dateValidationAttendue',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     dateValidationAttendue:string;
 
     @Column({
         name:'dateValidationReel',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     dateValidationReel:string;
 
     @Column({
         name:'commentaire',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     commentaire:string
   

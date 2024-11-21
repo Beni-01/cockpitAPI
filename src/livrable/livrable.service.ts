@@ -1,26 +1,78 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { CreateLivrableDto } from './dto/create-livrable.dto';
 import { UpdateLivrableDto } from './dto/update-livrable.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Livrable } from './entities/livrable.entity';
 
 @Injectable()
 export class LivrableService {
-  create(createLivrableDto: CreateLivrableDto) {
-    return 'This action adds a new livrable';
+  constructor(
+    @InjectRepository(Livrable)
+    private readonly livrableRepository: Repository<Livrable>,
+  ) {}
+
+  async create(createLivrableDto: CreateLivrableDto): Promise<Livrable> {
+    try {
+      const livrable = this.livrableRepository.create(createLivrableDto);
+      return await this.livrableRepository.save(livrable);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors de la création du livrable.',
+      );
+    }
   }
 
-  findAll() {
-    return `This action returns all livrable`;
+  async findAll(): Promise<Livrable[]> {
+    try {
+      return await this.livrableRepository.find();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors de la récupération des livrables.',
+      );
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} livrable`;
+  async findOne(id: number): Promise<Livrable> {
+    try {
+      const livrable = await this.livrableRepository.findOne({ where: { id } });
+      if (!livrable) {
+        throw new NotFoundException(`Le livrable avec l'id ${id} n'existe pas.`);
+      }
+      return livrable;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error; // Laisser passer les erreurs "NotFoundException"
+      }
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors de la récupération du livrable.',
+      );
+    }
   }
 
-  update(id: number, updateLivrableDto: UpdateLivrableDto) {
-    return `This action updates a #${id} livrable`;
+  async update(
+    id: number,
+    updateLivrableDto: Partial<CreateLivrableDto>,
+  ): Promise<Livrable> {
+    try {
+      const livrable = await this.findOne(id);
+      Object.assign(livrable, updateLivrableDto);
+      return await this.livrableRepository.save(livrable);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Une erreur est survenue lors de la mise à jour du livrable avec l'id ${id}.`,
+      );
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} livrable`;
+  async remove(id: number): Promise<void> {
+    try {
+      const livrable = await this.findOne(id);
+      await this.livrableRepository.remove(livrable);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Une erreur est survenue lors de la suppression du livrable avec l'id ${id}.`,
+      );
+    }
   }
 }

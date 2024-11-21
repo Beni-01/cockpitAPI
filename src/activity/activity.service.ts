@@ -5,6 +5,7 @@ import { Activity } from './entities/activity.entity';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
 import { SousActivity } from 'src/sous-activity/entities/sous-activity.entity';
+import { Livrable } from 'src/livrable/entities/livrable.entity';
 
 @Injectable()
 export class ActivityService {
@@ -14,6 +15,9 @@ export class ActivityService {
 
         @InjectRepository(SousActivity)
         private subActivityRepository: Repository<SousActivity>,
+
+        @InjectRepository(Livrable)
+        private readonly livrableRepository: Repository<Livrable>,
     ) {}
 
     async create(createActivityDto: CreateActivityDto): Promise<Activity> {
