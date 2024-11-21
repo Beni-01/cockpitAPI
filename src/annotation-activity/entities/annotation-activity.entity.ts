@@ -1,12 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Activity } from "src/activity/entities/activity.entity";
+import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
 import { PrimaryGeneratedColumn, Column, ManyToOne, Entity } from "typeorm";
 
 @Entity({
     name: 'annotationActivity'
 })
-export class AnnotationActivity {
+export class AnnotationActivity extends Timestamp {
     @PrimaryGeneratedColumn()
     @ApiProperty({ description: "ID de l'annotation" })
     id: number;
