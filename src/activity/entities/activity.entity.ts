@@ -1,9 +1,10 @@
 import { AnnotationActivity } from "src/annotation-activity/entities/annotation-activity.entity";
 import { DemandeProlongation } from "src/demande-prolongation/entities/demande-prolongation.entity";
+import { Livrable } from "src/livrable/entities/livrable.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({
     name:'activity'
@@ -71,13 +72,6 @@ export class Activity extends Timestamp {
     budgetConsomme:number
 
     @Column({
-        name:'livrable',
-        type:'varchar',
-        nullable:false
-    })
-    livrable: string
-
-    @Column({
         name:'dateDebut',
         type:'date',
         nullable:true
@@ -116,6 +110,10 @@ export class Activity extends Timestamp {
 
     @ManyToOne(()=>User, (user)=>user.activities, {eager:true})
     user:User
+
+    @ManyToOne(()=>Livrable, (livrable)=>livrable.activity, {eager:true})
+    @JoinColumn({ name: 'livrableId' })
+    livrable: Livrable
 
     @OneToMany(()=>SousActivity, (subactivities)=>subactivities.activity, {eager:true})
     subactivities:SousActivity[]

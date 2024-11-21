@@ -18,7 +18,7 @@ export class ActivityService {
 
     async create(createActivityDto: CreateActivityDto): Promise<Activity> {
       try {
-          const { subactivities, ...activityData } = createActivityDto;
+          const { subactivities, livrable, ...activityData } = createActivityDto;
 
           // Créer une nouvelle instance d'Activity à partir des données fournies
           const activity = this.activityRepository.create(activityData);
@@ -29,8 +29,9 @@ export class ActivityService {
           // Gérer les sous-activités si elles sont présentes
           if (subactivities && subactivities.length > 0) {
               const sousActivityPromises = subactivities.map(async (subactivity) => {
+                const { livrable, ...subActivityData } = subactivity;
                   const sousActivity = this.subActivityRepository.create({
-                      ...subactivity,
+                      ...subActivityData ,
                       activity: savedActivity, // Associer la sous-activité à l'activité principale
                   });
                   await this.subActivityRepository.save(sousActivity);
@@ -95,9 +96,11 @@ export class ActivityService {
             if (!activity) {
                 throw new NotFoundException(`Activité avec l'ID ${id} non trouvée`);
             }
+             
+            const { subactivities, livrable, ...activityData } = updateActivityDto;
 
             // Mettre à jour l'activité dans la base de données
-            await this.activityRepository.update(id, updateActivityDto);
+            await this.activityRepository.update(id, activityData);
 
             // Retourner l'activité mise à jour
             return await this.findOne(id);

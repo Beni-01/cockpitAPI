@@ -17,7 +17,8 @@ export class SousActivityService {
   // Create
   async create(createSousActivityDto: CreateSousActivityDto): Promise<SousActivity> {
     try {
-      const sousActivity = this.sousActivityRepository.create(createSousActivityDto);
+      const { livrable, ...subActivityData } = createSousActivityDto;
+      const sousActivity = this.sousActivityRepository.create(subActivityData);
       return await this.sousActivityRepository.save(sousActivity);
     } catch (error) {
       throw new InternalServerErrorException('Erreur lors de la création de la sous-activité');

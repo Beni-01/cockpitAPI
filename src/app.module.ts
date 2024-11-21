@@ -14,6 +14,7 @@ import { SousActivityModule } from './sous-activity/sous-activity.module';
 import { DemandeProlongationModule } from './demande-prolongation/demande-prolongation.module';
 import { AuditLogModule } from './audit-log/audit-log.module';
 import { AnnotationActivityModule } from './annotation-activity/annotation-activity.module';
+import { LivrableModule } from './livrable/livrable.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -37,6 +38,7 @@ import { AnnotationActivityModule } from './annotation-activity/annotation-activ
     DemandeProlongationModule,
     AuditLogModule,
     AnnotationActivityModule,
+    LivrableModule,
    
   ],
   controllers: [AppController],
