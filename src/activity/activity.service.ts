@@ -24,8 +24,13 @@ export class ActivityService {
       try {
           const { subactivities, livrable, ...activityData } = createActivityDto;
 
+          const createLivrable= this.livrableRepository.create({livrable})
+          const savedLivrable= await this.livrableRepository.save(createLivrable)
+
           // Créer une nouvelle instance d'Activity à partir des données fournies
           const activity = this.activityRepository.create(activityData);
+          activity.livrable=savedLivrable
+        
 
           // Sauvegarder l'activité principale dans la base de données
           const savedActivity = await this.activityRepository.save(activity);
@@ -34,10 +39,18 @@ export class ActivityService {
           if (subactivities && subactivities.length > 0) {
               const sousActivityPromises = subactivities.map(async (subactivity) => {
                 const { livrable, ...subActivityData } = subactivity;
+
+                const createLivrableSubLivraison= this.livrableRepository.create({livrable})
+                const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
+
+
                   const sousActivity = this.subActivityRepository.create({
                       ...subActivityData ,
                       activity: savedActivity, // Associer la sous-activité à l'activité principale
                   });
+
+                  sousActivity.livrable=savedLivrableSubLivraison
+                
                   await this.subActivityRepository.save(sousActivity);
               });
 

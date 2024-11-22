@@ -4,7 +4,7 @@ import { Livrable } from "src/livrable/entities/livrable.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({
     name:'activity'
@@ -111,7 +111,7 @@ export class Activity extends Timestamp {
     @ManyToOne(()=>User, (user)=>user.activities, {eager:true})
     user:User
 
-    @ManyToOne(()=>Livrable, (livrable)=>livrable.activity, {eager:true})
+    @OneToOne(()=>Livrable, (livrable)=>livrable.activity, {eager:true})
     @JoinColumn({ name: 'livrableId' })
     livrable: Livrable
 
