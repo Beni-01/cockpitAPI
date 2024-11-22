@@ -51,6 +51,13 @@ export class Activity extends Timestamp {
     province:string;
 
     @Column({
+        name:'direction',
+        type:'varchar',
+        nullable:true
+    })
+    direction?:string;
+
+    @Column({
         name:'responsable',
         type:'varchar',
         nullable:false

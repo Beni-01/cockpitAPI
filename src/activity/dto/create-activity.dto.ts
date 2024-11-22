@@ -65,6 +65,16 @@ export class CreateActivityDto {
     @IsString()  // Vérifie que c\'est une chaîne de caractères
     etat?: string;
 
+    @ApiProperty({
+        description: 'direction',
+        type: String,
+        example: 'Finances',
+        required: false,  // Ce champ est optionnel
+    })
+    @IsOptional()  // Le champ est optionnel
+    @IsString() 
+    direction?:string
+
     @ApiProperty({ description: 'Budget alloué à la sous-activité', example: 10000 })
     @IsOptional()
     @IsNumber()
