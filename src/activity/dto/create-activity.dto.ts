@@ -133,7 +133,7 @@ export class CreateActivityDto {
     @ApiProperty({ description: 'Responsable activité', example: 'John Doe' })
     @IsOptional()
     @IsString()
-    responsable: string;
+    responsable?: string;
 
 }
 

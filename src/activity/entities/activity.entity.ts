@@ -60,9 +60,9 @@ export class Activity extends Timestamp {
     @Column({
         name:'responsable',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
-    responsable:string
+    responsable?:string
 
     @Column({
         name:'budget',
