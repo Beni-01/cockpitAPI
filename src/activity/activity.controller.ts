@@ -33,7 +33,7 @@ export class ActivityController {
     @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
     @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
     findAllDraft() {
-      return this.activityService.findAll();
+      return this.activityService.findAllDraft();
     }
 
   // Route pour récupérer une activité spécifique par son ID
