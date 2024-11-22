@@ -29,11 +29,11 @@ export class ActivityController {
   }
 
     // Route pour récupérer toutes les activités
-    @Get('draft')
+    @Get('etat/:etat')
     @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
     @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-    findAllDraft() {
-      return this.activityService.findAllDraft();
+    findAllDraft(@Param('etat') etat:string) {
+      return this.activityService.findAllByStatus(etat);
     }
 
   // Route pour récupérer une activité spécifique par son ID

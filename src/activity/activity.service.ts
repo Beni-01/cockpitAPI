@@ -82,19 +82,25 @@ export class ActivityService {
         }
     }
 
-    async findAllDraft(): Promise<Activity[]> {
-        try {
-            // Trouver toutes les activités dans la base de données
-            return await this.activityRepository.find({
-                where:{
-                    etat:'En attente'
-                }
-            });
-        } catch (error) {
-            // Gérer les erreurs lors de la récupération et les envoyer à l'appelant
-            throw new BadRequestException('Échec de la récupération des activités', error.message);
+async findAllByStatus(status: string): Promise<Activity[]> {
+    try {
+        // Vérifier si le statut est valide avant d'effectuer la recherche
+        const validStatuses = ['En attente', 'Validé', 'Refusé', 'Approuvé']; // Liste des statuts possibles
+        if (!validStatuses.includes(status)) {
+            throw new BadRequestException(`Statut invalide: ${status}`);
         }
+
+        // Trouver toutes les activités avec le statut passé en paramètre
+        return await this.activityRepository.find({
+            where: {
+                etat: status,
+            },
+        });
+    } catch (error) {
+        // Gérer les erreurs lors de la récupération et les envoyer à l'appelant
+        throw new BadRequestException('Échec de la récupération des activités', error.message);
     }
+}
 
     // Récupérer une activité par son ID
     async findOne(id: number): Promise<Activity> {
