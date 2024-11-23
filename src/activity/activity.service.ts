@@ -25,7 +25,7 @@ export class ActivityService {
 
           let budgetActivity:number=0;
 
-          const { subactivities, livrable, ...activityData } = createActivityDto;
+          const { subactivities, livrable, typelivrable, ...activityData } = createActivityDto;
           subactivities.forEach((subactivity:any)=>{
             budgetActivity+=subactivity.budget
           })
@@ -38,7 +38,7 @@ export class ActivityService {
             return acc;
         }, { minDebut: null, maxFin: null });
 
-          const createLivrable= this.livrableRepository.create({livrable})
+          const createLivrable= this.livrableRepository.create({livrable, support:typelivrable})
           const savedLivrable= await this.livrableRepository.save(createLivrable)
 
           // Créer une nouvelle instance d'Activity à partir des données fournies
@@ -55,9 +55,9 @@ export class ActivityService {
           // Gérer les sous-activités si elles sont présentes
           if (subactivities && subactivities.length > 0) {
               const sousActivityPromises = subactivities.map(async (subactivity) => {
-                const { livrable, ...subActivityData } = subactivity;
+                const { livrable, typelivrable, ...subActivityData } = subactivity;
 
-                const createLivrableSubLivraison= this.livrableRepository.create({livrable})
+                const createLivrableSubLivraison= this.livrableRepository.create({livrable, support:typelivrable})
                 const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
 
 

@@ -65,6 +65,11 @@ status?: string;
   @IsString()
   livrable: string;
 
+  @ApiProperty({ description: 'Type de Livrable attendu de la sous-activité', example: 'Rapport final' })
+  @IsOptional()
+  @IsString()
+  typelivrable: string;
+
   @ApiProperty({ description: 'User qui crée la sous activité', example: 12 })
   @IsNotEmpty()
   @IsNumber()

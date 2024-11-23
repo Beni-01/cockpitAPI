@@ -85,6 +85,11 @@ export class CreateActivityDto {
     @IsString()
     livrable: string;
 
+    @ApiProperty({ description: 'Type de Livrable attendu de la sous-activité', example: 'Rapport final' })
+    @IsOptional()
+    @IsString()
+    typelivrable: string;
+
     @ApiProperty({
         description: 'L\'ID de l\'utilisateur associé à l\'activité',
         type: Number,
