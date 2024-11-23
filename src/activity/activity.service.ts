@@ -22,7 +22,21 @@ export class ActivityService {
 
     async create(createActivityDto: CreateActivityDto): Promise<Activity> {
       try {
+
+          let budgetActivity:number=0;
+
           const { subactivities, livrable, ...activityData } = createActivityDto;
+          subactivities.forEach((subactivity:any)=>{
+            budgetActivity+=subactivity.budget
+          })
+
+    
+          const result = subactivities.reduce((acc, activity) => {
+            // Comparer les dates pour trouver la plus ancienne et la plus récente
+            acc.minDebut = acc.minDebut ? (new Date(activity.debut) < new Date(acc.minDebut) ? activity.debut : acc.minDebut) : activity.debut;
+            acc.maxFin = acc.maxFin ? (new Date(activity.fin) > new Date(acc.maxFin) ? activity.fin : acc.maxFin) : activity.fin;
+            return acc;
+        }, { minDebut: null, maxFin: null });
 
           const createLivrable= this.livrableRepository.create({livrable})
           const savedLivrable= await this.livrableRepository.save(createLivrable)
@@ -30,7 +44,10 @@ export class ActivityService {
           // Créer une nouvelle instance d'Activity à partir des données fournies
           const activity = this.activityRepository.create(activityData);
           activity.livrable=savedLivrable
-        
+          activity.budget=budgetActivity
+          activity.dateDebut=result.minDebut
+          activity.dateFin=result.maxFin
+
 
           // Sauvegarder l'activité principale dans la base de données
           const savedActivity = await this.activityRepository.save(activity);
