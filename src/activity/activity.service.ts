@@ -38,7 +38,7 @@ export class ActivityService {
             return acc;
         }, { minDebut: null, maxFin: null });
 
-          const createLivrable= this.livrableRepository.create({livrable, support:typelivrable})
+          const createLivrable= this.livrableRepository.create({livrable, typelivrable})
           const savedLivrable= await this.livrableRepository.save(createLivrable)
 
           // Créer une nouvelle instance d'Activity à partir des données fournies
@@ -57,7 +57,7 @@ export class ActivityService {
               const sousActivityPromises = subactivities.map(async (subactivity) => {
                 const { livrable, typelivrable, ...subActivityData } = subactivity;
 
-                const createLivrableSubLivraison= this.livrableRepository.create({livrable, support:typelivrable})
+                const createLivrableSubLivraison= this.livrableRepository.create({livrable, typelivrable})
                 const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
 
 

@@ -51,6 +51,14 @@ export class CreateLivrableDto {
       dateLivraisonReelle?: string;
     
       @ApiPropertyOptional({
+        description: 'Type du livrable',
+        example: 'PDF',
+      })
+      @IsOptional()
+      @IsString()
+      typelivrable?: string;
+
+      @ApiPropertyOptional({
         description: 'Support du livrable',
         example: 'PDF',
       })
