@@ -38,12 +38,15 @@ export class ActivityService {
             return acc;
         }, { minDebut: null, maxFin: null });
 
-          const createLivrable= this.livrableRepository.create({livrable, typelivrable})
-          const savedLivrable= await this.livrableRepository.save(createLivrable)
+        const activity = this.activityRepository.create(activityData);
+
+        if(livrable){
+            const createLivrable= this.livrableRepository.create({livrable, typelivrable})
+            const savedLivrable= await this.livrableRepository.save(createLivrable)
+            activity.livrable=savedLivrable
+        }
 
           // Créer une nouvelle instance d'Activity à partir des données fournies
-          const activity = this.activityRepository.create(activityData);
-          activity.livrable=savedLivrable
           activity.budget=budgetActivity
           activity.dateDebut=result.minDebut
           activity.dateFin=result.maxFin
@@ -57,17 +60,17 @@ export class ActivityService {
               const sousActivityPromises = subactivities.map(async (subactivity) => {
                 const { livrable, typelivrable, ...subActivityData } = subactivity;
 
-                const createLivrableSubLivraison= this.livrableRepository.create({livrable, typelivrable})
-                const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
+                const sousActivity = this.subActivityRepository.create({
+                    ...subActivityData ,
+                    activity: savedActivity, // Associer la sous-activité à l'activité principale
+                });
 
-
-                  const sousActivity = this.subActivityRepository.create({
-                      ...subActivityData ,
-                      activity: savedActivity, // Associer la sous-activité à l'activité principale
-                  });
-
-                  sousActivity.livrable=savedLivrableSubLivraison
-                
+                if(livrable){
+                    const createLivrableSubLivraison= this.livrableRepository.create({livrable, typelivrable})
+                    const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
+                    sousActivity.livrable=savedLivrableSubLivraison
+                }
+         
                   await this.subActivityRepository.save(sousActivity);
               });
 
