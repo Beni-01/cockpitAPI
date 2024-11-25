@@ -46,7 +46,7 @@ export class CreateSousActivityDto {
   indicateur: string;
 
   @ApiProperty({ description: 'Budget alloué à la sous-activité', example: 10000 })
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   budget: number;
 

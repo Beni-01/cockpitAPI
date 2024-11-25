@@ -1,16 +1,28 @@
-import { PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm";
+import { PrimaryGeneratedColumn, Column, CreateDateColumn, Entity } from "typeorm";
 
+@Entity({
+    name:'auditLog'
+})
 export class AuditLog {
     @PrimaryGeneratedColumn()
     id: number;
   
-    @Column()
+    @Column({
+        name:'tableName',
+        type:'varchar'
+    })
     tableName: string;
   
-    @Column()
+    @Column({
+        name:'entityId',
+        type:'int'
+    })
     entityId: number;
   
-    @Column()
+    @Column({
+        name:'action',
+        type:'varchar'
+    })
     action: string;
   
     @Column({ type: 'json', nullable: true })
@@ -19,7 +31,7 @@ export class AuditLog {
     @Column({ type: 'json', nullable: true })
     newData: any;
   
-    @Column({ nullable: true })
+    @Column({ name:'performedBy', type:'int', nullable: true })
     performedBy: number;
   
     @CreateDateColumn()

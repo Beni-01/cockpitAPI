@@ -97,7 +97,8 @@ export class SousActivity  extends Timestamp{
     @Column({
         name:'budget',
         type:'int',
-        nullable:false
+        nullable:false,
+        default:0
     })
     budget:number
 
