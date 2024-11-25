@@ -1,9 +1,10 @@
+import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { PrimaryGeneratedColumn, Column, CreateDateColumn, Entity } from "typeorm";
 
 @Entity({
     name:'auditLog'
 })
-export class AuditLog {
+export class AuditLog extends Timestamp{
     @PrimaryGeneratedColumn()
     id: number;
   
