@@ -27,11 +27,11 @@ export class AuditInitializerService implements OnApplicationBootstrap {
           'INITIAL', // Type d'action personnalisée
           null, // Anciennes données (aucune)
           row, // Données actuelles
-          null, // ID de l'utilisateur non applicable ici
+          row.userId || null, // ID de l'utilisateur non applicable ici
         );
       }
     }
 
-    console.log('Audit initialization completed.');
+    console.log('Audit initialization completed with successfully');
   }
 }

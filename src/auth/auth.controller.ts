@@ -13,7 +13,7 @@ export class AuthController {
   @UseGuards(LocalGuard)
   @Post('login')
   login(@Request() req: Request) {
-    console.log(' connected ', req['user'])
+    //console.log(' connected ', req['user'])
     return req['user'];
   }
 

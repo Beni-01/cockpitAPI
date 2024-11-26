@@ -115,6 +115,13 @@ export class Activity extends Timestamp {
     })
     etat:string
 
+    @Column({
+        name:'userId',
+        type:'int',
+        nullable:true,
+    })
+    userId:number
+
     @ManyToOne(()=>User, (user)=>user.activities, {eager:true})
     user:User
 

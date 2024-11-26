@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 
 
 import { PassportModule } from '@nestjs/passport';
@@ -16,6 +16,8 @@ import { AuditLogModule } from './audit-log/audit-log.module';
 import { AnnotationActivityModule } from './annotation-activity/annotation-activity.module';
 import { LivrableModule } from './livrable/livrable.module';
 import { AuditInitializerService } from './audit-log/audit-initializer.service';
+import { AuditSubscriber } from './audit-log/audit-log.subscriber';
+import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -40,9 +42,16 @@ import { AuditInitializerService } from './audit-log/audit-initializer.service';
     AuditLogModule,
     AnnotationActivityModule,
     LivrableModule,
+    AuthModule
    
   ],
   controllers: [AppController],
-  providers: [AppService, AuditInitializerService],
+  providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AttachUserMiddleware) // Appliquer le middleware
+      .forRoutes({ path: '*', method: RequestMethod.ALL }); // Sur toutes les routes
+  }
+}

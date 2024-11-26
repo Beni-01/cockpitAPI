@@ -8,6 +8,18 @@ import { AuditLog } from './entities/audit-log.entity';
 export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 
+  @Post()
+  async createAuditLog(@Body() createAuditLogDto: CreateAuditLogDto) {
+    const { tableName, entityId, action, oldData, newData, performedBy } = createAuditLogDto;
+
+    // Call the service method to log the audit
+    await this.auditLogService.log(tableName, entityId, action, oldData, newData, performedBy);
+
+    return {
+      message: 'Audit log created successfully',
+    };
+  }
+
   // Récupérer tous les logs d'audit
   @Get()
   async findAll(

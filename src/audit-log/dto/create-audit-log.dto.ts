@@ -1,8 +1,7 @@
 import { IsNumber, IsString, IsJSON, IsOptional, IsDate } from "class-validator";
+import { CreateDateColumn } from "typeorm";
 
 export class CreateAuditLogDto {
- @IsNumber()
-  id: number;
 
   @IsString()
   tableName: string;
@@ -25,6 +24,8 @@ export class CreateAuditLogDto {
   @IsOptional()
   performedBy?: number;
 
-  @IsDate()
+  @CreateDateColumn({
+    update:false
+})
   performedAt: Date;
 }

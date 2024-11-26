@@ -28,6 +28,8 @@ export class AuditLogService {
       newData,
       performedBy,
     });
+
+    console.log('je suis executer ')
     await this.auditLogRepository.save(log);
   }
 
