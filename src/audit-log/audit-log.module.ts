@@ -9,5 +9,6 @@ import { AuditSubscriber } from './audit-log.subscriber';
   imports:[TypeOrmModule.forFeature([AuditLog])],
   controllers: [AuditLogController],
   providers: [AuditLogService, AuditSubscriber],
+  exports: [AuditLogService],
 })
 export class AuditLogModule {}
