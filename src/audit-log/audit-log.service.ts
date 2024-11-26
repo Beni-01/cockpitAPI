@@ -30,4 +30,28 @@ export class AuditLogService {
     });
     await this.auditLogRepository.save(log);
   }
+
+  // Trouver tous les logs avec filtres optionnels
+  async findLogs(tableName?: string, action?: string): Promise<AuditLog[]> {
+    const queryBuilder = this.auditLogRepository.createQueryBuilder('log');
+
+    if (tableName) {
+      queryBuilder.andWhere('log.tableName = :tableName', { tableName });
+    }
+    if (action) {
+      queryBuilder.andWhere('log.action = :action', { action });
+    }
+
+    return await queryBuilder.getMany();
+  }
+
+  // Trouver un log par ID
+  async findLogById(id: number): Promise<AuditLog> {
+    return await this.auditLogRepository.findOneOrFail({ where: { id } });
+  }
+
+  // Supprimer un log par ID
+  async deleteLog(id: number): Promise<void> {
+    await this.auditLogRepository.delete(id);
+  }
 }

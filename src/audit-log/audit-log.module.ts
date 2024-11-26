@@ -3,10 +3,11 @@ import { AuditLogService } from './audit-log.service';
 import { AuditLogController } from './audit-log.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuditLog } from './entities/audit-log.entity';
+import { AuditSubscriber } from './audit-log.subscriber';
 
 @Module({
   imports:[TypeOrmModule.forFeature([AuditLog])],
   controllers: [AuditLogController],
-  providers: [AuditLogService],
+  providers: [AuditLogService, AuditSubscriber],
 })
 export class AuditLogModule {}

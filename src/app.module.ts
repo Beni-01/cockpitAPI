@@ -15,6 +15,7 @@ import { DemandeProlongationModule } from './demande-prolongation/demande-prolon
 import { AuditLogModule } from './audit-log/audit-log.module';
 import { AnnotationActivityModule } from './annotation-activity/annotation-activity.module';
 import { LivrableModule } from './livrable/livrable.module';
+import { AuditInitializerService } from './audit-log/audit-initializer.service';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -42,6 +43,6 @@ import { LivrableModule } from './livrable/livrable.module';
    
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AuditInitializerService],
 })
 export class AppModule {}

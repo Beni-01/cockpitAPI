@@ -1,34 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { AuditLogService } from './audit-log.service';
 import { CreateAuditLogDto } from './dto/create-audit-log.dto';
 import { UpdateAuditLogDto } from './dto/update-audit-log.dto';
+import { AuditLog } from './entities/audit-log.entity';
 
 @Controller('audit-log')
 export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 
-  @Post()
-  create(@Body() createAuditLogDto: CreateAuditLogDto) {
-    return this.auditLogService.create(createAuditLogDto);
-  }
-
+  // Récupérer tous les logs d'audit
   @Get()
-  findAll() {
-    return this.auditLogService.findAll();
+  async findAll(
+    @Query('tableName') tableName?: string,
+    @Query('action') action?: string,
+  ): Promise<AuditLog[]> {
+    return await this.auditLogService.findLogs(tableName, action);
   }
 
+  // Récupérer les logs par ID
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.auditLogService.findOne(+id);
+  async findOne(@Param('id') id: number): Promise<AuditLog> {
+    return await this.auditLogService.findLogById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuditLogDto: UpdateAuditLogDto) {
-    return this.auditLogService.update(+id, updateAuditLogDto);
-  }
-
+  // Supprimer un log par ID
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.auditLogService.remove(+id);
+  async delete(@Param('id') id: number): Promise<void> {
+    return await this.auditLogService.deleteLog(id);
   }
 }
