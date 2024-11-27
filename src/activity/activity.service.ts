@@ -122,7 +122,14 @@ export class ActivityService {
                         directionAcc[direction][responsable] = []; // Initialiser le responsable
                     }
     
-                    directionAcc[direction][responsable].push(activity); // Ajouter l'activité sous ce responsable
+                    // Vérifier si l'activité est déjà ajoutée
+                    const alreadyExists = directionAcc[direction][responsable].some(
+                        (existingActivity) => existingActivity.id === activity.id
+                    );
+    
+                    if (!alreadyExists) {
+                        directionAcc[direction][responsable].push(activity); // Ajouter l'activité si elle n'est pas déjà présente
+                    }
                 });
     
                 return directionAcc;
@@ -133,6 +140,7 @@ export class ActivityService {
             throw new BadRequestException('Échec de la récupération des activités par direction et responsable', error.message);
         }
     }
+    
     
 
 async findAllByStatus(status: string): Promise<Activity[]> {
