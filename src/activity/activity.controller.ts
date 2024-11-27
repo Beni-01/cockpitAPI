@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { ActivityService } from './activity.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
+import { Activity } from './entities/activity.entity';
 
 // Annotation Swagger pour regrouper les routes sous la catégorie 'Activité'
 @ApiTags('Activité') 
@@ -26,6 +27,55 @@ export class ActivityController {
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   findAll() {
     return this.activityService.findAll();
+  }
+
+
+  @Get('direction')
+  @ApiOperation({ summary: 'Obtenir les activités groupées par direction et responsable' })
+  @ApiQuery({ name: 'etat', required: false, type: String, description: 'Filtrer par état des activités' })
+  @ApiQuery({ name: 'status', required: false, type: String, description: 'Filtrer par statut des activités' })
+  @ApiQuery({ name: 'responsable', required: false, type: String, description: 'Filtrer par responsable des sous-activités' })
+  @ApiQuery({ name: 'direction', required: false, type: String, description: 'Filtrer par direction' })
+  @ApiQuery({ name: 'province', required: false, type: String, description: 'Filtrer par province' })
+  @ApiQuery({ name: 'titre', required: false, type: String, description: 'Filtrer par titre des activités' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numéro de la page (par défaut 1)' })
+  @ApiQuery({ name: 'dateDebut', required: false, type: Number, description: 'date debut' })
+  @ApiQuery({ name: 'dateFin', required: false, type: Number, description: 'date dateline' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Nombre d\'éléments par page (par défaut 7)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Les activités ont été récupérées avec succès.',
+    type: Object,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'La récupération des activités a échoué.',
+  })
+  async getGroupedActivities(
+    @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
+    @Query('dateFin') dateFin?: string,   
+    @Query('etat') etat?: string,
+    @Query('status') status?: string,
+    @Query('responsable') responsable?: string,
+    @Query('direction') direction?: string,
+    @Query('province') province?: string,
+    @Query('titre') titre?: string,
+    @Query('page') page: string = '1', // Page actuelle (par défaut 1)
+    @Query('limit') limit: string = '7' // Nombre d'éléments par page (par défaut 7)
+  ): Promise<{
+    activites: Record<string, Record<string, Activity[]>>;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }> {
+    try {
+  
+      const groupedActivities = await this.activityService.findAllGroupedByDirectionAndResponsible(etat, status, responsable, direction, province, titre, dateDebut, dateFin, page, +limit);
+      return groupedActivities;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get('direction')

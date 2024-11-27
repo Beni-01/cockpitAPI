@@ -102,12 +102,79 @@ export class ActivityService {
         }
     }
 
-    async findAllGroupedByDirectionAndResponsible(): Promise<Record<string, Record<string, Activity[]>>> {
+    async findAllGroupedByDirectionAndResponsible(
+        etat?: string,
+        status?: string,
+        responsable?: string,
+        direction?: string,
+        province?: string,
+        titre?: string,
+        dateDebut?: string,  // Filtre optionnel par date de début
+        dateFin?: string,    // Filtre optionnel par date de fin
+        page: string = '1',  // Page actuelle (par défaut 1)
+        limit: number = 7    // Nombre d'éléments par page (par défaut 7)
+    ): Promise<{
+        activites: Record<string, Record<string, Activity[]>>;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    }> {
         try {
-            // Récupérer toutes les activités avec leurs sous-activités
-            const activities = await this.activityRepository.find({ relations: ['subactivities'] });
+            const queryBuilder = this.activityRepository.createQueryBuilder('activity')
+                .leftJoinAndSelect('activity.subactivities', 'subactivities');
     
-            // Groupement des activités
+            if (etat) {
+                queryBuilder.andWhere('activity.etat = :etat', { etat: etat });
+            }
+    
+            if (status) {
+                queryBuilder.andWhere('activity.status = :status', { status: status });
+            }
+    
+            if (direction) {
+                queryBuilder.andWhere('activity.direction = :direction', { direction: direction });
+            }
+    
+            if (province) {
+                queryBuilder.andWhere('activity.province = :province', { province: province });
+            }
+    
+            if (titre) {
+                queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
+            }
+    
+            if (responsable) {
+                queryBuilder.andWhere('subactivities.responsable = :responsable', { responsable: responsable });
+            }
+    
+                // Ajouter les filtres par date si fournis
+                if (dateDebut && dateFin) {
+                    // Incrémenter la dateFin d'un jour si elle est fournie
+                    const nextDay = new Date(dateFin);
+                    nextDay.setDate(nextDay.getDate() + 1);  // Ajoute 1 jour à la dateFin
+
+                    queryBuilder.andWhere('activity.date BETWEEN :dateDebut AND :nextDay', { 
+                        dateDebut, 
+                        nextDay: nextDay.toISOString() // Convertir la date en format ISO pour la requête
+                    });
+                } else if (dateDebut) {
+                    queryBuilder.andWhere('activity.date >= :dateDebut', { dateDebut });
+                } else if (dateFin) {
+                    // Incrémenter la dateFin d'un jour si seule la dateFin est fournie
+                    const nextDay = new Date(dateFin);
+                    nextDay.setDate(nextDay.getDate() + 1);  // Ajoute 1 jour à la dateFin
+
+                    queryBuilder.andWhere('activity.date <= :nextDay', { nextDay: nextDay.toISOString() });
+                }
+    
+            // Calculer les métadonnées de pagination
+            const [activities, totalCount] = await queryBuilder
+                .take(limit) // Limite d'éléments par page
+                .skip((parseInt(page, 10) - 1) * limit) // Sauter les éléments des pages précédentes
+                .getManyAndCount();
+    
+            // Groupement des activités par direction et responsable
             const grouped = activities.reduce((directionAcc, activity) => {
                 const { direction, subactivities } = activity;
     
@@ -135,9 +202,23 @@ export class ActivityService {
                 return directionAcc;
             }, {} as Record<string, Record<string, Activity[]>>);
     
-            return grouped;
+            // Calcul des métadonnées de pagination
+            const totalPages = Math.ceil(totalCount / limit);
+            const hasNextPage = parseInt(page, 10) < totalPages;
+            const hasPrevPage = parseInt(page, 10) > 1;
+    
+            return {
+                activites: grouped,
+                totalCount,
+                totalPages,
+                hasNextPage,
+                hasPrevPage,
+            };
         } catch (error) {
-            throw new BadRequestException('Échec de la récupération des activités par direction et responsable', error.message);
+            throw new BadRequestException(
+                'Échec de la récupération des activités par direction et responsable',
+                error.message
+            );
         }
     }
     
