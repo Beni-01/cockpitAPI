@@ -10,6 +10,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
     private readonly auditLogService: AuditLogService // Injection directe du service
   ) {}
 
+  
 //   // Méthode appelée avant l'insertion de l'entité dans la base de données
 //   async beforeInsert(event: InsertEvent<any>) {
 //     const logBoddy={
@@ -26,6 +27,8 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
 //     await this.ReplicateUserData('http://localhost:6002/activity', logBoddy , 'POST')
 //   }
 
+
+
   // Méthode appelée après l'insertion de l'entité dans la base de données
   async afterInsert(event: InsertEvent<any>) {
 
@@ -39,8 +42,8 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
         performedBy: event.queryRunner.data?.userId || null,
       }
       
-    console.log('after insert');
-    await this.ReplicateUserData('http://localhost:6002/audit-log', logBoddy , 'POST')
+    console.log('after insert', logBoddy);
+
 
 }
 

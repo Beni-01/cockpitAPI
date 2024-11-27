@@ -28,6 +28,13 @@ export class ActivityController {
     return this.activityService.findAll();
   }
 
+  @Get('direction')
+  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+  findAllByDirection() {
+    return this.activityService.findAllGroupedByDirectionAndResponsible();
+  }
+
     // Route pour récupérer toutes les activités
     @Get('etat/:etat')
     @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })

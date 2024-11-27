@@ -6,7 +6,7 @@ import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
 import { SousActivity } from 'src/sous-activity/entities/sous-activity.entity';
 import { Livrable } from 'src/livrable/entities/livrable.entity';
-
+import { groupBy } from 'lodash'; 
 @Injectable()
 export class ActivityService {
     constructor(
@@ -101,6 +101,39 @@ export class ActivityService {
             throw new BadRequestException('Échec de la récupération des activités', error.message);
         }
     }
+
+    async findAllGroupedByDirectionAndResponsible(): Promise<Record<string, Record<string, Activity[]>>> {
+        try {
+            // Récupérer toutes les activités avec leurs sous-activités
+            const activities = await this.activityRepository.find({ relations: ['subactivities'] });
+    
+            // Groupement des activités
+            const grouped = activities.reduce((directionAcc, activity) => {
+                const { direction, subactivities } = activity;
+    
+                if (!directionAcc[direction]) {
+                    directionAcc[direction] = {}; // Initialiser la direction
+                }
+    
+                subactivities.forEach((sub) => {
+                    const { responsable } = sub;
+    
+                    if (!directionAcc[direction][responsable]) {
+                        directionAcc[direction][responsable] = []; // Initialiser le responsable
+                    }
+    
+                    directionAcc[direction][responsable].push(activity); // Ajouter l'activité sous ce responsable
+                });
+    
+                return directionAcc;
+            }, {} as Record<string, Record<string, Activity[]>>);
+    
+            return grouped;
+        } catch (error) {
+            throw new BadRequestException('Échec de la récupération des activités par direction et responsable', error.message);
+        }
+    }
+    
 
 async findAllByStatus(status: string): Promise<Activity[]> {
     try {

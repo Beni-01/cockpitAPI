@@ -9,7 +9,7 @@ export class AttachUserMiddleware implements NestMiddleware {
       req.queryRunner = { data: { userId: req.body.userId } }; // Attache l'utilisateur
 
     }
-    console.log('req body ', req.queryRunner, req.body )
+    console.log('req body ', req.body)
     next();
   }
 }
