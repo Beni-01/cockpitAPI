@@ -30,20 +30,104 @@ export class ActivityController {
   }
 
 
-
   @Get('direction')
-  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
-  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-  findAllGroupedByDirection() {
-    return this.activityService.findAllGroupedByDirection();
+  @ApiOperation({ summary: 'Obtenir les activités groupées par direction et responsable' })
+  @ApiQuery({ name: 'etat', required: false, type: String, description: 'Filtrer par état des activités' })
+  @ApiQuery({ name: 'status', required: false, type: String, description: 'Filtrer par statut des activités' })
+  @ApiQuery({ name: 'responsable', required: false, type: String, description: 'Filtrer par responsable des sous-activités' })
+  @ApiQuery({ name: 'direction', required: false, type: String, description: 'Filtrer par direction' })
+  @ApiQuery({ name: 'province', required: false, type: String, description: 'Filtrer par province' })
+  @ApiQuery({ name: 'titre', required: false, type: String, description: 'Filtrer par titre des activités' })
+  @ApiQuery({ name: 'page', required: false, type: String, description: 'Numéro de la page (par défaut 1)' })
+  @ApiQuery({ name: 'dateDebut', required: false, type: String, description: 'date debut' })
+  @ApiQuery({ name: 'dateFin', required: false, type: String, description: 'date dateline' })
+  @ApiQuery({ name: 'limit', required: false, type: String, description: 'Nombre d\'éléments par page (par défaut 7)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Les activités ont été récupérées avec succès.',
+    type: Object,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'La récupération des activités a échoué.',
+  })
+  async getGroupedActivities(
+    @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
+    @Query('dateFin') dateFin?: string,   
+    @Query('etat') etat?: string,
+    @Query('status') status?: string,
+    @Query('responsable') responsable?: string,
+    @Query('direction') direction?: string,
+    @Query('province') province?: string,
+    @Query('titre') titre?: string,
+    @Query('page') page: string = '1', // Page actuelle (par défaut 1)
+    @Query('limit') limit: string = '7' // Nombre d'éléments par page (par défaut 7)
+  ): Promise<{
+    activites: Record<string, Activity[]>;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}>  {
+    try {
+  
+      const groupedActivities = await this.activityService.findAllGroupedByDirection(etat, status, direction, province, titre, dateDebut, dateFin, page, +limit);
+      return groupedActivities;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
+
+
 
   @Get('division')
-  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
-  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-  findAllByDirection() {
-    return this.activityService.findAllGroupedByDirectionAndResponsible();
+  @ApiOperation({ summary: 'Obtenir les activités groupées par direction et responsable' })
+  @ApiQuery({ name: 'etat', required: false, type: String, description: 'Filtrer par état des activités' })
+  @ApiQuery({ name: 'status', required: false, type: String, description: 'Filtrer par statut des activités' })
+  @ApiQuery({ name: 'responsable', required: false, type: String, description: 'Filtrer par responsable des sous-activités' })
+  @ApiQuery({ name: 'direction', required: false, type: String, description: 'Filtrer par direction' })
+  @ApiQuery({ name: 'province', required: false, type: String, description: 'Filtrer par province' })
+  @ApiQuery({ name: 'titre', required: false, type: String, description: 'Filtrer par titre des activités' })
+  @ApiQuery({ name: 'page', required: false, type: String, description: 'Numéro de la page (par défaut 1)' })
+  @ApiQuery({ name: 'dateDebut', required: false, type: String, description: 'date debut' })
+  @ApiQuery({ name: 'dateFin', required: false, type: String, description: 'date dateline' })
+  @ApiQuery({ name: 'limit', required: false, type: String, description: 'Nombre d\'éléments par page (par défaut 7)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Les activités ont été récupérées avec succès.',
+    type: Object,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'La récupération des activités a échoué.',
+  })
+  async getGroupedActivitiesDivision(
+    @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
+    @Query('dateFin') dateFin?: string,   
+    @Query('etat') etat?: string,
+    @Query('status') status?: string,
+    @Query('responsable') responsable?: string,
+    @Query('direction') direction?: string,
+    @Query('province') province?: string,
+    @Query('titre') titre?: string,
+    @Query('page') page: string = '1', // Page actuelle (par défaut 1)
+    @Query('limit') limit: string = '7' // Nombre d'éléments par page (par défaut 7)
+  ): Promise<{
+    activites: Record<string, Record<string, Activity[]>>;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}> {
+    try {
+  
+      const groupedActivities = await this.activityService.findAllGroupedByDirectionAndResponsible(etat, status, direction, responsable, province, titre, dateDebut, dateFin, page, +limit);
+      return groupedActivities;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
+
 
     // Route pour récupérer toutes les activités
     @Get('etat/:etat')
