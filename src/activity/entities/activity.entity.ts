@@ -35,6 +35,12 @@ export class Activity extends Timestamp {
     })
     resultat:string
 
+    // @Column({
+    //     name:'fileLivrable',
+    //     type:'varchar',
+    //     nullable:true
+    // })
+    // fileLivrable:string
 
     @Column({
         name:'resultatObtenu',

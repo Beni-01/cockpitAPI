@@ -110,6 +110,13 @@ export class SousActivity  extends Timestamp{
     budgetConsomme:number
 
     // @Column({
+    //     name:'fileLivrable',
+    //     type:'varchar',
+    //     nullable:true
+    // })
+    // fileLivrable:string
+
+    // @Column({
     //     name:'livrable',
     //     type:'varchar',
     //     nullable:false
