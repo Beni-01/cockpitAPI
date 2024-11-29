@@ -222,6 +222,102 @@ export class ActivityService {
         }
     }
     
+    async findAllGroupedByDirection(
+        etat?: string,
+        status?: string,
+        direction?: string,
+        province?: string,
+        titre?: string,
+        dateDebut?: string, // Filtre optionnel par date de début
+        dateFin?: string,   // Filtre optionnel par date de fin
+        page: string = '1', // Page actuelle (par défaut 1)
+        limit: number = 7   // Nombre d'éléments par page (par défaut 7)
+    ): Promise<{
+        activites: Record<string, Activity[]>;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    }> {
+        try {
+            const queryBuilder = this.activityRepository.createQueryBuilder('activity')
+                .leftJoinAndSelect('activity.subactivities', 'subactivities');
+    
+            if (etat) {
+                queryBuilder.andWhere('activity.etat = :etat', { etat: etat });
+            }
+    
+            if (status) {
+                queryBuilder.andWhere('activity.status = :status', { status: status });
+            }
+    
+            if (direction) {
+                queryBuilder.andWhere('activity.direction = :direction', { direction: direction });
+            }
+    
+            if (province) {
+                queryBuilder.andWhere('activity.province = :province', { province: province });
+            }
+    
+            if (titre) {
+                queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
+            }
+    
+            // Ajouter les filtres par date si fournis
+            if (dateDebut && dateFin) {
+                const nextDay = new Date(dateFin);
+                nextDay.setDate(nextDay.getDate() + 1); // Ajoute 1 jour à la dateFin
+    
+                queryBuilder.andWhere('activity.date BETWEEN :dateDebut AND :nextDay', { 
+                    dateDebut, 
+                    nextDay: nextDay.toISOString(),
+                });
+            } else if (dateDebut) {
+                queryBuilder.andWhere('activity.date >= :dateDebut', { dateDebut });
+            } else if (dateFin) {
+                const nextDay = new Date(dateFin);
+                nextDay.setDate(nextDay.getDate() + 1); // Ajoute 1 jour à la dateFin
+    
+                queryBuilder.andWhere('activity.date <= :nextDay', { nextDay: nextDay.toISOString() });
+            }
+    
+            // Calculer les métadonnées de pagination
+            const [activities, totalCount] = await queryBuilder
+                .take(limit) // Limite d'éléments par page
+                .skip((parseInt(page, 10) - 1) * limit) // Sauter les éléments des pages précédentes
+                .getManyAndCount();
+    
+            // Groupement des activités par direction
+            const grouped = activities.reduce((directionAcc, activity) => {
+                const { direction } = activity;
+    
+                if (!directionAcc[direction]) {
+                    directionAcc[direction] = []; // Initialiser le groupe de direction
+                }
+    
+                directionAcc[direction].push(activity); // Ajouter l'activité dans le groupe correspondant
+                return directionAcc;
+            }, {} as Record<string, Activity[]>);
+    
+            // Calcul des métadonnées de pagination
+            const totalPages = Math.ceil(totalCount / limit);
+            const hasNextPage = parseInt(page, 10) < totalPages;
+            const hasPrevPage = parseInt(page, 10) > 1;
+    
+            return {
+                activites: grouped,
+                totalCount,
+                totalPages,
+                hasNextPage,
+                hasPrevPage,
+            };
+        } catch (error) {
+            throw new BadRequestException(
+                'Échec de la récupération des activités par direction',
+                error.message
+            );
+        }
+    }
     
 
 async findAllByStatus(status: string): Promise<Activity[]> {

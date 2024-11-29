@@ -38,10 +38,10 @@ export class ActivityController {
   @ApiQuery({ name: 'direction', required: false, type: String, description: 'Filtrer par direction' })
   @ApiQuery({ name: 'province', required: false, type: String, description: 'Filtrer par province' })
   @ApiQuery({ name: 'titre', required: false, type: String, description: 'Filtrer par titre des activités' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Numéro de la page (par défaut 1)' })
-  @ApiQuery({ name: 'dateDebut', required: false, type: Number, description: 'date debut' })
-  @ApiQuery({ name: 'dateFin', required: false, type: Number, description: 'date dateline' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Nombre d\'éléments par page (par défaut 7)' })
+  @ApiQuery({ name: 'page', required: false, type: String, description: 'Numéro de la page (par défaut 1)' })
+  @ApiQuery({ name: 'dateDebut', required: false, type: String, description: 'date debut' })
+  @ApiQuery({ name: 'dateFin', required: false, type: String, description: 'date dateline' })
+  @ApiQuery({ name: 'limit', required: false, type: String, description: 'Nombre d\'éléments par page (par défaut 7)' })
   @ApiResponse({
     status: 200,
     description: 'Les activités ont été récupérées avec succès.',
@@ -78,7 +78,17 @@ export class ActivityController {
     }
   }
 
+  
+
+
   @Get('direction')
+  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+  findAllGroupedByDirection() {
+    return this.activityService.findAllGroupedByDirection();
+  }
+
+  @Get('division')
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   findAllByDirection() {
