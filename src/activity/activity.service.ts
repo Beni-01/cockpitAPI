@@ -241,7 +241,9 @@ export class ActivityService {
     }> {
         try {
             const queryBuilder = this.activityRepository.createQueryBuilder('activity')
-                .leftJoinAndSelect('activity.subactivities', 'subactivities');
+                .leftJoinAndSelect('activity.subactivities', 'subactivities')
+                .leftJoinAndSelect('activity.livrable', 'livrable')
+             
     
             if (etat) {
                 queryBuilder.andWhere('activity.etat = :etat', { etat: etat });
