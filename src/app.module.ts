@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestMiddleware, RequestMethod } from '@nestjs/common';
 
 
 import { PassportModule } from '@nestjs/passport';
@@ -48,7 +48,7 @@ import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {
+export class AppModule  {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AttachUserMiddleware) // Appliquer le middleware

@@ -65,6 +65,14 @@ export class CreateLivrableDto {
       @IsOptional()
       @IsString()
       support?: string;
+
+      @ApiPropertyOptional({
+        description: 'Nom du fichier du livrable du livrable',
+        example: 'Rapport trimestriel',
+      })
+      @IsOptional()
+      @IsString()
+      livrablefileName:string
     
       @ApiPropertyOptional({
         description: 'Date prévue de validation',

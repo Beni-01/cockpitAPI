@@ -62,6 +62,13 @@ export class Livrable extends Timestamp {
     typelivrable:string;
 
     @Column({
+        name:'livrablefileName',
+        type:'varchar',
+        nullable:true
+    })
+    livrablefileName:string
+
+    @Column({
         name:'support',
         type:'varchar',
         nullable:true
