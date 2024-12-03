@@ -141,7 +141,7 @@ export class Activity extends Timestamp {
     @OneToMany(()=>DemandeProlongation, (demande)=>demande.activity, {eager:true})
     demandes:DemandeProlongation[]
 
-    @OneToMany(()=>AnnotationActivity, (annotation)=>annotation.activity)
+    @OneToMany(()=>AnnotationActivity, (annotation)=>annotation.activity, {eager:true})
     annotations:AnnotationActivity[]
 
 }
