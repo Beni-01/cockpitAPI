@@ -125,6 +125,7 @@ export class ActivityService {
             .leftJoinAndSelect('activity.subactivities', 'subactivities')
             .leftJoinAndSelect('activity.livrable', 'livrable')
             .leftJoinAndSelect('activity.annotations', 'annotations')
+            .leftJoinAndSelect('activity.demandes', 'demandes')
     
             if (etat) {
                 queryBuilder.andWhere('activity.etat = :etat', { etat: etat });
@@ -246,6 +247,7 @@ export class ActivityService {
                 .leftJoinAndSelect('activity.subactivities', 'subactivities')
                 .leftJoinAndSelect('activity.livrable', 'livrable')
                 .leftJoinAndSelect('activity.annotations', 'annotations')
+                .leftJoinAndSelect('activity.demandes', 'demandes')
              
     
             if (etat) {
