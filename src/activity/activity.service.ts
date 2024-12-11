@@ -330,7 +330,7 @@ export class ActivityService {
 async findAllByStatus(status: string): Promise<Activity[]> {
     try {
         // Vérifier si le statut est valide avant d'effectuer la recherche
-        const validStatuses = ['En attente', 'Validé', 'Refusé', 'Approuvé']; // Liste des statuts possibles
+        const validStatuses = ['En attente', 'Validé', 'Retourné', 'Approuvé']; // Liste des statuts possibles
         if (!validStatuses.includes(status)) {
             throw new BadRequestException(`Statut invalide: ${status}`);
         }
