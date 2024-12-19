@@ -20,4 +20,8 @@ export default new DataSource({
   migrations: [`${__dirname}/migrations/*{.ts,.js}`],
   migrationsTableName: 'migrations',
   subscribers: [AuditSubscriber],
+  extra: {
+    timezone: 'Z', // Pour UTC
+    // timezone: 'Africa/Kinshasa', // Pour un fuseau horaire spécifique
+  },
 });
