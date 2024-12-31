@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryBuilder, Repository } from 'typeorm';
 import { Activity } from './entities/activity.entity';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
@@ -47,9 +47,9 @@ export class ActivityService {
         }
 
           // Créer une nouvelle instance d'Activity à partir des données fournies
-          activity.budget=budgetActivity
-          activity.dateDebut=result.minDebut
-          activity.dateFin=result.maxFin
+          activity.budget= createActivityDto.budget ? createActivityDto.budget :  budgetActivity
+          activity.dateDebut= createActivityDto.dateDebut ? createActivityDto.dateDebut : result.minDebut
+          activity.dateFin=createActivityDto.dateFin ? createActivityDto.dateFin : result.maxFin
 
 
           // Sauvegarder l'activité principale dans la base de données
@@ -399,7 +399,7 @@ async findAllByStatus(status: string): Promise<Activity[]> {
             }
 
             // Supprimer l'activité de la base de données
-            await this.activityRepository.delete(id);
+            await this.activityRepository.softDelete(id);
         } catch (error) {
             // Gérer les erreurs lors de la suppression
             if (error instanceof NotFoundException) {
@@ -408,4 +408,66 @@ async findAllByStatus(status: string): Promise<Activity[]> {
             throw new BadRequestException('Échec de la suppression de l\'activité', error.message);
         }
     }
+
+
+
+    // Récupérer toutes les activités
+    async echeanceActyvity(year:number): Promise<any> {
+        try {
+        
+            console.log('year ', {year})
+            const query = this.activityRepository.createQueryBuilder('activity')
+            .leftJoinAndSelect('activity.subactivities', 'subactivities')
+            .leftJoinAndSelect('activity.livrable', 'livrable')
+            .leftJoinAndSelect('activity.annotations', 'annotations')
+            .leftJoinAndSelect('activity.demandes', 'demandes')
+            .andWhere('YEAR(activity.dateDebut) = :year AND YEAR(activity.dateFin) = :year', {year:year});
+
+            const activities = await query.getMany()
+
+            const result = activities.reduce((acc, activity) => {
+                // Comparer les dates pour trouver la plus ancienne et la plus récente
+                acc.minDebut = acc.minDebut ? (activity.dateDebut < (acc.minDebut) ? activity.dateDebut : acc.minDebut) : activity.dateDebut;
+                acc.maxFin = acc.maxFin ? ((activity.dateFin) > (acc.maxFin) ? activity.dateFin : acc.maxFin) : activity.dateFin;
+                return acc;
+            }, { minDebut: null, maxFin: null });
+
+            return result
+
+        } catch (error) {
+            // Gérer les erreurs lors de la récupération et les envoyer à l'appelant
+            throw new BadRequestException('Échec de la récupération des activités', error.message);
+        }
+    }
+
+    async totalBudget(year:number): Promise<any> {
+        try {
+        
+            console.log('year ', {year})
+            const query = this.activityRepository.createQueryBuilder('activity')
+            .leftJoinAndSelect('activity.subactivities', 'subactivities')
+            .leftJoinAndSelect('activity.livrable', 'livrable')
+            .leftJoinAndSelect('activity.annotations', 'annotations')
+            .leftJoinAndSelect('activity.demandes', 'demandes')
+            .andWhere('YEAR(activity.dateDebut) = :year AND YEAR(activity.dateFin) = :year', {year:year});
+
+            const activities = await query.getMany()
+
+            const result = activities.reduce((acc, activity) => {
+                // Comparer les dates pour trouver la plus ancienne et la plus récente
+                acc.budgetTotal += activity.budget;
+                acc.budgeConsomme += activity.budgetConsomme;
+                return acc;
+            }, { budgetTotal: 0, budgeConsomme: 0});
+
+            return {...result,
+                reste:result.budgetTotal-result.budgeConsomme
+            }
+
+        } catch (error) {
+            // Gérer les erreurs lors de la récupération et les envoyer à l'appelant
+            throw new BadRequestException('Échec de la récupération des activités', error.message);
+        }
+    }
+
 }

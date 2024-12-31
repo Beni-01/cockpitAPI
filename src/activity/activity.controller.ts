@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException, Query, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { ActivityService } from './activity.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
@@ -28,6 +28,22 @@ export class ActivityController {
   findAll() {
     return this.activityService.findAll();
   }
+
+    // Route pour récupérer toutes les activités
+    @Get('dashboard/echeances/:year')
+    @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+    @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+    echeanceActivity(@Param('year', ParseIntPipe) year:number) {
+      return this.activityService.echeanceActyvity(year);
+    }
+
+    // Route pour récupérer toutes les activités
+    @Get('dashboard/budget/:year')
+    @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+    @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+    totalBudget(@Param('year', ParseIntPipe) year:number) {
+        return this.activityService.totalBudget(year);
+    }
 
 
   @Get('direction')
