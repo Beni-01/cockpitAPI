@@ -4,11 +4,13 @@ import { SousActivityController } from './sous-activity.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { SousActivity } from './entities/sous-activity.entity';
+import { ActivityModule } from 'src/activity/activity.module';
 
 @Module({
   imports: [
     // Enregistrement de l'entité dans TypeOrm
     TypeOrmModule.forFeature([SousActivity, User]),
+    ActivityModule
   ],
   controllers: [SousActivityController],
   providers: [SousActivityService],

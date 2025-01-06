@@ -11,5 +11,6 @@ import { Livrable } from 'src/livrable/entities/livrable.entity';
   imports: [TypeOrmModule.forFeature([Activity, User, SousActivity, Livrable ])],
   controllers: [ActivityController],
   providers: [ActivityService],
+  exports:[ActivityService]
 })
 export class ActivityModule {}

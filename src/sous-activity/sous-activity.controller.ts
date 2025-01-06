@@ -39,8 +39,8 @@ export class SousActivityController {
   @ApiResponse({ status: 200, description: 'Sous-activité mise à jour avec succès.' })
   @ApiResponse({ status: 400, description: 'Requête invalide.' })
   @ApiResponse({ status: 404, description: 'Sous-activité non trouvée.' })
-  update(@Param('id') id: string, @Body() updateSousActivityDto: UpdateSousActivityDto) {
-    return this.sousActivityService.update(+id, updateSousActivityDto);
+  update(@Param('id') id: string, @Param('idActivity') idActivity,  @Body() updateSousActivityDto: UpdateSousActivityDto) {
+    return this.sousActivityService.update(+id, +idActivity, updateSousActivityDto);
   }
 
   @Delete(':id')
