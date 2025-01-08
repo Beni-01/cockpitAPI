@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber, IsEmpty } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsEmpty, IsOptional } from 'class-validator';
 
 export class CreateDemandeProlongationDto {
   @ApiProperty({
@@ -30,7 +30,7 @@ export class CreateDemandeProlongationDto {
     description: 'Response to the extension request',
     example: 'Approved',
   })
-  @IsEmpty()
+  @IsOptional()
   @IsString()
   reponse: string;
 

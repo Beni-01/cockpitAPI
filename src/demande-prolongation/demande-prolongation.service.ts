@@ -18,18 +18,12 @@ export class DemandeProlongationService {
   // Méthode pour créer une demande de prolongation
   async create(dto: CreateDemandeProlongationDto) {
     try {
-      // Recherche l'utilisateur avec l'ID fourni dans le DTO
-      const user = await this.findOne(dto.userId);
-      if (!user) throw new NotFoundException('Utilisateur non trouvé'); // Lancer une exception si l'utilisateur n'est pas trouvé
-
+     
       // Crée une nouvelle instance de DemandeProlongation
-      const entity = this.repository.create({
-        ...dto,
-        user, // Associe l'utilisateur trouvé à la demande
-      });
-
+      const entity = this.repository.create(dto);
       // Sauvegarde et retourne la demande créée
       return await this.repository.save(entity);
+      
     } catch (error) {
       // Capture les erreurs et retourne un message d'erreur avec les détails
       throw new InternalServerErrorException('Échec de la création de la demande de prolongation', error.message);
