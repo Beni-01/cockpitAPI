@@ -33,7 +33,7 @@ export class SousActivityController {
     return this.sousActivityService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch(':id/:idActivity')
   @ApiOperation({ summary: 'Mettre à jour une sous-activité par son ID' })
   @ApiParam({ name: 'id', description: "L'identifiant de la sous-activité", type: Number })
   @ApiResponse({ status: 200, description: 'Sous-activité mise à jour avec succès.' })
