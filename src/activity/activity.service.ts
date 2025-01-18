@@ -345,7 +345,7 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     async findOne(id: number): Promise<Activity> {
         try {
             // Chercher une activité par son ID
-            const activity = await this.activityRepository.findOne({where:{id}});
+            const activity = await this.activityRepository.findOne({where:{id}, relations:['subactivities']});
 
             // Si l'activité n'est pas trouvée, lancer une exception NotFound
             if (!activity) {

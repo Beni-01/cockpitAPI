@@ -82,17 +82,29 @@ export class SousActivityService {
         throw new NotFoundException('Sous-activité non trouvée');
       }
   
-      // Trouver l'activité associée
-      const activity:any = await this.activityRepository.findOne(idActivity);
+      // Trouver l'activité associée avec toutes ses sous-activités
+      const activity = await this.activityRepository.findOne(idActivity);
+  
       if (!activity) {
         throw new NotFoundException('Activité non trouvée');
       }
   
-      // Mettre à jour le budget de l'activité
+      // Mettre à jour le budget consommé de l'activité
       activity.budgetConsomme += budgetConsomme;
   
       // Enregistrer les modifications sur l'activité
-      await this.activityRepository.update(idActivity, activity);
+      await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme });
+  
+      // Vérifier si tous les statuts des sous-activités sont "clôturés"
+      const allSubActivitiesClosed = activity.subactivities.every(
+        (subActivity) => subActivity.status.toLowerCase() === 'cloturé'
+      );
+  
+      if (allSubActivitiesClosed) {
+        // Si oui, mettre à jour le statut de l'activité
+        activity.status = 'clôturé';
+        await this.activityRepository.update(idActivity, { status: activity.status });
+      }
   
       // Mettre à jour les données de la sous-activité
       Object.assign(sousActivity, updateSousActivityDto);
