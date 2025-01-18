@@ -40,7 +40,7 @@ export class LivrableService {
         .createQueryBuilder('livrable')
         .select('livrable.status', 'status')
         .addSelect('COUNT(*)', 'total')
-        .addSelect('ROUND((COUNT(*) / SUM(COUNT(*)) OVER()) * 100, 2)', 'percentage')
+        .addSelect('ROUND((COUNT(*) / SUM(COUNT(*)) OVER()) * 100, 2)', 'percentage') // Précision à deux décimale
         .groupBy('livrable.status')
         .getRawMany();
   
@@ -48,7 +48,7 @@ export class LivrableService {
       const result = rawResult.map((row) => ({
       status: row.status,
       total: Number(row.total), // Convertir en nombre
-      percentage: Number(row.percentage), // Convertir en nombre
+      percentage: parseFloat(row.percentage), // Convertir en nombre
     }));
 
       return result;
