@@ -122,7 +122,7 @@ export class CreateActivityDto {
   
     @ApiProperty({ description: 'Budget consommé activité', example: 5000 })
     @IsOptional()
-    @IsString()
+    @IsNumber()
     budgetConsomme:number
 
     @ApiProperty({ description: 'Résultat activité', example: 'Objectifs atteints' })

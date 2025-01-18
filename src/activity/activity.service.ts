@@ -324,7 +324,7 @@ export class ActivityService {
 async findAllByStatus(status: string): Promise<Activity[]> {
     try {
         // Vérifier si le statut est valide avant d'effectuer la recherche
-        const validStatuses = ['En attente', 'Validé', 'Retourné', 'Approuvé', 'Reprogrammé']; // Liste des statuts possibles
+        const validStatuses = ['En attente', 'Validé', 'Retourné', 'Approuvé', 'Reprogrammé', 'Cloturé']; // Liste des statuts possibles
         if (!validStatuses.includes(status)) {
             throw new BadRequestException(`Statut invalide: ${status}`);
         }
@@ -469,5 +469,73 @@ async findAllByStatus(status: string): Promise<Activity[]> {
             throw new BadRequestException('Échec de la récupération des activités', error.message);
         }
     }
+
+
+
+    async getDirectionProgress(): Promise<any[]> {
+        try {
+            // Récupérer toutes les activités avec leurs sous-activités et direction
+            const activities = await this.activityRepository.find({ relations: ['subactivities'] });
+    
+            // Calculer la progression pour chaque direction
+            const directionProgress = {};
+    
+            // Parcours de chaque activité pour calculer la progression par direction
+            activities.forEach((activity) => {
+                const directionName = activity.direction; // Vérifier si direction est définie
+                if (!directionName) return; // Ignorer si aucune direction n'est associée
+    
+                // Calcul de la progression de l'activité
+                const totalSubActivities = activity.subactivities?.length || 0;
+                const completedSubActivities = activity.subactivities?.filter(subActivity => subActivity.status.toLocaleLowerCase()=="cloturé").length || 0;
+    
+                const activityProgress = totalSubActivities > 0
+                    ? (completedSubActivities / totalSubActivities) * 100
+                    : 0;
+    
+                // Si la direction n'existe pas encore dans le résultat, on l'initialise
+                if (!directionProgress[directionName]) {
+                    directionProgress[directionName] = {
+                        totalProgress: 0,
+                        activityCount: 0,
+                    };
+                }
+    
+                // Accumuler la progression pour cette direction
+                directionProgress[directionName].totalProgress += activityProgress;
+                directionProgress[directionName].activityCount += 1;
+            });
+    
+            // Calculer la moyenne de la progression pour chaque direction
+            const result = Object.keys(directionProgress).map(directionName => {
+                const progressData = directionProgress[directionName];
+                return {
+                    direction: directionName,
+                    progression: progressData.activityCount > 0
+                        ? progressData.totalProgress / progressData.activityCount
+                        : 0, // Si aucune activité, retourner 0
+                };
+            });
+    
+            // Ajouter les directions sans activité (si elles existent dans la base de données)
+            const allDirections = await this.activityRepository
+                .createQueryBuilder('activity')
+                .select('activity.direction')
+                .distinct(true)
+                .getRawMany();
+    
+            allDirections.forEach((dir) => {
+                const directionName = dir.direction;
+                if (!result.find(r => r.direction === directionName)) {
+                    result.push({ direction: directionName, progression: 0 });
+                }
+            });
+    
+            return result;
+        } catch (error) {
+            throw new BadRequestException('Erreur lors du calcul de la progression des directions', error.message);
+        }
+    }
+    
 
 }

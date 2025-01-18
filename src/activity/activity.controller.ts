@@ -29,6 +29,17 @@ export class ActivityController {
     return this.activityService.findAll();
   }
 
+
+
+
+
+  @Get('dashboard')
+  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+  getDirectionProgress() {
+    return this.activityService.getDirectionProgress();
+  }
+
     // Route pour récupérer toutes les activités
     @Get('dashboard/echeances/:year')
     @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })

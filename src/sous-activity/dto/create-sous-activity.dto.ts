@@ -92,6 +92,6 @@ status?: string;
 
   @ApiProperty({ description: 'Budget consommé à la sous-activité', example: 5000 })
   @IsOptional()
-  @IsString()
+  @IsNumber()
   budgetConsomme:number
 }
