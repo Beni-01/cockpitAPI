@@ -17,6 +17,13 @@ export class LivrableController {
     return this.livrableService.create(createLivrableDto);
   }
 
+  @Get('dashboard')
+  @ApiOperation({ summary: 'Récupérer tous les livrables' })
+  @ApiResponse({ status: 200, description: 'Liste des livrables récupérée avec succès.' })
+  getStatLivrableByStatus() {
+    return this.livrableService.getStatLivrableByStatus();
+  }
+
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les livrables' })
   @ApiResponse({ status: 200, description: 'Liste des livrables récupérée avec succès.' })

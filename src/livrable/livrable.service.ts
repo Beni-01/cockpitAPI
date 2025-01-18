@@ -33,6 +33,34 @@ export class LivrableService {
     }
   }
 
+  async getStatLivrableByStatus(): Promise<any> {
+    try {
+      // Obtenez les totaux par statut
+      const rawResult = await this.livrableRepository
+        .createQueryBuilder('livrable')
+        .select('livrable.status', 'status')
+        .addSelect('COUNT(*)', 'total')
+        .addSelect('ROUND((COUNT(*) / SUM(COUNT(*)) OVER()) * 100, 2)', 'percentage')
+        .groupBy('livrable.status')
+        .getRawMany();
+  
+          // Transformez les résultats en un format avec des nombres
+      const result = rawResult.map((row) => ({
+      status: row.status,
+      total: Number(row.total), // Convertir en nombre
+      percentage: Number(row.percentage), // Convertir en nombre
+    }));
+
+      return result;
+    } catch (error) {
+      
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors de la récupération des livrables.',
+      );
+    }
+  }
+  
+
   async findOne(id: number): Promise<Livrable> {
     try {
       const livrable = await this.livrableRepository.findOne({ where: { id } });
@@ -68,7 +96,7 @@ export class LivrableService {
   async remove(id: number): Promise<void> {
     try {
       const livrable = await this.findOne(id);
-      await this.livrableRepository.remove(livrable);
+      await this.livrableRepository.softRemove(livrable);
     } catch (error) {
       throw new InternalServerErrorException(
         `Une erreur est survenue lors de la suppression du livrable avec l'id ${id}.`,
