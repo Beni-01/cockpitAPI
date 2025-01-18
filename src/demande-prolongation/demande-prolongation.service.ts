@@ -30,16 +30,48 @@ export class DemandeProlongationService {
     }
   }
 
-  // Méthode pour récupérer toutes les demandes de prolongation
   async findAll() {
     try {
-      // Récupère toutes les demandes de prolongation
-      return await this.repository.find();
+      // Récupère toutes les demandes de prolongation et inclut les données de l'entité "activity"
+      return await this.repository.find({
+        relations: ['activity'], // Spécifie le nom de la relation
+      });
     } catch (error) {
       // Capture les erreurs et retourne un message d'erreur avec les détails
-      throw new InternalServerErrorException('Échec de la récupération des demandes de prolongation', error.message);
+      throw new InternalServerErrorException(
+        'Échec de la récupération des demandes de prolongation',
+        error.message,
+      );
     }
   }
+
+  async getStatDemandeByStatus(): Promise<any> {
+    try {
+      // Obtenez les totaux par statut
+      const rawResult = await this.repository
+        .createQueryBuilder('demande')
+        .select('demande.reponse', 'status')
+        .addSelect('COUNT(*)', 'total')
+        .addSelect('ROUND((COUNT(*) / SUM(COUNT(*)) OVER()) * 100, 2)', 'percentage') // Précision à deux décimale
+        .groupBy('demande.reponse')
+        .getRawMany();
+  
+          // Transformez les résultats en un format avec des nombres
+      const result = rawResult.map((row) => ({
+      status: row.status,
+      total: Number(row.total), // Convertir en nombre
+      percentage: parseFloat(row.percentage), // Convertir en nombre
+    }));
+
+      return result;
+    } catch (error) {
+      
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors de la récupération des livrables.',
+      );
+    }
+  }
+  
 
   // Méthode pour récupérer une demande de prolongation par son ID
   async findOne(id: number) {
@@ -106,4 +138,75 @@ export class DemandeProlongationService {
       throw new InternalServerErrorException('Échec de la suppression de la demande de prolongation', error.message);
     }
   }
+
+
+  async getProlongationsByActivityDirectionWithStatusAndPercentage() {
+    try {
+      // Calculer le total global des demandes
+      const totalDemandesGlobal = await this.repository
+        .createQueryBuilder('demandes')
+        .select('COUNT(demandes.id)', 'total')
+        .getRawOne();
+  
+      const totalDemandes = totalDemandesGlobal.total;
+  
+      // Requête pour obtenir les demandes par direction et statut
+      const result = await this.repository
+        .createQueryBuilder('demandes') // Alias pour les demandes
+        .leftJoinAndSelect('demandes.activity', 'activity') // Jointure avec l'entité Activity
+        .select('activity.direction', 'direction') // Sélectionne la direction dans Activity
+        .addSelect('demandes.reponse', 'status') // Sélectionne le statut des demandes (réponse)
+        .addSelect('COUNT(demandes.id)', 'nombreDemandes') // Compte les demandes
+        .addSelect(
+          `(COUNT(demandes.id) * 100.0 / :totalDemandes)`,
+          'pourcentage' // Utilisation du total global pour calculer le pourcentage
+        )
+        .groupBy('activity.direction') // Regroupe par direction
+        .addGroupBy('demandes.reponse') // Regroupe aussi par statut
+        .setParameter('totalDemandes', totalDemandes) // Passe la valeur du total global
+        .getRawMany(); // Retourne les résultats bruts
+  
+      // Formatage des résultats pour structurer par direction et statuts
+      const formattedResult = result.reduce((acc, row) => {
+        const direction = row.direction || 'Non spécifié';
+  
+        // Trouver ou créer l'entrée pour la direction
+        let directionData = acc.find((d) => d.direction === direction);
+        if (!directionData) {
+          directionData = {
+            direction,
+            totalDemandes: 0,
+            demandesParStatus: [],
+            pourcentage: 0,
+          };
+          acc.push(directionData);
+        }
+  
+        // Ajouter le statut et les détails associés
+        directionData.demandesParStatus.push({
+          status: row.status || 'Non spécifié',
+          nombreDemandes: Number(row.nombreDemandes),
+          pourcentage: parseFloat(row.pourcentage).toFixed(2),
+        });
+  
+        // Incrémenter le total de demandes pour cette direction
+        directionData.totalDemandes += Number(row.nombreDemandes);
+  
+        // Calculer le pourcentage global de la direction
+        directionData.pourcentage = (
+          (directionData.totalDemandes / totalDemandes) * 100
+        ).toFixed(2);
+  
+        return acc;
+      }, []);
+  
+      return formattedResult;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors du calcul des demandes par direction, statut et pourcentage.',
+      );
+    }
+  }
+  
+  
 }

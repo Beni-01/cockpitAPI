@@ -25,6 +25,22 @@ export class DemandeProlongationController {
     return this.demandeProlongationService.findAll();
   }
 
+  @Get('dashboard')
+  @ApiOperation({ summary: 'Récupérer toutes les demandes de prolongation' })
+  @ApiResponse({ status: 200, description: 'Liste des demandes de prolongation.' })
+  getStatDemandeByStatus() {
+    return this.demandeProlongationService.getStatDemandeByStatus();
+  }
+
+  @Get('dashboard/advanced')
+  @ApiOperation({ summary: 'Récupérer toutes les demandes de prolongation' })
+  @ApiResponse({ status: 200, description: 'Liste des demandes de prolongation.' })
+  getProlongationsByActivityDirectionWithStatusAndPercentage() {
+    return this.demandeProlongationService.getProlongationsByActivityDirectionWithStatusAndPercentage();
+  }
+
+ 
+
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer une demande de prolongation par ID' })
   @ApiResponse({ status: 200, description: 'Demande de prolongation trouvée.' })

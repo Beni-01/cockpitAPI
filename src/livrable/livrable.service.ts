@@ -103,4 +103,75 @@ export class LivrableService {
       );
     }
   }
+
+
+  async getLivrablesByActivityDirectionWithStatusAndPercentage() {
+    try {
+      // Calculer le total global des livrables
+      const totalLivrablesGlobal = await this.livrableRepository
+        .createQueryBuilder('livrables')
+        .select('COUNT(livrables.id)', 'total')
+        .getRawOne();
+  
+      const totalLivrables = totalLivrablesGlobal.total;
+  
+      // Requête pour obtenir les livrables par direction et statut
+      const result = await this.livrableRepository
+        .createQueryBuilder('livrables') // Alias pour les livrables
+        .leftJoinAndSelect('livrables.activity', 'activity') // Jointure avec l'entité Activity
+        .select('activity.direction', 'direction') // Sélectionne la direction dans Activity
+        .addSelect('livrables.status', 'status') // Sélectionne le statut des livrables
+        .addSelect('COUNT(livrables.id)', 'nombreLivrables') // Compte les livrables
+        .addSelect(
+          `(COUNT(livrables.id) * 100.0 / :totalLivrables)`,
+          'pourcentage' // Utilisation du total global pour calculer le pourcentage
+        )
+        .groupBy('activity.direction') // Regroupe par direction
+        .addGroupBy('livrables.status') // Regroupe aussi par statut
+        .setParameter('totalLivrables', totalLivrables) // Passe la valeur du total global
+        .getRawMany(); // Retourne les résultats bruts
+  
+      // Formatage des résultats pour structurer par direction et statuts
+      const formattedResult = result.reduce((acc, row) => {
+        const direction = row.direction || 'Non spécifié';
+  
+        // Trouver ou créer l'entrée pour la direction
+        let directionData = acc.find((d) => d.direction === direction);
+        if (!directionData) {
+          directionData = {
+            direction,
+            totalLivrables: 0,
+            livrablesParStatus: [],
+            pourcentage: 0,
+          };
+          acc.push(directionData);
+        }
+  
+        // Ajouter le statut et les détails associés
+        directionData.livrablesParStatus.push({
+          status: row.status || 'Non spécifié',
+          nombreLivrables: Number(row.nombreLivrables),
+          pourcentage: parseFloat(row.pourcentage).toFixed(2),
+        });
+  
+        // Incrémenter le total de livrables pour cette direction
+        directionData.totalLivrables += Number(row.nombreLivrables);
+  
+        // Calculer le pourcentage global de la direction
+        directionData.pourcentage = (
+          (directionData.totalLivrables / totalLivrables) * 100
+        ).toFixed(2);
+  
+        return acc;
+      }, []);
+  
+      return formattedResult;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors du calcul des livrables par direction, statut et pourcentage.',
+      );
+    }
+  }
+  
+  
 }

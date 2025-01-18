@@ -24,6 +24,15 @@ export class LivrableController {
     return this.livrableService.getStatLivrableByStatus();
   }
 
+  @Get('dashboard/advanced')
+  @ApiOperation({ summary: 'Récupérer tous les livrables' })
+  @ApiResponse({ status: 200, description: 'Liste des livrables récupérée avec succès.' })
+  getLivrablesByActivityDirectionWithStatusAndPercentage() {
+    return this.livrableService.getLivrablesByActivityDirectionWithStatusAndPercentage();
+  }
+
+
+
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les livrables' })
   @ApiResponse({ status: 200, description: 'Liste des livrables récupérée avec succès.' })

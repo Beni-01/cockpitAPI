@@ -43,6 +43,19 @@ export class DemandeProlongation extends Timestamp {
     })
     commentaire: string
 
+
+    @Column({
+        name:'activityId',
+        type:'number'
+    })
+    activityId:number
+
+    @Column({
+        name:'userId',
+        type:'number'
+    })
+    userId:number
+
     @ManyToOne(()=>User, (user)=>user.demandeProlongations, {eager:true})
     user:User
 
