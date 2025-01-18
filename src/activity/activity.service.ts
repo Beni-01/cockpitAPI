@@ -487,7 +487,7 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     
                 // Calcul de la progression de l'activité
                 const totalSubActivities = activity.subactivities?.length || 0;
-                const completedSubActivities = activity.subactivities?.filter(subActivity => subActivity.status.toLocaleLowerCase()=="cloturé").length || 0;
+                const completedSubActivities = activity.subactivities?.filter(subActivity => subActivity.status.toLocaleLowerCase() === "cloturé").length || 0;
     
                 const activityProgress = totalSubActivities > 0
                     ? (completedSubActivities / totalSubActivities) * 100
@@ -526,12 +526,12 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     
             allDirections.forEach((dir) => {
                 const directionName = dir.direction;
-                if (!result.find(r => r.direction === directionName)) {
+                if (directionName && !result.find(r => r.direction === directionName)) {
                     result.push({ direction: directionName, progression: 0 });
                 }
             });
     
-            return result;
+            return result.filter(r => r.direction); // Filtrer les résultats sans direction
         } catch (error) {
             throw new BadRequestException('Erreur lors du calcul de la progression des directions', error.message);
         }
