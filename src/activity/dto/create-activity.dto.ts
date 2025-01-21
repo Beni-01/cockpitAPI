@@ -102,7 +102,7 @@ export class CreateActivityDto {
 
     @ApiPropertyOptional({
         description: 'Les SousActivité',
-        type: [ UpdateSousActivityDto],
+        type: [UpdateSousActivityDto],
     })
     @IsOptional()
     @ValidateNested({ each: true })

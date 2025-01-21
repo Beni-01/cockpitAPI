@@ -16,7 +16,7 @@ export class Activity extends Timestamp {
 
     @Column({
         name:'titre',
-        type:'varchar',
+        type:'text',
         nullable:false
     })
     titre:string
