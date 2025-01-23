@@ -31,13 +31,19 @@ export class ActivityController {
 
 
 
-
-
   @Get('dashboard')
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   getDirectionProgress() {
     return this.activityService.getDirectionProgress();
+  }
+
+
+  @Get('statut/dashboard')
+  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+  getDirectionStats() {
+    return this.activityService.getDirectionStats();
   }
 
     // Route pour récupérer toutes les activités
