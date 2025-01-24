@@ -485,7 +485,7 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     
                 // Calcul de la progression de l'activité
                 const totalSubActivities = activity.subactivities?.length || 0;
-                const completedSubActivities = activity.subactivities?.filter(subActivity => subActivity.status.toLocaleLowerCase() === "cloturé").length || 0;
+                const completedSubActivities = activity.subactivities?.filter(subActivity => subActivity.status.toLocaleLowerCase() == "cloturé").length || 0;
     
                 const activityProgress = totalSubActivities > 0
                     ? (completedSubActivities / totalSubActivities) * 100
@@ -532,6 +532,63 @@ async findAllByStatus(status: string): Promise<Activity[]> {
             return result.filter(r => r.direction); // Filtrer les résultats sans direction
         } catch (error) {
             throw new BadRequestException('Erreur lors du calcul de la progression des directions', error.message);
+        }
+    }
+
+
+    async getDirectionProgressDeep(): Promise<any[]> {
+        try {
+            // Récupérer toutes les activités avec leurs sous-activités
+            const activities = await this.activityRepository.find({ 
+                relations: ['subactivities'] 
+            });
+    
+            const directionStats = {};
+    
+            // Parcourir toutes les activités et sous-activités
+            activities.forEach(activity => {
+                const direction = activity.direction;
+                if (!direction) return;
+    
+                // Initialiser la direction si nécessaire
+                if (!directionStats[direction]) {
+                    directionStats[direction] = {
+                        totalSub: 0,
+                        closedSub: 0
+                    };
+                }
+    
+                // Compter toutes les sous-activités et les clôturées
+                const subactivities = activity.subactivities || [];
+                directionStats[direction].totalSub += subactivities.length;
+                directionStats[direction].closedSub += subactivities.filter(sub => 
+                    sub.status.toLowerCase() === 'cloturé'
+                ).length;
+            });
+    
+            // Calculer les pourcentages
+            const result = Object.keys(directionStats).map(direction => ({
+                direction,
+                progression: directionStats[direction].totalSub > 0 
+                    ? (directionStats[direction].closedSub / directionStats[direction].totalSub) * 100 
+                    : 0
+            }));
+    
+            // Ajouter les directions sans aucune sous-activité
+            const allDirections = await this.activityRepository
+                .createQueryBuilder('activity')
+                .select('DISTINCT activity.direction', 'direction')
+                .getRawMany();
+    
+            allDirections.forEach(({ direction }) => {
+                if (direction && !result.find(r => r.direction === direction)) {
+                    result.push({ direction, progression: 0 });
+                }
+            });
+    
+            return result.filter(r => r.direction);
+        } catch (error) {
+            throw new BadRequestException('Erreur lors du calcul de la progression', error.message);
         }
     }
 

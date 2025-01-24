@@ -35,7 +35,7 @@ export class ActivityController {
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   getDirectionProgress() {
-    return this.activityService.getDirectionProgress();
+    return this.activityService.getDirectionProgressDeep();
   }
 
 
