@@ -35,7 +35,7 @@ export class ActivityController {
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   getDirectionProgress() {
-    return this.activityService.getDirectionProgressDeep();
+    return this.activityService.getDirectionProgressDeepSeek();
   }
 
 
@@ -45,6 +45,7 @@ export class ActivityController {
   getDirectionStats() {
     return this.activityService.getDirectionStats();
   }
+
 
     // Route pour récupérer toutes les activités
     @Get('dashboard/echeances/:year')

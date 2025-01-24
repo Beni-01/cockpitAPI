@@ -536,7 +536,7 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     }
 
 
-    async getDirectionProgressDeep(): Promise<any[]> {
+    async getDirectionProgressDeepSeek(): Promise<any[]> {
         try {
             // Récupérer toutes les activités avec leurs sous-activités
             const activities = await this.activityRepository.find({ 
