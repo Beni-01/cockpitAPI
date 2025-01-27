@@ -483,20 +483,12 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     
                 if (!directionStats[direction]) {
                     directionStats[direction] = {
-                        totalSub: 0,
-                        closedSub: 0,
-                        totalActivity: 0,
-                        closedActivity: 0
+                        totalSub: 0,    // Total des sous-activités
+                        closedSub: 0    // Sous-activités clôturées
                     };
                 }
     
-                // Mise à jour des stats pour les activités
-                directionStats[direction].totalActivity += 1;
-                if (activity.status.toLowerCase() === 'cloturé') {
-                    directionStats[direction].closedActivity += 1;
-                }
-    
-                // Mise à jour des stats pour les sous-activités
+                // Compter les sous-activités
                 const subactivities = activity.subactivities || [];
                 directionStats[direction].totalSub += subactivities.length;
                 directionStats[direction].closedSub += subactivities.filter(sub => 
@@ -504,15 +496,17 @@ async findAllByStatus(status: string): Promise<Activity[]> {
                 ).length;
             });
     
+            // Créer le résultat final avec les stats des sous-activités
             const result = Object.keys(directionStats).map(direction => ({
                 direction,
+                totalSub: directionStats[direction].totalSub,
+                closedSub: directionStats[direction].closedSub,
                 progression: directionStats[direction].totalSub > 0 
                     ? (directionStats[direction].closedSub / directionStats[direction].totalSub) * 100 
-                    : 0,
-                totalActivity: directionStats[direction].totalActivity,
-                closedActivity: directionStats[direction].closedActivity
+                    : 0
             }));
     
+            // Ajouter les directions sans aucune sous-activité
             const allDirections = await this.activityRepository
                 .createQueryBuilder('activity')
                 .select('DISTINCT activity.direction', 'direction')
@@ -522,9 +516,9 @@ async findAllByStatus(status: string): Promise<Activity[]> {
                 if (direction && !result.find(r => r.direction === direction)) {
                     result.push({ 
                         direction, 
-                        progression: 0,
-                        totalActivity: 0,
-                        closedActivity: 0
+                        totalSub: 0,
+                        closedSub: 0,
+                        progression: 0 
                     });
                 }
             });
