@@ -74,7 +74,7 @@ export class SousActivityService {
   ): Promise<SousActivity> {
     try {
       // Récupérer le budget consommé de la sous-activité
-      const budgetConsomme = updateSousActivityDto.budgetConsomme;
+      const budgetConsomme = updateSousActivityDto.budgetConsomme || 0;
   
       // Trouver la sous-activité existante
       const sousActivity = await this.findOne(id);
