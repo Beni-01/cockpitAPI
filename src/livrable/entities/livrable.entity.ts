@@ -95,7 +95,7 @@ export class Livrable extends Timestamp {
         nullable:true
     })
     commentaire:string
-  
+
     @OneToOne(()=>Activity, (activity)=>activity.livrable)
     activity:Activity
 

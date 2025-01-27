@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsString, IsOptional, IsDateString } from "class-validator";
+import { IsString, IsOptional, IsDateString, IsNumber } from "class-validator";
 
 export class CreateLivrableDto {
     @ApiProperty({
@@ -65,6 +65,14 @@ export class CreateLivrableDto {
       @IsOptional()
       @IsString()
       support?: string;
+
+      @IsOptional()
+      @IsNumber()
+      subActivityId?:number
+
+      @IsOptional()
+      @IsNumber()
+      activityId?:number
 
       @ApiPropertyOptional({
         description: 'Nom du fichier du livrable du livrable',

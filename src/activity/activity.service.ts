@@ -469,96 +469,34 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     }
 
 
-
-    async getDirectionProgress(): Promise<any[]> {
-        try {
-            // Récupérer toutes les activités avec leurs sous-activités et direction
-            const activities = await this.activityRepository.find({ relations: ['subactivities'] });
-    
-            // Calculer la progression pour chaque direction
-            const directionProgress = {};
-    
-            // Parcours de chaque activité pour calculer la progression par direction
-            activities.forEach((activity) => {
-                const directionName = activity.direction; // Vérifier si direction est définie
-                if (!directionName) return; // Ignorer si aucune direction n'est associée
-    
-                // Calcul de la progression de l'activité
-                const totalSubActivities = activity.subactivities?.length || 0;
-                const completedSubActivities = activity.subactivities?.filter(subActivity => subActivity.status.toLocaleLowerCase() == "cloturé").length || 0;
-    
-                const activityProgress = totalSubActivities > 0
-                    ? (completedSubActivities / totalSubActivities) * 100
-                    : 0;
-    
-                // Si la direction n'existe pas encore dans le résultat, on l'initialise
-                if (!directionProgress[directionName]) {
-                    directionProgress[directionName] = {
-                        totalProgress: 0,
-                        activityCount: 0,
-                    };
-                }
-    
-                // Accumuler la progression pour cette direction
-                directionProgress[directionName].totalProgress += activityProgress;
-                directionProgress[directionName].activityCount += 1;
-            });
-    
-            // Calculer la moyenne de la progression pour chaque direction
-            const result = Object.keys(directionProgress).map(directionName => {
-                const progressData = directionProgress[directionName];
-                return {
-                    direction: directionName,
-                    progression: progressData.activityCount > 0
-                        ? progressData.totalProgress / progressData.activityCount
-                        : 0, // Si aucune activité, retourner 0
-                };
-            });
-    
-            // Ajouter les directions sans activité (si elles existent dans la base de données)
-            const allDirections = await this.activityRepository
-                .createQueryBuilder('activity')
-                .select('activity.direction')
-                .distinct(true)
-                .getRawMany();
-    
-            allDirections.forEach((dir) => {
-                const directionName = dir.direction;
-                if (directionName && !result.find(r => r.direction === directionName)) {
-                    result.push({ direction: directionName, progression: 0 });
-                }
-            });
-    
-            return result.filter(r => r.direction); // Filtrer les résultats sans direction
-        } catch (error) {
-            throw new BadRequestException('Erreur lors du calcul de la progression des directions', error.message);
-        }
-    }
-
-
     async getDirectionProgressDeepSeek(): Promise<any[]> {
         try {
-            // Récupérer toutes les activités avec leurs sous-activités
             const activities = await this.activityRepository.find({ 
                 relations: ['subactivities'] 
             });
     
             const directionStats = {};
     
-            // Parcourir toutes les activités et sous-activités
             activities.forEach(activity => {
                 const direction = activity.direction;
                 if (!direction) return;
     
-                // Initialiser la direction si nécessaire
                 if (!directionStats[direction]) {
                     directionStats[direction] = {
                         totalSub: 0,
-                        closedSub: 0
+                        closedSub: 0,
+                        totalActivity: 0,
+                        closedActivity: 0
                     };
                 }
     
-                // Compter toutes les sous-activités et les clôturées
+                // Mise à jour des stats pour les activités
+                directionStats[direction].totalActivity += 1;
+                if (activity.status.toLowerCase() === 'cloturé') {
+                    directionStats[direction].closedActivity += 1;
+                }
+    
+                // Mise à jour des stats pour les sous-activités
                 const subactivities = activity.subactivities || [];
                 directionStats[direction].totalSub += subactivities.length;
                 directionStats[direction].closedSub += subactivities.filter(sub => 
@@ -566,15 +504,15 @@ async findAllByStatus(status: string): Promise<Activity[]> {
                 ).length;
             });
     
-            // Calculer les pourcentages
             const result = Object.keys(directionStats).map(direction => ({
                 direction,
                 progression: directionStats[direction].totalSub > 0 
                     ? (directionStats[direction].closedSub / directionStats[direction].totalSub) * 100 
-                    : 0
+                    : 0,
+                totalActivity: directionStats[direction].totalActivity,
+                closedActivity: directionStats[direction].closedActivity
             }));
     
-            // Ajouter les directions sans aucune sous-activité
             const allDirections = await this.activityRepository
                 .createQueryBuilder('activity')
                 .select('DISTINCT activity.direction', 'direction')
@@ -582,7 +520,12 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     
             allDirections.forEach(({ direction }) => {
                 if (direction && !result.find(r => r.direction === direction)) {
-                    result.push({ direction, progression: 0 });
+                    result.push({ 
+                        direction, 
+                        progression: 0,
+                        totalActivity: 0,
+                        closedActivity: 0
+                    });
                 }
             });
     

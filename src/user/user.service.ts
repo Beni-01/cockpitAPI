@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,6 +19,22 @@ export class UserService {
         const user = this.userRepository.create(createUserDto);
         return await this.userRepository.save(user);
     }
+
+    async importUserCreation(createUserDtos: CreateUserDto[]): Promise<User[]> {
+        const users: User[] = [];
+      
+        try {
+          for (const createUserDto of createUserDtos) {
+
+            const user = this.userRepository.create(createUserDto);      
+            users.push(await this.userRepository.save(user));
+          }
+      
+          return users; 
+        } catch (err) {
+          throw new BadRequestException(`Une erreur est survenue lors de l'importation des users :  ${err}`);
+        }
+      }
 
     async findAll(): Promise<User[]> {
         return await this.userRepository.find();

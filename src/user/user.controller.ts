@@ -17,6 +17,11 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Post('import')
+  importUserCreation(@Body() createUserDtos: CreateUserDto[]) {
+    return this.userService.importUserCreation(createUserDtos);
+  }
+
   @Get()
   findAll() {
     return this.userService.findAll();
