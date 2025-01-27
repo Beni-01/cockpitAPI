@@ -274,13 +274,13 @@ export class ActivityService {
             if (dateDebut && dateFin) {
                 const nextDay = new Date(dateFin);
                 nextDay.setDate(nextDay.getDate() + 1);
-                queryBuilder.andWhere('activity.date BETWEEN :dateDebut AND :nextDay', { dateDebut, nextDay: nextDay.toISOString() });
+                queryBuilder.andWhere('activity.dateDebut >= :dateDebut AND activity.dateFin <= :nextDay', { dateDebut, nextDay: nextDay.toISOString() });
             } else if (dateDebut) {
-                queryBuilder.andWhere('activity.date >= :dateDebut', { dateDebut });
+                queryBuilder.andWhere('activity.dateDebut >= :dateDebut', { dateDebut });
             } else if (dateFin) {
                 const nextDay = new Date(dateFin);
                 nextDay.setDate(nextDay.getDate() + 1);
-                queryBuilder.andWhere('activity.date <= :nextDay', { nextDay: nextDay.toISOString() });
+                queryBuilder.andWhere('activity.dateFin <= :nextDay', { nextDay: nextDay.toISOString() });
             }
     
             // Pagination
@@ -313,8 +313,7 @@ export class ActivityService {
             };
         } catch (error) {
             throw new BadRequestException(
-                'Échec de la récupération des activités par direction',
-                error.message
+                `Échec de la récupération des activités par direction : ${error.message}`
             );
         }
     }
