@@ -468,7 +468,6 @@ async findAllByStatus(status: string): Promise<Activity[]> {
         }
     }
 
-
     async getDirectionProgressDeepSeek(): Promise<any[]> {
         try {
             const activities = await this.activityRepository.find({ 
