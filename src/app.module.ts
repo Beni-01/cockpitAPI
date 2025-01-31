@@ -18,6 +18,7 @@ import { LivrableModule } from './livrable/livrable.module';
 import { AuditInitializerService } from './audit-log/audit-initializer.service';
 import { AuditSubscriber } from './audit-log/audit-log.subscriber';
 import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
+import { UserLivrableModule } from './user-livrable/user-livrable.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -42,7 +43,8 @@ import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
     AuditLogModule,
     AnnotationActivityModule,
     LivrableModule,
-    AuthModule
+    AuthModule,
+    UserLivrableModule
    
   ],
   controllers: [AppController],

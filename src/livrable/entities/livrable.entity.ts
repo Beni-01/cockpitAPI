@@ -1,7 +1,8 @@
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserLivrable } from "src/user-livrable/entities/user-livrable.entity";
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({
     name:'livrable'
@@ -102,5 +103,7 @@ export class Livrable extends Timestamp {
     @OneToOne(()=>SousActivity, (subActivity)=>subActivity.livrable)
     subActivity:SousActivity
 
+    @OneToMany(()=>UserLivrable,(agentValidateur)=>agentValidateur.livrable)
+    agentValidateur:UserLivrable[]
 
 }
