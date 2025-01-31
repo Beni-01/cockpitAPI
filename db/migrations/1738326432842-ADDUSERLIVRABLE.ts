@@ -1,0 +1,142 @@
+import { MigrationInterface, QueryRunner } from "typeorm";
+
+export class ADDUSERLIVRABLE1738326432842 implements MigrationInterface {
+    name = 'ADDUSERLIVRABLE1738326432842'
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+
+        await queryRunner.query(`CREATE TABLE \`user-livrable\` (\`createdAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6), \`updatedAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6), \`deletedAt\` datetime(6) NULL, \`id\` int NOT NULL AUTO_INCREMENT, \`userId\` int NOT NULL, \`livrableId\` int NOT NULL, \`date_signature\` datetime NULL, \`isSign\` tinyint NOT NULL DEFAULT 0, PRIMARY KEY (\`id\`)) ENGINE=InnoDB`);
+        
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`ALTER TABLE \`user-livrable\` DROP FOREIGN KEY \`FK_e9ce17b02719b8b282200c80ebc\``);
+        await queryRunner.query(`ALTER TABLE \`user-livrable\` DROP FOREIGN KEY \`FK_d441346a0c52533284ea4dc9c4f\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP FOREIGN KEY \`FK_c3dd9f7a5f6f90c5d1b3087fb49\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP FOREIGN KEY \`FK_3571467bcbe021f66e2bdce96ea\``);
+        await queryRunner.query(`ALTER TABLE \`annotationActivity\` DROP FOREIGN KEY \`FK_79050c9930c98928590df36b1bc\``);
+        await queryRunner.query(`ALTER TABLE \`annotationActivity\` DROP FOREIGN KEY \`FK_c21c8b2f96df2aaa95bc9b3e852\``);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP FOREIGN KEY \`FK_60bc4dbcd1770ec0a6b689640a1\``);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP FOREIGN KEY \`FK_856efdd136dff1362f39e292a5d\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP FOREIGN KEY \`FK_19938e31a1e6e78edfa60d52881\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP FOREIGN KEY \`FK_38e5f6d4a785ff0ec835c6fb943\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP FOREIGN KEY \`FK_0b60e6cf85e054f08ab9c019a78\``);
+        await queryRunner.query(`DROP INDEX \`REL_c3dd9f7a5f6f90c5d1b3087fb4\` ON \`activity\``);
+        await queryRunner.query(`DROP INDEX \`REL_19938e31a1e6e78edfa60d5288\` ON \`sousActivity\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`commentaire\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`commentaire\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`dateValidationReel\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`dateValidationReel\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`dateValidationAttendue\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`dateValidationAttendue\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`support\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`support\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`livrablefileName\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`livrablefileName\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`typelivrable\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`typelivrable\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`dateLivraisonReelle\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`dateLivraisonReelle\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`dateLivraisonAttendue\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`dateLivraisonAttendue\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`responsable\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`responsable\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`status\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`status\` varchar(255) NULL DEFAULT 'En attente'`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`description\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`description\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`livrable\` DROP COLUMN \`livrable\``);
+        await queryRunner.query(`ALTER TABLE \`livrable\` ADD \`livrable\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP INDEX \`IDX_c3dd9f7a5f6f90c5d1b3087fb4\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`etat\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`etat\` varchar(255) NULL DEFAULT 'En attente'`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`status\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`status\` varchar(255) NULL DEFAULT 'En attente'`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`responsable\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`responsable\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`direction\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`direction\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`province\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`province\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`resultatObtenu\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`resultatObtenu\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`resultat\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`resultat\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`activity\` DROP COLUMN \`description\``);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD \`description\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`annotationActivity\` DROP COLUMN \`type\``);
+        await queryRunner.query(`ALTER TABLE \`annotationActivity\` ADD \`type\` varchar(255) NULL DEFAULT 'COMMENTAIRE'`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`grade\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`grade\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`fonction\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`fonction\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`direction\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`direction\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`service\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`service\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`division\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`division\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`password\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`password\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`username\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`username\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`telephone\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`telephone\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`email\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`email\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`prenom\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`prenom\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`postnom\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`postnom\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`user\` DROP COLUMN \`nom\``);
+        await queryRunner.query(`ALTER TABLE \`user\` ADD \`nom\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` CHANGE \`userId\` \`userId\` int NULL`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` CHANGE \`activityId\` \`activityId\` int NULL`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`commentaire\``);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`commentaire\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`reponse\``);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`reponse\` varchar(255) NOT NULL DEFAULT 'En attente'`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`niveau\``);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`niveau\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`impact\``);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`impact\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` DROP COLUMN \`description\``);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD \`description\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP INDEX \`IDX_19938e31a1e6e78edfa60d5288\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`status\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`status\` varchar(255) NULL DEFAULT 'En attente'`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`resultatObtenu\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`resultatObtenu\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`indicateur\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`indicateur\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`fin\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`fin\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`debut\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`debut\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`autreService\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`autreService\` varchar(255) NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`responsable\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`responsable\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`province\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`province\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`resultat\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`resultat\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` DROP COLUMN \`titre\``);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD \`titre\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`auditLog\` DROP COLUMN \`action\``);
+        await queryRunner.query(`ALTER TABLE \`auditLog\` ADD \`action\` varchar(255) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE \`auditLog\` DROP COLUMN \`tableName\``);
+        await queryRunner.query(`ALTER TABLE \`auditLog\` ADD \`tableName\` varchar(255) NOT NULL`);
+        await queryRunner.query(`DROP TABLE \`user-livrable\``);
+        await queryRunner.query(`CREATE UNIQUE INDEX \`IDX_c3dd9f7a5f6f90c5d1b3087fb4\` ON \`activity\` (\`livrableId\`)`);
+        await queryRunner.query(`CREATE UNIQUE INDEX \`IDX_19938e31a1e6e78edfa60d5288\` ON \`sousActivity\` (\`livrableId\`)`);
+        await queryRunner.query(`ALTER TABLE \`activity\` ADD CONSTRAINT \`FK_3571467bcbe021f66e2bdce96ea\` FOREIGN KEY (\`userId\`) REFERENCES \`f360db\`.\`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`annotationActivity\` ADD CONSTRAINT \`FK_c21c8b2f96df2aaa95bc9b3e852\` FOREIGN KEY (\`activityId\`) REFERENCES \`f360db\`.\`activity\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`annotationActivity\` ADD CONSTRAINT \`FK_79050c9930c98928590df36b1bc\` FOREIGN KEY (\`userId\`) REFERENCES \`f360db\`.\`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD CONSTRAINT \`FK_856efdd136dff1362f39e292a5d\` FOREIGN KEY (\`userId\`) REFERENCES \`f360db\`.\`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`demandeProlongation\` ADD CONSTRAINT \`FK_60bc4dbcd1770ec0a6b689640a1\` FOREIGN KEY (\`activityId\`) REFERENCES \`f360db\`.\`activity\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD CONSTRAINT \`FK_38e5f6d4a785ff0ec835c6fb943\` FOREIGN KEY (\`activityId\`) REFERENCES \`f360db\`.\`activity\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+        await queryRunner.query(`ALTER TABLE \`sousActivity\` ADD CONSTRAINT \`FK_0b60e6cf85e054f08ab9c019a78\` FOREIGN KEY (\`userId\`) REFERENCES \`f360db\`.\`user\`(\`id\`) ON DELETE NO ACTION ON UPDATE NO ACTION`);
+    }
+
+}

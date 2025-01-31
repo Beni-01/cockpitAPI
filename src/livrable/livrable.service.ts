@@ -4,12 +4,18 @@ import { UpdateLivrableDto } from './dto/update-livrable.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Livrable } from './entities/livrable.entity';
+import { UserService } from 'src/user/user.service';
+import { UserLivrableService } from 'src/user-livrable/user-livrable.service';
 
 @Injectable()
 export class LivrableService {
   constructor(
     @InjectRepository(Livrable)
     private readonly livrableRepository: Repository<Livrable>,
+
+    private  readonly agentValidateurService: UserLivrableService,
+
+    private  readonly userService: UserService,
   ) {}
 
   async create(createLivrableDto: CreateLivrableDto): Promise<Livrable> {
@@ -22,6 +28,21 @@ export class LivrableService {
       );
     }
   }
+
+
+  async saveFormWithValidateur(livrableId:number){
+
+    const validateurs=await this.userService.getUsersByFunction()
+
+    validateurs?.data?.forEach(async (validateur:any)=>{
+     const createAgentValidateurDto={
+       livrableId,
+       userId:validateur.id
+     }
+     return await this.agentValidateurService.create(createAgentValidateurDto)
+    })
+    
+ }
 
   async findAll(): Promise<Livrable[]> {
     try {

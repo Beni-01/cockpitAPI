@@ -1,8 +1,11 @@
 import { Livrable } from "src/livrable/entities/livrable.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
-import { PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { PrimaryGeneratedColumn, Column, ManyToOne, Entity } from "typeorm";
 
+@Entity({
+    name:'user-livrable'
+})
 export class UserLivrable  extends Timestamp{
     @PrimaryGeneratedColumn()
     id:number;
@@ -18,8 +21,6 @@ export class UserLivrable  extends Timestamp{
         type:'int'
     })
     livrableId:number
-
-
 
     @Column({
         name:'date_signature',

@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { Dataformater } from 'src/utilities/data-formater.class';
 
 
 
@@ -12,6 +13,7 @@ export class UserService {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        private httpDataFormater:Dataformater<any>,
 
     ) {}
 
@@ -34,6 +36,27 @@ export class UserService {
         } catch (err) {
           throw new BadRequestException(`Une erreur est survenue lors de l'importation des users :  ${err}`);
         }
+      }
+
+
+      async getUsersByFunction(): Promise<any> {
+        const query =`
+      SELECT user.id, user.nom, user.postnom, user.prenom, user.email, user.sexe, fonction.id AS fonctionId, fonction.fonction
+      FROM user
+      INNER JOIN fonction ON user.fonctionId = fonction.id
+      WHERE fonction.fonction IN ('directeur financier','directeur général','controleur de gestion','Directeur général adjoint chargé des opérations', 'directeur général adjoint administration et finances', 'responsable audit');
+      `;
+  
+    const validateurOrder:any=[];
+    const validateurs= await this.userRepository.query(query);
+  
+
+        validateurOrder[0]=validateurs.find((value:any)=>value.fonction.toLowerCase().includes('chargé des opérations'))
+        validateurOrder[1]=validateurs.find((value:any)=>value.fonction.toLowerCase().includes('directeur général adjoint administration et finances'))
+        validateurOrder[2]=validateurs.find((value:any)=>value.fonction.toLowerCase()=='directeur général')
+
+        return  this.httpDataFormater.format(validateurOrder, HttpStatus.OK)
+    
       }
 
     async findAll(): Promise<User[]> {
