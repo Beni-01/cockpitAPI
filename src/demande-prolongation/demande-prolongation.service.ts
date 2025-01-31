@@ -12,9 +12,11 @@ export class DemandeProlongationService {
   constructor(
     @InjectRepository(DemandeProlongation)
     private readonly repository: Repository<DemandeProlongation>, // Injection du repository pour DemandeProlongation
-     private readonly activityRepository:ActivityService,
+    
     @InjectRepository(User)
     private readonly userRepository: Repository<User>, // Injection du repository pour User
+
+    private readonly activityRepository:ActivityService,
   ) {}
 
   // Méthode pour créer une demande de prolongation

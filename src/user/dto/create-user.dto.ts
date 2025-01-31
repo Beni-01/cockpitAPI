@@ -29,6 +29,10 @@ export class CreateUserDto {
   @IsOptional()
   directionId:number;
 
+  @IsNumber()
+  @IsOptional()
+  directionGeneraleId:number
+
   @IsString()
   @IsOptional()
   direction?:string;

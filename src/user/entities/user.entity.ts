@@ -120,6 +120,16 @@ export class User extends Timestamp {
 
     @Column(
         {
+           name:'directionGeneraleId',
+           type:'int',
+           nullable:true
+        }
+    )
+    directionGeneraleId?:number
+
+
+    @Column(
+        {
            name:'serviceId',
            type:'int',
            nullable:true
