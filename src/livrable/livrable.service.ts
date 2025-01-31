@@ -46,7 +46,7 @@ export class LivrableService {
 
   async findAll(): Promise<Livrable[]> {
     try {
-      return await this.livrableRepository.find();
+      return await this.livrableRepository.find({relations:['agentValidateur'] });
     } catch (error) {
       throw new InternalServerErrorException(
         'Une erreur est survenue lors de la récupération des livrables.',
@@ -84,7 +84,7 @@ export class LivrableService {
 
   async findOne(id: number): Promise<Livrable> {
     try {
-      const livrable = await this.livrableRepository.findOne({ where: { id } });
+      const livrable = await this.livrableRepository.findOne({ where: { id }, relations:['agentValidateur'] });
       if (!livrable) {
         throw new NotFoundException(`Le livrable avec l'id ${id} n'existe pas.`);
       }
@@ -140,6 +140,7 @@ export class LivrableService {
       const result = await this.livrableRepository
         .createQueryBuilder('livrables') // Alias pour les livrables
         .leftJoinAndSelect('livrables.activity', 'activity') // Jointure avec l'entité Activity
+        .leftJoinAndSelect('livrables.agentValidateur','agentValidateur')
         .select('activity.direction', 'direction') // Sélectionne la direction dans Activity
         .addSelect('livrables.status', 'status') // Sélectionne le statut des livrables
         .addSelect('COUNT(livrables.id)', 'nombreLivrables') // Compte les livrables
