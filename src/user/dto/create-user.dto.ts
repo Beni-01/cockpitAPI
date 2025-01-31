@@ -81,6 +81,10 @@ export class CreateUserDto {
   @IsBoolean()
   status:boolean=true
 
+  @IsOptional()
+  @IsBoolean()
+  isSetPassword:boolean=false
+
   @BeforeInsert()
   async hashPasword() {
     this.password = await bcrypt.hash(this.password, 10);

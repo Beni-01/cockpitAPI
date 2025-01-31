@@ -156,6 +156,14 @@ export class User extends Timestamp {
     )
     division?:string
 
+    @Column(
+        {
+            name:'isSetPassword',
+            type:'boolean',
+            default:false
+        }
+    )
+    isSetPassword:boolean
 
     @Column(
         {
