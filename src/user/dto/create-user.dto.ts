@@ -11,11 +11,11 @@ export class CreateUserDto {
   nom:string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   postnom:string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   prenom:string;
 
   @IsString()
