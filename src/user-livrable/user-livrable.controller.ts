@@ -23,8 +23,8 @@ export class UserLivrableController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserLivrableDto: UpdateUserLivrableDto) {
-    return this.userLivrableService.update(+id, updateUserLivrableDto);
+  update(@Param('id') id: string, @Param('idLivrable') idLivrable: string, @Body() updateUserLivrableDto: UpdateUserLivrableDto) {
+    return this.userLivrableService.update(+id, +idLivrable, updateUserLivrableDto);
   }
 
   @Delete(':id')
@@ -32,3 +32,4 @@ export class UserLivrableController {
     return this.userLivrableService.remove(+id);
   }
 }
+
