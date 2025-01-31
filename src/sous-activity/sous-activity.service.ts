@@ -102,7 +102,7 @@ export class SousActivityService {
   
       if (allSubActivitiesClosed) {
         // Si oui, mettre à jour le statut de l'activité
-        activity.status = 'clôturé';
+        activity.status = 'cloturé';
         await this.activityRepository.update(idActivity, { status: activity.status });
       }
   

@@ -5,12 +5,14 @@ import { DemandeProlongation } from './entities/demande-prolongation.entity';
 import { CreateDemandeProlongationDto } from './dto/create-demande-prolongation.dto';
 import { UpdateDemandeProlongationDto } from './dto/update-demande-prolongation.dto';
 import { User } from '../user/entities/user.entity';
+import { ActivityService } from 'src/activity/activity.service';
 
 @Injectable()
 export class DemandeProlongationService {
   constructor(
     @InjectRepository(DemandeProlongation)
     private readonly repository: Repository<DemandeProlongation>, // Injection du repository pour DemandeProlongation
+     private readonly activityRepository:ActivityService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>, // Injection du repository pour User
   ) {}
@@ -21,8 +23,21 @@ export class DemandeProlongationService {
      
       // Crée une nouvelle instance de DemandeProlongation
       const entity = this.repository.create(dto);
+
+      const activity = await this.activityRepository.findOne(dto.activityId);
+  
+      if (!activity) {
+        throw new NotFoundException('Activité non trouvée');
+      }
+  
       // Sauvegarde et retourne la demande créée
-      return await this.repository.save(entity);
+      const demandSaved= await this.repository.save(entity);
+
+      activity.status = 'cloturé';
+      await this.activityRepository.update(dto.activityId, { status: "Reprogrammé" });
+
+
+      return demandSaved
       
     } catch (error) {
       // Capture les erreurs et retourne un message d'erreur avec les détails
