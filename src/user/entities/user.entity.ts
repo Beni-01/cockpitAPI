@@ -79,6 +79,7 @@ export class User extends Timestamp {
     @Column({
         name:'password',
         type:'varchar',
+        default:"N/A"
       
     })
     password:string;
