@@ -51,7 +51,7 @@ export class DemandeProlongationService {
     try {
       // Récupère toutes les demandes de prolongation et inclut les données de l'entité "activity"
       return await this.repository.find({
-        relations: ['activity'], // Spécifie le nom de la relation
+        relations: ['activity', 'demandeUser'], // Spécifie le nom de la relation
       });
     } catch (error) {
       // Capture les erreurs et retourne un message d'erreur avec les détails
@@ -94,7 +94,7 @@ export class DemandeProlongationService {
   async findOne(id: number) {
     try {
       // Recherche la demande de prolongation par son ID
-      const entity = await this.repository.findOne({where:{id}});
+      const entity = await this.repository.findOne({where:{id}, relations: ['activity', 'demandeUser'],  });
       if (!entity) throw new NotFoundException('Demande de prolongation non trouvée'); // Lancer une exception si la demande n'est pas trouvée
       return entity;
     } catch (error) {

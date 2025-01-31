@@ -1,7 +1,8 @@
 import { Activity } from "src/activity/entities/activity.entity";
+import { DemandeUser } from "src/demande-user/entities/demande-user.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({
     name:"demandeProlongation"
@@ -61,5 +62,9 @@ export class DemandeProlongation extends Timestamp {
 
     @ManyToOne(()=>Activity, (activity)=>activity.demandes)
     activity:Activity
+
+
+    @OneToMany(()=>DemandeUser,(demandeUser)=>demandeUser.demande)
+    demandeUser:DemandeUser[]
 
 }
