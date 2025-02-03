@@ -18,14 +18,14 @@ export class SousActivity  extends Timestamp{
 
     @Column({
         name:'titre',
-        type:'varchar',
+        type:'text',
         nullable:false
     })
     titre:string;
 
     @Column({
         name:'resultat',
-        type:'varchar',
+        type:'text',
         nullable:false
     })
     resultat:string
@@ -74,14 +74,14 @@ export class SousActivity  extends Timestamp{
 
     @Column({
         name:'indicateur',
-        type:'varchar',
+        type:'text',
         nullable:true
     })
     indicateur:string
 
     @Column({
         name:'resultatObtenu',
-        type:'varchar',
+        type:'text',
         nullable:true
     })
     resultatObtenu:string
