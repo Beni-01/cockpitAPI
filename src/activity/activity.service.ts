@@ -274,7 +274,7 @@ export class ActivityService {
             if (dateDebut && dateFin) {
                 const nextDay = new Date(dateFin);
                 nextDay.setDate(nextDay.getDate() + 1);
-                queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin) OR (activity.dateFin >= :dateDebutIverse)', { dateDebut, dateFin: nextDay.toISOString(), dateDebutIverse: dateDebut });
+                queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { dateDebut, dateFin: nextDay.toISOString() });
                 //queryBuilder.andWhere('activity.dateDebut >= :dateDebut AND activity.dateFin <= :nextDay', { dateDebut, nextDay: nextDay.toISOString() });
             } else if (dateDebut && !dateFin) {
                 queryBuilder.andWhere('activity.dateDebut >= :dateDebut', { dateDebut });
