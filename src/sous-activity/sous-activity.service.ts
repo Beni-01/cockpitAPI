@@ -1,14 +1,16 @@
 // sous-activity.service.ts
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { SousActivity } from './entities/sous-activity.entity';
 import { CreateSousActivityDto } from './dto/create-sous-activity.dto';
 import { UpdateSousActivityDto } from './dto/update-sous-activity.dto';
 import { ActivityService } from 'src/activity/activity.service';
 import { UpdateActivityDto } from 'src/activity/dto/update-activity.dto';
 import { CreateActivityDto } from 'src/activity/dto/create-activity.dto';
-
+import { Livrable } from 'src/livrable/entities/livrable.entity';
+import { DataSource } from 'typeorm';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class SousActivityService {
@@ -16,19 +18,84 @@ export class SousActivityService {
     @InjectRepository(SousActivity)
     private readonly sousActivityRepository: Repository<SousActivity>,
 
-    private readonly activityRepository:ActivityService
+    private readonly activityRepository:ActivityService,
+
+    @InjectRepository(Livrable)
+    private readonly livrableRepository: Repository<Livrable>,
+
+    private dataSource:DataSource
+
+   
   ) {}
 
   // Create
   async create(createSousActivityDto: CreateSousActivityDto): Promise<SousActivity> {
     try {
-      const { livrable, ...subActivityData } = createSousActivityDto;
+      const { livrable, typelivrable, ...subActivityData } = createSousActivityDto;
       const sousActivity = this.sousActivityRepository.create(subActivityData);
+
+      if(livrable){
+        const createLivrableSubLivraison= this.livrableRepository.create({livrable, typelivrable})
+        const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
+        sousActivity.livrable=savedLivrableSubLivraison
+    }
+
       return await this.sousActivityRepository.save(sousActivity);
     } catch (error) {
       throw new InternalServerErrorException('Erreur lors de la création de la sous-activité');
     }
   }
+
+
+ 
+
+  async createMany(createSousActivityDtos: CreateSousActivityDto[]): Promise<SousActivity[]> {
+    const queryRunner = this.sousActivityRepository.manager.connection.createQueryRunner();
+    
+    // Start a transaction
+    await queryRunner.startTransaction();
+  
+    try {
+      const sousActivities: SousActivity[] = [];
+  
+      for (const dto of createSousActivityDtos) {
+        const { livrable, typelivrable, ...subActivityData } = dto;
+  
+        // Create the SousActivity entity
+        const sousActivity = this.sousActivityRepository.create(subActivityData);
+  
+        if (livrable) {
+          // Create the Livrable entity
+          const createLivrableSubLivraison = this.livrableRepository.create({ livrable, typelivrable });
+  
+          // Save the Livrable within the same transaction
+          const savedLivrableSubLivraison = await queryRunner.manager.save(createLivrableSubLivraison);
+          
+          // Assign saved livrable to sousActivity
+          sousActivity.livrable = savedLivrableSubLivraison;
+        }
+  
+        sousActivities.push(sousActivity);
+      }
+  
+      // Save all SousActivity entities within the transaction
+      await queryRunner.manager.save(SousActivity, sousActivities);
+  
+      // Commit the transaction
+      await queryRunner.commitTransaction();
+      
+      return sousActivities;
+    } catch (error) {
+      // Rollback the transaction in case of error
+      await queryRunner.rollbackTransaction();
+      throw new InternalServerErrorException('Erreur lors de la création des sous-activités');
+    } finally {
+      // Release the query runner to allow other operations
+      await queryRunner.release();
+    }
+  }
+  
+  
 
   // Find All
   async findAll(): Promise<SousActivity[]> {

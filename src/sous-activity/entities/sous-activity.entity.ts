@@ -54,14 +54,14 @@ export class SousActivity  extends Timestamp{
     @Column({
         name:'debut',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     debut: string
 
     @Column({
         name:'fin',
         type:'varchar',
-        nullable:false
+        nullable:true
     })
     fin:string
 

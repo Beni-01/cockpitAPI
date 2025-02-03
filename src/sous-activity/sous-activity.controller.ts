@@ -17,6 +17,14 @@ export class SousActivityController {
     return this.sousActivityService.create(createSousActivityDto);
   }
 
+  @Post('post/many')
+  @ApiOperation({ summary: 'Créer une nouvelle sous-activité' })
+  @ApiResponse({ status: 201, description: 'Sous-activité créée avec succès.' })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  createMany(@Body() createSousActivityDto: CreateSousActivityDto[]) {
+    return this.sousActivityService.createMany(createSousActivityDto);
+  }
+
   @Get()
   @ApiOperation({ summary: 'Récupérer toutes les sous-activités' })
   @ApiResponse({ status: 200, description: 'Liste des sous-activités récupérée avec succès.' })

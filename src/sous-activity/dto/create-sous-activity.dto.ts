@@ -31,12 +31,12 @@ export class CreateSousActivityDto {
   autreService: string;
 
   @ApiProperty({ description: 'Date de début de la sous-activité', example: '2024-11-01' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   debut: string;
 
   @ApiProperty({ description: 'Date de fin de la sous-activité', example: '2024-11-30' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   fin: string;
 

@@ -30,7 +30,7 @@ export class ActivityService {
             budgetActivity+=subactivity.budget
           })
 
-    
+
           const result = subactivities.reduce((acc, activity) => {
             // Comparer les dates pour trouver la plus ancienne et la plus récente
             acc.minDebut = acc.minDebut ? (new Date(activity.debut) < new Date(acc.minDebut) ? activity.debut : acc.minDebut) : activity.debut;
