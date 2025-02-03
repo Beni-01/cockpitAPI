@@ -88,7 +88,9 @@ export class SousActivityService {
     } catch (error) {
       // Rollback the transaction in case of error
       await queryRunner.rollbackTransaction();
-      throw new InternalServerErrorException('Erreur lors de la création des sous-activités');
+      console.log('inserer eror', error)
+      throw new InternalServerErrorException(`Erreur lors de la création des sous-activités ${error}`);
+
     } finally {
       // Release the query runner to allow other operations
       await queryRunner.release();
