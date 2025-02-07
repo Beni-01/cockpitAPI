@@ -39,6 +39,6 @@ export class UserLivrable  extends Timestamp{
     @ManyToOne(()=>User, (agent)=>agent.agentValidateur, {eager:true})
     user:User;
 
-    @ManyToOne(()=>Livrable, (livrable)=>livrable.agentValidateur, {eager:true})
+    @ManyToOne(()=>Livrable, (livrable)=>livrable.agentValidateur)
     livrable:Livrable
 }

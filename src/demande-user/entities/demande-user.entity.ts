@@ -40,6 +40,6 @@ export class DemandeUser extends Timestamp{
         @ManyToOne(()=>User, (agent)=>agent.demandeUser, {eager:true})
         user:User;
     
-        @ManyToOne(()=>DemandeProlongation, (demande)=>demande.demandeUser, {eager:true})
+        @ManyToOne(()=>DemandeProlongation, (demande)=>demande.demandeUser)
         demande:DemandeProlongation
 }

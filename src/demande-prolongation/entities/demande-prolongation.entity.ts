@@ -64,7 +64,7 @@ export class DemandeProlongation extends Timestamp {
     activity:Activity
 
 
-    @OneToMany(()=>DemandeUser,(demandeUser)=>demandeUser.demande)
+    @OneToMany(()=>DemandeUser,(demandeUser)=>demandeUser.demande,{eager:true})
     demandeUser:DemandeUser[]
 
 }

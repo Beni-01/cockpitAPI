@@ -103,7 +103,7 @@ export class Livrable extends Timestamp {
     @OneToOne(()=>SousActivity, (subActivity)=>subActivity.livrable)
     subActivity:SousActivity
 
-    @OneToMany(()=>UserLivrable,(agentValidateur)=>agentValidateur.livrable)
+    @OneToMany(()=>UserLivrable,(agentValidateur)=>agentValidateur.livrable, {eager:true})
     agentValidateur:UserLivrable[]
 
 }
