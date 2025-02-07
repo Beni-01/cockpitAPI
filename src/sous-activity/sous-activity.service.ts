@@ -47,7 +47,6 @@ export class SousActivityService {
   }
 
 
- 
 
   async createMany(createSousActivityDtos: CreateSousActivityDto[]): Promise<SousActivity[]> {
     const queryRunner = this.sousActivityRepository.manager.connection.createQueryRunner();
@@ -139,7 +138,8 @@ export class SousActivityService {
   async update(
     id: number,
     idActivity: number,
-    updateSousActivityDto: UpdateSousActivityDto
+    updateSousActivityDto: UpdateSousActivityDto,
+    idLivrable?:number
   ): Promise<SousActivity> {
     try {
       // Récupérer le budget consommé de la sous-activité
@@ -174,6 +174,23 @@ export class SousActivityService {
         activity.status = 'cloturé';
         await this.activityRepository.update(idActivity, { status: activity.status });
       }
+
+
+      if (updateSousActivityDto.livrable && !idLivrable) {
+        // Crée un objet de livrable en fonction de la présence de typelivrable
+        const livrableData = updateSousActivityDto.typelivrable ? { livrable:updateSousActivityDto.livrable, typelivrable:updateSousActivityDto.typelivrable  } : { livrable:updateSousActivityDto.livrable };
+    
+        // Crée et sauvegarde le livrable
+        const createLivrable = this.livrableRepository.create(livrableData);
+        const savedLivrable = await this.livrableRepository.save(createLivrable);
+    
+        // Ajoute le livrable sauvegardé à activityData
+        sousActivity["livrable"] = savedLivrable;
+    }
+    if(idLivrable){
+      const livrableData = updateSousActivityDto.typelivrable ? { livrable:updateSousActivityDto.livrable, typelivrable:updateSousActivityDto.typelivrable  } : { livrable:updateSousActivityDto.livrable };
+        this.livrableRepository.update(idLivrable, livrableData);
+    }
   
       // Mettre à jour les données de la sous-activité
       Object.assign(sousActivity, updateSousActivityDto);

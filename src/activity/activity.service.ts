@@ -365,7 +365,7 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     }
 
     // Mettre à jour une activité par son ID
-    async update(id: number, updateActivityDto: UpdateActivityDto): Promise<Activity> {
+    async update(id: number, updateActivityDto: UpdateActivityDto, idLivrable?:number): Promise<Activity> {
         try {
             // Vérifier si l'activité existe avant de la mettre à jour
             const activity = await this.findOne(id);
@@ -373,10 +373,27 @@ async findAllByStatus(status: string): Promise<Activity[]> {
                 throw new NotFoundException(`Activité avec l'ID ${id} non trouvée`);
             }
              
-            const { subactivities, livrable, ...activityData } = updateActivityDto;
+            const { subactivities,livrable,typelivrable, ...activityData } = updateActivityDto;
+
+
+            if (livrable && !idLivrable) {
+                // Crée un objet de livrable en fonction de la présence de typelivrable
+                const livrableData = typelivrable ? { livrable, typelivrable } : { livrable };
+            
+                // Crée et sauvegarde le livrable
+                const createLivrable = this.livrableRepository.create(livrableData);
+                const savedLivrable = await this.livrableRepository.save(createLivrable);
+            
+                // Ajoute le livrable sauvegardé à activityData
+                activityData["livrable"] = savedLivrable;
+            }
+            if(idLivrable){
+                const livrableData = typelivrable ? { livrable, typelivrable } : { livrable };
+                this.livrableRepository.update(idLivrable, livrableData);
+            }
 
             // Mettre à jour l'activité dans la base de données
-            await this.activityRepository.update(id, activityData);
+            await this.activityRepository.update(id,activityData);
 
             // Retourner l'activité mise à jour
             return await this.findOne(id);

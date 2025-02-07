@@ -188,8 +188,8 @@ export class ActivityController {
   @ApiBody({ type: UpdateActivityDto })
   @ApiResponse({ status: 200, description: 'Activité mise à jour avec succès.' })
   @ApiResponse({ status: 404, description: 'Activité non trouvée.' })
-  update(@Param('id') id: string, @Body() updateActivityDto: UpdateActivityDto) {
-    return this.activityService.update(+id, updateActivityDto);
+  update(@Param('id') id: string, @Body() updateActivityDto: UpdateActivityDto, @Query('idLivrable') idLivrable:string) {
+    return this.activityService.update(+id, updateActivityDto, +idLivrable);
   }
 
   // Route pour supprimer une activité par son ID
