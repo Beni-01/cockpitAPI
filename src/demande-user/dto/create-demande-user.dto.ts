@@ -10,8 +10,8 @@ export class CreateDemandeUserDto {
         demandeId:number;
     
         @IsOptional()
-        isSign?:boolean;
+        isValidate?:boolean;
     
         @IsOptional()
-        date_signature?:Date;
+        date_validation?:Date;
 }

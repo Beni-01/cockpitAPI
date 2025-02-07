@@ -24,18 +24,18 @@ export class DemandeUser extends Timestamp{
         demandeId:number
     
         @Column({
-            name:'date_signature',
+            name:'date_validation',
             type:'datetime',
             nullable:true
         })
-        date_signature?:Date;
+        date_validation?:Date;
     
         @Column({
-            name:'isSign',
+            name:'isValidate',
             type:'boolean',
             default:false
         })
-        isSign?:boolean
+        isValidate?:boolean
     
         @ManyToOne(()=>User, (agent)=>agent.demandeUser, {eager:true})
         user:User;
