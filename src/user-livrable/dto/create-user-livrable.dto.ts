@@ -10,7 +10,7 @@ export class CreateUserLivrableDto {
     livrableId:number;
 
     @IsOptional()
-    isSign?:boolean;
+    isValidate?:boolean;
 
     @IsOptional()
     date_signature?:Date;
