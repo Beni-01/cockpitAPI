@@ -51,7 +51,6 @@ export class ActivityService {
           activity.dateDebut= createActivityDto.dateDebut ? createActivityDto.dateDebut : result.minDebut
           activity.dateFin=createActivityDto.dateFin ? createActivityDto.dateFin : result.maxFin
 
-
           // Sauvegarder l'activité principale dans la base de données
           const savedActivity = await this.activityRepository.save(activity);
 
