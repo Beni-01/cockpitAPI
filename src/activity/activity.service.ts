@@ -243,13 +243,16 @@ export class ActivityService {
         hasPrevPage: boolean;
     }> {
         try {
-            const queryBuilder = this.activityRepository.createQueryBuilder('activity')
-                .leftJoinAndSelect('activity.subactivities', 'subactivities')
-                .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable') // Inclure les livrables des sous-activités
-                .leftJoinAndSelect('activity.livrable', 'activityLivrable')
-                .leftJoinAndSelect('activity.annotations', 'annotations')
-                .leftJoinAndSelect('activity.demandes', 'demandes');
-    
+         
+                const queryBuilder = this.activityRepository.createQueryBuilder('activity')
+                    .leftJoinAndSelect('activity.subactivities', 'subactivities')
+                    .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
+                    .leftJoinAndSelect('subactivityLivrable.agentValidateur', 'subactivityLivrableAgentValidateur') // Ajouté
+                    .leftJoinAndSelect('activity.livrable', 'activityLivrable')
+                    .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur') // Ajouté
+                    .leftJoinAndSelect('activity.annotations', 'annotations')
+                    .leftJoinAndSelect('activity.demandes', 'demandes');
+                    
             // Application des filtres
             if (etat) {
                 queryBuilder.andWhere('activity.etat = :etat', { etat });
