@@ -121,11 +121,18 @@ export class ActivityService {
         hasPrevPage: boolean;
     }> {
         try {
+       
             const queryBuilder = this.activityRepository.createQueryBuilder('activity')
             .leftJoinAndSelect('activity.subactivities', 'subactivities')
-            .leftJoinAndSelect('activity.livrable', 'livrable')
+            .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
+            .leftJoinAndSelect('subactivityLivrable.agentValidateur', 'subactivityLivrableAgentValidateur')
+            .leftJoinAndSelect('subactivityLivrableAgentValidateur.user', 'subactivityLivrableAgentValidateurUser') // Ajouté
+            .leftJoinAndSelect('activity.livrable', 'activityLivrable')
+            .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur')
+            .leftJoinAndSelect('activityLivrableAgentValidateur.user', 'activityLivrableAgentValidateurUser') // Ajouté
             .leftJoinAndSelect('activity.annotations', 'annotations')
             .leftJoinAndSelect('activity.demandes', 'demandes')
+            .leftJoinAndSelect('demandes.user', 'demandesUser'); // Ajouté
     
             if (etat) {
                 queryBuilder.andWhere('activity.etat = :etat', { etat: etat });
@@ -243,15 +250,18 @@ export class ActivityService {
         hasPrevPage: boolean;
     }> {
         try {
-         
+            
                 const queryBuilder = this.activityRepository.createQueryBuilder('activity')
                     .leftJoinAndSelect('activity.subactivities', 'subactivities')
                     .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
-                    .leftJoinAndSelect('subactivityLivrable.agentValidateur', 'subactivityLivrableAgentValidateur') // Ajouté
+                    .leftJoinAndSelect('subactivityLivrable.agentValidateur', 'subactivityLivrableAgentValidateur')
+                    .leftJoinAndSelect('subactivityLivrableAgentValidateur.user', 'subactivityLivrableAgentValidateurUser') // Ajouté
                     .leftJoinAndSelect('activity.livrable', 'activityLivrable')
-                    .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur') // Ajouté
+                    .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur')
+                    .leftJoinAndSelect('activityLivrableAgentValidateur.user', 'activityLivrableAgentValidateurUser') // Ajouté
                     .leftJoinAndSelect('activity.annotations', 'annotations')
                     .leftJoinAndSelect('activity.demandes', 'demandes')
+                    .leftJoinAndSelect('demandes.user', 'demandesUser'); // Ajouté
                     
             // Application des filtres
             if (etat) {
@@ -278,7 +288,6 @@ export class ActivityService {
                 const nextDay = new Date(dateFin);
                 nextDay.setDate(nextDay.getDate() + 1);
                 queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { dateDebut, dateFin: nextDay.toISOString() });
-                //queryBuilder.andWhere('activity.dateDebut >= :dateDebut AND activity.dateFin <= :nextDay', { dateDebut, nextDay: nextDay.toISOString() });
             } else if (dateDebut) {
                 queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
             } else if (dateFin) {
@@ -321,6 +330,7 @@ export class ActivityService {
             );
         }
     }
+
     
     
 
