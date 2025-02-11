@@ -29,6 +29,13 @@ export class DemandeUser extends Timestamp{
             nullable:true
         })
         date_validation?:Date;
+
+        @Column({
+            name:'comment',
+            type:'text',
+            nullable:true
+        })
+        comment:string
     
         @Column({
             name:'isValidate',

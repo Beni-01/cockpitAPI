@@ -1,4 +1,4 @@
-import { IsNumber, IsNotEmpty, IsOptional } from "class-validator";
+import { IsNumber, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateDemandeUserDto {
         @IsNumber()
@@ -11,6 +11,10 @@ export class CreateDemandeUserDto {
     
         @IsOptional()
         isValidate?:boolean;
+
+        @IsOptional()
+        @IsString()
+        comment?:string
     
         @IsOptional()
         date_validation?:Date;

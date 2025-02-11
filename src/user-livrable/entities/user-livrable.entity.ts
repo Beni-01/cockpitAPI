@@ -30,6 +30,13 @@ export class UserLivrable  extends Timestamp{
     date_validation?:Date;
 
     @Column({
+        name:'comment',
+        type:'text',
+        nullable:true
+    })
+    comment:string
+
+    @Column({
         name:'isValidate',
         type:'boolean',
         default:false
