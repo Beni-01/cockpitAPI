@@ -251,7 +251,7 @@ export class ActivityService {
                     .leftJoinAndSelect('activity.livrable', 'activityLivrable')
                     .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur') // Ajouté
                     .leftJoinAndSelect('activity.annotations', 'annotations')
-                    .leftJoinAndSelect('activity.demandes', 'demandes');
+                    .leftJoinAndSelect('activity.demandes', 'demandes')
                     
             // Application des filtres
             if (etat) {
