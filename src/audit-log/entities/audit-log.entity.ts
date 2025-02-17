@@ -35,6 +35,4 @@ export class AuditLog extends Timestamp{
     @Column({ name:'performedBy', type:'int', nullable: true })
     performedBy: number;
   
-    @CreateDateColumn()
-    performedAt: Date;
 }

@@ -13,6 +13,7 @@ import * as bodyParser from 'body-parser';
 import { WsAdapter } from '@nestjs/platform-ws';
 
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { RequestContextMiddleware } from './user/request-context.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -22,6 +23,8 @@ async function bootstrap() {
   
   // Utilisation du middleware helmet pour renforcer la sécurité
   app.use(helmet());
+  
+  //app.useGlobalMiddleware(new RequestContextMiddleware());
   
   // Configuration des pipes de validation pour transformer et sécuriser les requêtes
   app.useGlobalPipes(new ValidationPipe({

@@ -56,4 +56,15 @@ export class AuditLogService {
   async deleteLog(id: number): Promise<void> {
     await this.auditLogRepository.delete(id);
   }
+
+
+  async getLogsByTable(tableName: string) {
+    return this.auditLogRepository.find({ where: { tableName }, order: { createdAt: "DESC" } });
+  }
+
+  async getLogsByUser(userId: number) {
+    return this.auditLogRepository.find({ where: { performedBy: userId }, order: { createdAt: "DESC" } });
+  }
+
+
 }

@@ -20,6 +20,7 @@ import { AuditSubscriber } from './audit-log/audit-log.subscriber';
 import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
 import { UserLivrableModule } from './user-livrable/user-livrable.module';
 import { DemandeUserModule } from './demande-user/demande-user.module';
+import { RequestContextMiddleware } from './user/request-context.middleware';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,6 +28,7 @@ import { DemandeUserModule } from './demande-user/demande-user.module';
       cache: true,
       load: [AppConfig, DatabaseConfig],
     }),
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -57,5 +59,7 @@ export class AppModule  {
     consumer
       .apply(AttachUserMiddleware) // Appliquer le middleware
       .forRoutes({ path: '*', method: RequestMethod.ALL }); // Sur toutes les routes
+
+    consumer.apply(RequestContextMiddleware).forRoutes('*'); // Appliquer à toutes les routes   
   }
 }

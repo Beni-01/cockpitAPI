@@ -20,6 +20,18 @@ export class AuditLogController {
     };
   }
 
+
+  @Get('audit/log')
+  async getLogs(@Query('table') tableName?: string, @Query('user') userId?: number) {
+    if (tableName) {
+      return this.auditLogService.getLogsByTable(tableName);
+    }
+    if (userId) {
+      return this.auditLogService.getLogsByUser(userId);
+    }
+    return [];
+  }
+
   // Récupérer tous les logs d'audit
   @Get()
   async findAll(

@@ -10,6 +10,7 @@ import { AuditSubscriber } from './audit-log.subscriber';
   controllers: [AuditLogController],
   providers: [AuditLogService, AuditSubscriber],
   exports: [AuditLogService],
+  
 
 })
 export class AuditLogModule {}

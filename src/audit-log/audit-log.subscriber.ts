@@ -2,10 +2,13 @@ import { EventSubscriber, EntitySubscriberInterface, InsertEvent, UpdateEvent, R
 import { AuditLogService } from './audit-log.service';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { AuditLog } from './entities/audit-log.entity';
 
 @EventSubscriber()
 @Injectable() // Rendre AuditSubscriber injectable
 export class AuditSubscriber implements EntitySubscriberInterface<any>{
+
+  
   constructor(
     private readonly auditLogService: AuditLogService // Injection directe du service
   ) {}
@@ -28,56 +31,56 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
 //   }
 
 // Méthode appelée après l'insertion de l'entité dans la base de données
-  async afterInsert(event: InsertEvent<any>) {
+//   async afterInsert(event: InsertEvent<any>) {
 
-    console.log('event ', event.queryRunner.data)
-    const logBoddy={
-        tableName: event.metadata.tableName,
-        entityId: event.entity.id,
-        action: "CREATE",
-        oldData: null,
-        newData: null,
-        performedBy: event.queryRunner.data?.userId || null,
-      }
+//     console.log('event ', event.queryRunner.data)
+//     const logBoddy={
+//         tableName: event.metadata.tableName,
+//         entityId: event.entity.id,
+//         action: "CREATE",
+//         oldData: null,
+//         newData: null,
+//         performedBy: event.queryRunner.data?.userId || null,
+//       }
       
-    console.log('after insert', logBoddy);
-}
+//     console.log('after insert', logBoddy);
+// }
 
   // Méthode appelée après la mise à jour de l'entité dans la base de données
-  async afterUpdate(event: UpdateEvent<any>) {
-    console.log('after update');
-    if (!this.auditLogService) {
-      console.error('AuditLogService est undefined');
-      return;
-    }
+  // async afterUpdate(event: UpdateEvent<any>) {
+  //   console.log('after update');
+  //   if (!this.auditLogService) {
+  //     console.error('AuditLogService est undefined');
+  //     return;
+  //   }
 
-    await this.auditLogService.log(
-      event.metadata.tableName,
-      event.entity.id,
-      'UPDATE',
-      event.databaseEntity, // Anciennes données
-      event.entity, // Nouvelles données
-      event.queryRunner.data?.userId || null,
-    );
-  }
+  //   await this.auditLogService.log(
+  //     event.metadata.tableName,
+  //     event.entity.id,
+  //     'UPDATE',
+  //     event.databaseEntity, // Anciennes données
+  //     event.entity, // Nouvelles données
+  //     event.queryRunner.data?.userId || null,
+  //   );
+  // }
 
   // Méthode appelée après la suppression de l'entité dans la base de données
-  async afterRemove(event: RemoveEvent<any>) {
-    console.log('after remove');
-    if (!this.auditLogService) {
-      console.error('AuditLogService est undefined');
-      return;
-    }
+  // async afterRemove(event: RemoveEvent<any>) {
+  //   console.log('after remove');
+  //   if (!this.auditLogService) {
+  //     console.error('AuditLogService est undefined');
+  //     return;
+  //   }
 
-    await this.auditLogService.log(
-      event.metadata.tableName,
-      event.entityId,
-      'DELETE',
-      event.databaseEntity, // Données supprimées
-      null,
-      event.queryRunner.data?.userId || null,
-    );
-  }
+  //   await this.auditLogService.log(
+  //     event.metadata.tableName,
+  //     event.entityId,
+  //     'DELETE',
+  //     event.databaseEntity, // Données supprimées
+  //     null,
+  //     event.queryRunner.data?.userId || null,
+  //   );
+  // }
 
 
   async ReplicateUserData(uri:string,body:any, method:string){
@@ -110,6 +113,41 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
       }
       
     }
+
+
+    async afterInsert(event: InsertEvent<any>) {
+      await event.manager.getRepository(AuditLog).save({
+        tableName: event.metadata.tableName,
+        entityId: event.entity.id,
+        action: "INSERT",
+        newData: event.entity,
+        performedBy: event.entity.performedBy || null
+      });
+    }
+  
+    async afterUpdate(event: UpdateEvent<any>) {
+      await event.manager.getRepository(AuditLog).save({
+        tableName: event.metadata.tableName,
+        entityId: event.entity.id,
+        action: "UPDATE",
+        oldData: event.databaseEntity,
+        newData: event.entity,
+        performedBy: event.entity.performedBy || null
+      });
+    }
+  
+    async afterRemove(event: RemoveEvent<any>) {
+      await event.manager.getRepository(AuditLog).save({
+        tableName: event.metadata.tableName,
+        entityId: event.entityId,
+        action: "DELETE",
+        oldData: event.databaseEntity,
+        performedBy: event.entity?.performedBy || null
+      });
+    }
+
+
+
 }
 
 
