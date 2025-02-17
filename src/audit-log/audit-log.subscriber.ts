@@ -6,12 +6,12 @@ import { AuditLog } from './entities/audit-log.entity';
 
 @EventSubscriber()
 @Injectable() // Rendre AuditSubscriber injectable
-export class AuditSubscriber implements EntitySubscriberInterface<any>{
+export class AuditSubscriber {
 
   
-  constructor(
-    private readonly auditLogService: AuditLogService // Injection directe du service
-  ) {}
+  // constructor(
+  //   private readonly auditLogService: AuditLogService // Injection directe du service
+  // ) {}
 
   
 //   // Méthode appelée avant l'insertion de l'entité dans la base de données
@@ -114,22 +114,27 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
       
     }
 
-    async afterInsert(event: InsertEvent<any>) {
-      await event.manager.getRepository(AuditLog).save({
-        tableName: event.metadata.tableName || null,
-        entityId: event.entity.id || null,
-        action: "INSERT",
-        userId: event.entity?.userId || null
-      });
-    }
+    // async afterInsert(event: InsertEvent<any>) {
+    //   await event.manager.getRepository(AuditLog).save({
+    //     tableName: event.metadata.tableName || null,
+    //     entityId: event.entity.id || null,
+    //     action: "INSERT",
+    //     userId: event.entity?.userId || null
+    //   });
+    // }
   
     // async afterUpdate(event: UpdateEvent<any>) {
+
+
+    //   console.log(' EVENT UPDATED ', event.entity)
+
     //   await event.manager.getRepository(AuditLog).save({
     //     tableName: event.metadata.tableName || null,
     //     entityId: event.entity.id || null,
     //     action: "UPDATE",
     //     userId: event.entity?.userId || null
     //   });
+      
     // }
   
     // async afterRemove(event: RemoveEvent<any>) {
