@@ -171,6 +171,7 @@ export class SousActivityService {
       activity.budgetConsomme += budgetConsomme;
       activity.budget=budgetActivity;
   
+      console.log('activité changer ', activity.budget, activity)
       // Enregistrer les modifications sur l'activité
       await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget });
   
