@@ -150,41 +150,15 @@ export class SousActivityService {
 
       let budgetActivity:number=0;
 
-      // Trouver la sous-activité existante
-      const sousActivity = await this.findOne(id);
-      if (!sousActivity) {
-        throw new NotFoundException('Sous-activité non trouvée');
-      }
-  
-      // Trouver l'activité associée avec toutes ses sous-activités
-      const activity = await this.activityRepository.findOne(idActivity);
+     
+ 
 
-      activity.subactivities.forEach((subactivity:any)=>{
-        budgetActivity+=subactivity.budget
-      })
-  
-      if (!activity) {
-        throw new NotFoundException('Activité non trouvée');
-      }
-  
-      // Mettre à jour le budget consommé de l'activité
-      activity.budgetConsomme += budgetConsomme;
-      activity.budget=budgetActivity;
-  
-      console.log('activité changer ', activity.budget, activity)
-      // Enregistrer les modifications sur l'activité
-      await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget });
-  
-      // Vérifier si tous les statuts des sous-activités sont "clôturés"
-      const allSubActivitiesClosed = activity.subactivities.every(
-        (subActivity) => subActivity.status.toLowerCase() === 'cloturé'
-      );
-  
-      if (allSubActivitiesClosed) {
-        // Si oui, mettre à jour le statut de l'activité
-        activity.status = 'cloturé';
-        await this.activityRepository.update(idActivity, { status: activity.status });
-      }
+ // Trouver la sous-activité existante
+ const sousActivity = await this.findOne(id);
+ if (!sousActivity) {
+   throw new NotFoundException('Sous-activité non trouvée');
+ }
+
 
 
       if (updateSousActivityDto.livrable && !idLivrable) {
@@ -207,7 +181,40 @@ export class SousActivityService {
       Object.assign(sousActivity, updateSousActivityDto);
   
       // Enregistrer les modifications sur la sous-activité
-      return await this.sousActivityRepository.save(sousActivity);
+      const sousActivityResult= await this.sousActivityRepository.save(sousActivity);
+
+
+       // Trouver l'activité associée avec toutes ses sous-activités
+      const activity = await this.activityRepository.findOne(idActivity);
+
+      if (!activity) {
+        throw new NotFoundException('Activité non trouvée');
+      }
+
+      activity.subactivities.forEach((subactivity:any)=>{
+        budgetActivity+=subactivity.budget
+      })
+
+      // Vérifier si tous les statuts des sous-activités sont "clôturés"
+      const allSubActivitiesClosed = activity.subactivities.every(
+        (subActivity) => subActivity.status.toLowerCase() === 'cloturé'
+      );
+
+      if (allSubActivitiesClosed) {
+        // Si oui, mettre à jour le statut de l'activité
+        activity.status = 'cloturé';
+        await this.activityRepository.update(idActivity, { status: activity.status });
+      }
+
+        // Mettre à jour le budget consommé de l'activité
+        activity.budgetConsomme += budgetConsomme;
+        activity.budget=budgetActivity;
+
+    // Enregistrer les modifications sur l'activité
+   await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget });
+
+
+      return sousActivityResult
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la sous-activité et du budget de l\'activité:', error);
       throw new InternalServerErrorException(
