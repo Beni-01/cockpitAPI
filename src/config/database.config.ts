@@ -1,5 +1,5 @@
 import { registerAs } from '@nestjs/config';
-import { AuditSubscriber } from 'src/audit-log/audit-log.subscriber';
+
 
 export default registerAs('database', () => ({
   type: 'mysql',
@@ -10,7 +10,6 @@ export default registerAs('database', () => ({
   database: process.env.DB_NAME,
   synchronize: process.env.NODE_ENV === 'development',
   entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
-  subscribers: [AuditSubscriber],
   logging: false,
   migrations: [`${__dirname}/../../db/migrations/*{.ts,.js}`],
   migrationsTableName: 'migrations',

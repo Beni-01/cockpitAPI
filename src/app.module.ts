@@ -16,11 +16,14 @@ import { AuditLogModule } from './audit-log/audit-log.module';
 import { AnnotationActivityModule } from './annotation-activity/annotation-activity.module';
 import { LivrableModule } from './livrable/livrable.module';
 import { AuditInitializerService } from './audit-log/audit-initializer.service';
-import { AuditSubscriber } from './audit-log/audit-log.subscriber';
+
 import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
 import { UserLivrableModule } from './user-livrable/user-livrable.module';
 import { DemandeUserModule } from './demande-user/demande-user.module';
 import { RequestContextMiddleware } from './user/request-context.middleware';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AuditLogService } from './audit-log/audit-log.service';
+import { AuditInterceptor } from './audit-log/audti-log.interceptor';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -52,7 +55,12 @@ import { RequestContextMiddleware } from './user/request-context.middleware';
    
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,  
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },],
 })
 export class AppModule  {
   configure(consumer: MiddlewareConsumer) {

@@ -13,6 +13,9 @@ import * as bodyParser from 'body-parser';
 import { WsAdapter } from '@nestjs/platform-ws';
 
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { AuditInterceptor } from './audit-log/audti-log.interceptor';
+import { AuditLogService } from './audit-log/audit-log.service';
+import { CustomValidationPipe } from './custom-app.pipe';
 
 
 async function bootstrap() {
@@ -23,15 +26,10 @@ async function bootstrap() {
   
   // Utilisation du middleware helmet pour renforcer la sécurité
   app.use(helmet());
-  
-  //app.useGlobalMiddleware(new RequestContextMiddleware());
-  
+
+ 
   // Configuration des pipes de validation pour transformer et sécuriser les requêtes
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(new CustomValidationPipe());
 
 
   app.enableCors();

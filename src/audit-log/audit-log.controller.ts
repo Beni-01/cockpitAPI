@@ -22,7 +22,7 @@ export class AuditLogController {
 
 
   @Get('audit/log')
-  async getLogs(@Query('table') tableName?: string, @Query('user') userId?: number) {
+  async getLogs(@Query('table') tableName?: string, @Query('userId') userId?: number) {
     if (tableName) {
       return this.auditLogService.getLogsByTable(tableName);
     }

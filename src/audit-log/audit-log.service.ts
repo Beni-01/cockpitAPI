@@ -29,7 +29,6 @@ export class AuditLogService {
       userId,
     });
 
-    console.log('je suis executer ')
     await this.auditLogRepository.save(log);
   }
 
