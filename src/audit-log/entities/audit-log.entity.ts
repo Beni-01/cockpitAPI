@@ -39,7 +39,6 @@ export class AuditLog extends Timestamp{
     @Column({ name:'userId', type:'int', nullable: true })
     userId: number;
 
-
     @ManyToOne(()=>User, (user)=>user.auditable, {eager:true})
     user:User
   

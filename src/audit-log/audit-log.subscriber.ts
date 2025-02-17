@@ -123,22 +123,22 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
       });
     }
   
-    async afterUpdate(event: UpdateEvent<any>) {
-      await event.manager.getRepository(AuditLog).save({
-        tableName: event.metadata.tableName || null,
-        entityId: event.entity.id || null,
-        action: "UPDATE",
-        userId: event.entity?.userId || null
-      });
-    }
+    // async afterUpdate(event: UpdateEvent<any>) {
+    //   await event.manager.getRepository(AuditLog).save({
+    //     tableName: event.metadata.tableName || null,
+    //     entityId: event.entity.id || null,
+    //     action: "UPDATE",
+    //     userId: event.entity?.userId || null
+    //   });
+    // }
   
-    async afterRemove(event: RemoveEvent<any>) {
-      await event.manager.getRepository(AuditLog).save({
-        tableName: event.metadata.tableName || null,
-        entityId: event.entity.id || null,
-        userId:event.entity?.userId || null
-      });
-    }
+    // async afterRemove(event: RemoveEvent<any>) {
+    //   await event.manager.getRepository(AuditLog).save({
+    //     tableName: event.metadata.tableName || null,
+    //     entityId: event.entity.id || null,
+    //     userId:event.entity?.userId || null
+    //   });
+    // }
 
 
 
