@@ -11,19 +11,22 @@ export class AuditLog extends Timestamp{
   
     @Column({
         name:'tableName',
-        type:'varchar'
+        type:'varchar',
+        nullable:true
     })
     tableName: string;
   
     @Column({
         name:'entityId',
-        type:'int'
+        type:'int',
+        nullable:true
     })
     entityId: number;
   
     @Column({
         name:'action',
-        type:'varchar'
+        type:'varchar',
+        nullable:true
     })
     action: string;
   

@@ -116,8 +116,8 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
 
     async afterInsert(event: InsertEvent<any>) {
       await event.manager.getRepository(AuditLog).save({
-        tableName: event.metadata.tableName,
-        entityId: event.entity.id,
+        tableName: event.metadata.tableName || null,
+        entityId: event.entity.id || null,
         action: "INSERT",
         userId: event.entity?.userId || null
       });
@@ -125,8 +125,8 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
   
     async afterUpdate(event: UpdateEvent<any>) {
       await event.manager.getRepository(AuditLog).save({
-        tableName: event.metadata.tableName,
-        entityId: event.entity.id,
+        tableName: event.metadata.tableName || null,
+        entityId: event.entity.id || null,
         action: "UPDATE",
         userId: event.entity?.userId || null
       });
@@ -134,8 +134,8 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
   
     async afterRemove(event: RemoveEvent<any>) {
       await event.manager.getRepository(AuditLog).save({
-        tableName: event.metadata.tableName,
-        entityId: event.entityId,
+        tableName: event.metadata.tableName || null,
+        entityId: event.entity.id || null,
         userId:event.entity?.userId || null
       });
     }

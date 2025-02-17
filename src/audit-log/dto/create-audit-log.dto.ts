@@ -4,13 +4,13 @@ import { CreateDateColumn } from "typeorm";
 export class CreateAuditLogDto {
 
   @IsString()
-  tableName: string;
+  tableName?: string;
 
   @IsNumber()
-  entityId: number;
+  entityId?: number;
 
   @IsString()
-  action: string;
+  action?: string;
 
   @IsJSON()
   @IsOptional()
