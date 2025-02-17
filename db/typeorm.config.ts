@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
-import { AuditSubscriber } from 'src/audit-log/audit-log.subscriber';
+
 
 config();
 
@@ -19,7 +19,7 @@ export default new DataSource({
   logging: configService.getOrThrow('NODE_ENV') === 'development',
   migrations: [`${__dirname}/migrations/*{.ts,.js}`],
   migrationsTableName: 'migrations',
-  subscribers: [AuditSubscriber],
+  
   extra: {
     timezone: 'Z', // Pour UTC
     // timezone: 'Africa/Kinshasa', // Pour un fuseau horaire spécifique

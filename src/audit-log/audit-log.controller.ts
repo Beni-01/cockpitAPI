@@ -21,7 +21,7 @@ export class AuditLogController {
   }
 
 
-  @Get('audit/log')
+  @Get('log')
   async getLogs(@Query('table') tableName?: string, @Query('userId') userId?: number) {
     if (tableName) {
       return this.auditLogService.getLogsByTable(tableName);
@@ -35,14 +35,15 @@ export class AuditLogController {
   // Récupérer tous les logs d'audit
   @Get()
   async findAll(
-    @Query('tableName') tableName?: string,
+    @Query('table') tableName?: string,
     @Query('action') action?: string,
+    @Query('userId') userId?: string,
   ): Promise<AuditLog[]> {
-    return await this.auditLogService.findLogs(tableName, action);
+    return await this.auditLogService.findLogs(tableName, action, +userId);
   }
 
   // Récupérer les logs par ID
-  @Get(':id')
+  @Get('getLogById/:id')
   async findOne(@Param('id') id: number): Promise<AuditLog> {
     return await this.auditLogService.findLogById(id);
   }

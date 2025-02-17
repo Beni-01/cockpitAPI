@@ -33,7 +33,7 @@ export class AuditLogService {
   }
 
   // Trouver tous les logs avec filtres optionnels
-  async findLogs(tableName?: string, action?: string): Promise<AuditLog[]> {
+  async findLogs(tableName?: string, action?: string, userId?:number): Promise<AuditLog[]> {
     const queryBuilder = this.auditLogRepository.createQueryBuilder('log');
 
     if (tableName) {
@@ -41,6 +41,10 @@ export class AuditLogService {
     }
     if (action) {
       queryBuilder.andWhere('log.action = :action', { action });
+    }
+
+    if (userId) {
+      queryBuilder.andWhere('log.userId = :userId', { userId });
     }
 
     return await queryBuilder.getMany();
