@@ -26,6 +26,8 @@ export class ActivityService {
           let budgetActivity:number=0;
 
           const { subactivities, livrable, typelivrable, ...activityData } = createActivityDto;
+
+        
           subactivities.forEach((subactivity:any)=>{
             budgetActivity+=subactivity.budget
           })

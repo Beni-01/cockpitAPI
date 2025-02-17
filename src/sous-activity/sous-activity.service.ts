@@ -120,6 +120,7 @@ export class SousActivityService {
     }
   }
 
+
   // // Update
   // async update(id: number, idActivity: number, updateSousActivityDto: UpdateSousActivityDto): Promise<SousActivity> {
   //   try {
@@ -135,6 +136,7 @@ export class SousActivityService {
   //   }
   // }
 
+
   async update(
     id: number,
     idActivity: number,
@@ -145,6 +147,9 @@ export class SousActivityService {
       // Récupérer le budget consommé de la sous-activité
       const budgetConsomme = updateSousActivityDto.budgetConsomme || 0;
   
+
+      let budgetActivity:number=0;
+
       // Trouver la sous-activité existante
       const sousActivity = await this.findOne(id);
       if (!sousActivity) {
@@ -153,6 +158,10 @@ export class SousActivityService {
   
       // Trouver l'activité associée avec toutes ses sous-activités
       const activity = await this.activityRepository.findOne(idActivity);
+
+      activity.subactivities.forEach((subactivity:any)=>{
+        budgetActivity+=subactivity.budget
+      })
   
       if (!activity) {
         throw new NotFoundException('Activité non trouvée');
@@ -160,9 +169,10 @@ export class SousActivityService {
   
       // Mettre à jour le budget consommé de l'activité
       activity.budgetConsomme += budgetConsomme;
+      activity.budget=budgetActivity;
   
       // Enregistrer les modifications sur l'activité
-      await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme });
+      await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget });
   
       // Vérifier si tous les statuts des sous-activités sont "clôturés"
       const allSubActivitiesClosed = activity.subactivities.every(

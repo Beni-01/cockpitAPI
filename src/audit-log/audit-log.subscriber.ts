@@ -27,9 +27,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
 //     await this.ReplicateUserData('http://localhost:6002/activity', logBoddy , 'POST')
 //   }
 
-
-
-  // Méthode appelée après l'insertion de l'entité dans la base de données
+// Méthode appelée après l'insertion de l'entité dans la base de données
   async afterInsert(event: InsertEvent<any>) {
 
     console.log('event ', event.queryRunner.data)
@@ -43,8 +41,6 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
       }
       
     console.log('after insert', logBoddy);
-
-
 }
 
   // Méthode appelée après la mise à jour de l'entité dans la base de données
