@@ -5,7 +5,7 @@ import { ModuleRef } from '@nestjs/core';
 import { AuditLog } from './entities/audit-log.entity';
 
 @EventSubscriber()
-@Injectable() // Rendre AuditSubscriber injectable
+// @Injectable() // Rendre AuditSubscriber injectable
 export class AuditSubscriber {
 
   
@@ -13,7 +13,6 @@ export class AuditSubscriber {
   //   private readonly auditLogService: AuditLogService // Injection directe du service
   // ) {}
 
-  
 //   // Méthode appelée avant l'insertion de l'entité dans la base de données
 //   async beforeInsert(event: InsertEvent<any>) {
 //     const logBoddy={
