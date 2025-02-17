@@ -22,10 +22,7 @@ export class CreateAuditLogDto {
 
   @IsNumber()
   @IsOptional()
-  performedBy?: number;
+  userId?: number;
 
-  @CreateDateColumn({
-    update:false
-})
-  performedAt: Date;
+ 
 }

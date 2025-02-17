@@ -10,10 +10,10 @@ export class AuditLogController {
 
   @Post()
   async createAuditLog(@Body() createAuditLogDto: CreateAuditLogDto) {
-    const { tableName, entityId, action, oldData, newData, performedBy } = createAuditLogDto;
+    const { tableName, entityId, action, oldData, newData, userId } = createAuditLogDto;
 
     // Call the service method to log the audit
-    await this.auditLogService.log(tableName, entityId, action, oldData, newData, performedBy);
+    await this.auditLogService.log(tableName, entityId, action, oldData, newData, userId);
 
     return {
       message: 'Audit log created successfully',

@@ -13,7 +13,7 @@ import * as bodyParser from 'body-parser';
 import { WsAdapter } from '@nestjs/platform-ws';
 
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { RequestContextMiddleware } from './user/request-context.middleware';
+
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -44,11 +44,8 @@ async function bootstrap() {
   //   // credentials: true, // Autorise l'envoi de cookies (nécessaire pour CSRF)
   // });
 
-
   // Middleware pour l'analyse des cookies
   app.use(cookieParser());
-
-
 
   // Adapter la taille maximale des en-têtes HTTP
   app.getHttpAdapter().getInstance().set('maxHttpHeaderSize', 100 * 1024 * 1024);
@@ -74,7 +71,6 @@ async function bootstrap() {
 
   // Configuration du niveau de journalisation
 //  app.useLogger(['error', 'warn', 'log', 'debug', 'verbose']); // Choisissez les niveaux de journalisation que vous souhaitez
-
 
   // Utilisation de l'adaptateur WebSocket pour les notifications en temps réel
   app.useWebSocketAdapter(new WsAdapter(app));

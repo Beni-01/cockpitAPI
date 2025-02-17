@@ -22,7 +22,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
 //         "action": "CREATE",
 //         "oldData": null,
 //         "newData": event.entity,
-//         "performedBy": event.queryRunner.data?.userId || null,
+//         "userId": event.queryRunner.data?.userId || null,
     
 //       }
       
@@ -40,7 +40,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
 //         action: "CREATE",
 //         oldData: null,
 //         newData: null,
-//         performedBy: event.queryRunner.data?.userId || null,
+//         userId: event.queryRunner.data?.userId || null,
 //       }
       
 //     console.log('after insert', logBoddy);
@@ -121,7 +121,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
         entityId: event.entity.id,
         action: "INSERT",
         newData: event.entity,
-        performedBy: event.entity?.userId || null
+        userId: event.entity?.userId || null
       });
     }
   
@@ -132,7 +132,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
         action: "UPDATE",
         oldData: event.databaseEntity,
         newData: event.entity,
-        performedBy: event.entity?.userId || null
+        userId: event.entity?.userId || null
       });
     }
   
@@ -142,7 +142,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
         entityId: event.entityId,
         action: "DELETE",
         oldData: event.databaseEntity,
-        performedBy:event.entity?.userId || null
+        userId:event.entity?.userId || null
       });
     }
 
