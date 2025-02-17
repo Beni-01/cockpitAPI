@@ -1,5 +1,6 @@
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-import { PrimaryGeneratedColumn, Column, CreateDateColumn, Entity } from "typeorm";
+import { User } from "src/user/entities/user.entity";
+import { PrimaryGeneratedColumn, Column, CreateDateColumn, Entity, ManyToOne } from "typeorm";
 
 @Entity({
     name:'auditLog'
@@ -32,7 +33,11 @@ export class AuditLog extends Timestamp{
     @Column({ type: 'json', nullable: true })
     newData: any;
   
-    @Column({ name:'performedBy', type:'int', nullable: true })
-    performedBy: number;
+    @Column({ name:'userId', type:'int', nullable: true })
+    userId: number;
+
+
+    @ManyToOne(()=>User, (user)=>user.auditable, {eager:true})
+    user:User
   
 }

@@ -121,7 +121,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
         entityId: event.entity.id,
         action: "INSERT",
         newData: event.entity,
-        performedBy: event.entity.performedBy || null
+        performedBy: event.entity?.userId || null
       });
     }
   
@@ -132,7 +132,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
         action: "UPDATE",
         oldData: event.databaseEntity,
         newData: event.entity,
-        performedBy: event.entity.performedBy || null
+        performedBy: event.entity?.userId || null
       });
     }
   
@@ -142,7 +142,7 @@ export class AuditSubscriber implements EntitySubscriberInterface<any>{
         entityId: event.entityId,
         action: "DELETE",
         oldData: event.databaseEntity,
-        performedBy: event.entity?.performedBy || null
+        performedBy:event.entity?.userId || null
       });
     }
 

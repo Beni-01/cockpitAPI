@@ -18,7 +18,7 @@ export class AuditLogService {
     action: string,
     oldData: any,
     newData: any,
-    performedBy: number,
+    userId: number,
   ) {
     const log = this.auditLogRepository.create({
       tableName,
@@ -26,7 +26,7 @@ export class AuditLogService {
       action,
       oldData,
       newData,
-      performedBy,
+      userId,
     });
 
     console.log('je suis executer ')
@@ -63,7 +63,7 @@ export class AuditLogService {
   }
 
   async getLogsByUser(userId: number) {
-    return this.auditLogRepository.find({ where: { performedBy: userId }, order: { createdAt: "DESC" } });
+    return this.auditLogRepository.find({ where: { userId }, order: { createdAt: "DESC" } });
   }
 
 

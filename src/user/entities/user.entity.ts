@@ -7,6 +7,7 @@ import { DemandeProlongation } from "src/demande-prolongation/entities/demande-p
 import { AnnotationActivity } from "src/annotation-activity/entities/annotation-activity.entity";
 import { UserLivrable } from "src/user-livrable/entities/user-livrable.entity";
 import { DemandeUser } from "src/demande-user/entities/demande-user.entity";
+import { AuditLog } from "src/audit-log/entities/audit-log.entity";
 
 
 @Entity({
@@ -242,6 +243,9 @@ export class User extends Timestamp {
 
     @OneToMany(()=>DemandeUser,(demandeUser)=>demandeUser.user)
     demandeUser:DemandeUser[]
+
+    @OneToMany(()=>AuditLog, (auditable)=>auditable.user)
+    auditable:AuditLog[]
 }
 
 
