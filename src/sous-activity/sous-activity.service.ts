@@ -31,6 +31,9 @@ export class SousActivityService {
   // Create
   async create(createSousActivityDto: CreateSousActivityDto): Promise<SousActivity> {
     try {
+
+      let budgetActivity:number=0;
+      
       const { livrable, typelivrable, ...subActivityData } = createSousActivityDto;
       const sousActivity = this.sousActivityRepository.create(subActivityData);
 
@@ -40,7 +43,32 @@ export class SousActivityService {
         sousActivity.livrable=savedLivrableSubLivraison
     }
 
-      return await this.sousActivityRepository.save(sousActivity);
+      const subactivitySaved=  await this.sousActivityRepository.save(sousActivity);
+
+      // Trouver l'activité associée avec toutes ses sous-activités
+      const activity = await this.activityRepository.findOne(createSousActivityDto.activityId);
+
+      const result = activity.subactivities.reduce((acc, activity) => {
+        // Comparer les dates pour trouver la plus ancienne et la plus récente
+        acc.minDebut = acc.minDebut ? (new Date(activity.debut) < new Date(acc.minDebut) ? activity.debut : acc.minDebut) : activity.debut;
+        acc.maxFin = acc.maxFin ? (new Date(activity.fin) > new Date(acc.maxFin) ? activity.fin : acc.maxFin) : activity.fin;
+        return acc;
+    }, { minDebut: null, maxFin: null });
+
+
+        activity.subactivities.forEach((subactivity:any)=>{
+          budgetActivity+=subactivity.budget
+        })
+
+        activity.budget=budgetActivity;
+        activity.dateDebut= result.minDebut
+        activity.dateFin=result.maxFin
+
+     // Enregistrer les modifications sur l'activité
+      await this.activityRepository.update(createSousActivityDto.activityId, { budget:activity.budget, dateDebut:activity.dateDebut, dateFin:activity.dateFin });
+
+
+      return subactivitySaved
     } catch (error) {
       throw new InternalServerErrorException('Erreur lors de la création de la sous-activité');
     }
@@ -199,7 +227,6 @@ export class SousActivityService {
     }, { minDebut: null, maxFin: null });
 
 
-
       // Vérifier si tous les statuts des sous-activités sont "clôturés"
       const allSubActivitiesClosed = activity.subactivities.every(
         (subActivity) => subActivity.status.toLowerCase() === 'cloturé'
@@ -218,8 +245,8 @@ export class SousActivityService {
         activity.dateDebut= result.minDebut
         activity.dateFin=result.maxFin
 
-    // Enregistrer les modifications sur l'activité
-   await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget, dateDebut:activity.dateDebut, dateFin:activity.dateFin });
+     // Enregistrer les modifications sur l'activité
+      await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget, dateDebut:activity.dateDebut, dateFin:activity.dateFin });
 
 
       return sousActivityResult
