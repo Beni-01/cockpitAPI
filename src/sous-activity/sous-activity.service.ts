@@ -150,16 +150,12 @@ export class SousActivityService {
 
       let budgetActivity:number=0;
 
-     
- 
-
+    
  // Trouver la sous-activité existante
  const sousActivity = await this.findOne(id);
  if (!sousActivity) {
    throw new NotFoundException('Sous-activité non trouvée');
  }
-
-
 
       if (updateSousActivityDto.livrable && !idLivrable) {
         // Crée un objet de livrable en fonction de la présence de typelivrable
@@ -195,6 +191,15 @@ export class SousActivityService {
         budgetActivity+=subactivity.budget
       })
 
+      const result = activity.subactivities.reduce((acc, activity) => {
+        // Comparer les dates pour trouver la plus ancienne et la plus récente
+        acc.minDebut = acc.minDebut ? (new Date(activity.debut) < new Date(acc.minDebut) ? activity.debut : acc.minDebut) : activity.debut;
+        acc.maxFin = acc.maxFin ? (new Date(activity.fin) > new Date(acc.maxFin) ? activity.fin : acc.maxFin) : activity.fin;
+        return acc;
+    }, { minDebut: null, maxFin: null });
+
+
+
       // Vérifier si tous les statuts des sous-activités sont "clôturés"
       const allSubActivitiesClosed = activity.subactivities.every(
         (subActivity) => subActivity.status.toLowerCase() === 'cloturé'
@@ -210,8 +215,11 @@ export class SousActivityService {
         activity.budgetConsomme += budgetConsomme;
         activity.budget=budgetActivity;
 
+        activity.dateDebut= result.minDebut
+        activity.dateFin=result.maxFin
+
     // Enregistrer les modifications sur l'activité
-   await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget });
+   await this.activityRepository.update(idActivity, { budgetConsomme: activity.budgetConsomme, budget:activity.budget, dateDebut:activity.dateDebut, dateFin:activity.dateFin });
 
 
       return sousActivityResult

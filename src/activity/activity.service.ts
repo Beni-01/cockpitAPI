@@ -50,6 +50,7 @@ export class ActivityService {
 
           // Créer une nouvelle instance d'Activity à partir des données fournies
           activity.budget= createActivityDto.budget ? createActivityDto.budget :  budgetActivity
+          
           activity.dateDebut= createActivityDto.dateDebut ? createActivityDto.dateDebut : result.minDebut
           activity.dateFin=createActivityDto.dateFin ? createActivityDto.dateFin : result.maxFin
 
