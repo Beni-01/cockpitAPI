@@ -242,139 +242,134 @@ export class ActivityService {
     }
     
 
+    async findAllGroupedByDirection(
+        etat?: string,
+        status?: string,
+        direction?: string,
+        province?: string,
+        titre?: string,
+        dateDebut?: string,
+        dateFin?: string,
+        page: string = '1',
+        limit: number = 7
+    ): Promise<{
+        activites: Record<string, Activity[]>;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    }> {
+        try {
+            const queryBuilder = this.activityRepository.createQueryBuilder('activity')
+                .leftJoinAndSelect('activity.subactivities', 'subactivities')
+                .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
+                .leftJoinAndSelect('activity.livrable', 'activityLivrable')
+                .leftJoinAndSelect('activity.annotations', 'annotations')
+                .leftJoinAndSelect('activity.demandes', 'demandes');
 
+            // Application des filtres
+            if (etat) queryBuilder.andWhere('activity.etat = :etat', { etat });
+            if (status) queryBuilder.andWhere('activity.status = :status', { status });
+            if (direction) queryBuilder.andWhere('activity.direction = :direction', { direction });
+            if (province) queryBuilder.andWhere('activity.province = :province', { province });
+            if (titre) queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
+            if (dateDebut && dateFin) {
+                const nextDay = new Date(dateFin);
+                nextDay.setDate(nextDay.getDate() + 1);
+                queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { dateDebut, dateFin: nextDay.toISOString() });
+            } else if (dateDebut) {
+                queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
+            } else if (dateFin) {
+                const nextDay = new Date(dateFin);
+                nextDay.setDate(nextDay.getDate() + 1);
+                queryBuilder.andWhere('activity.dateFin <= :nextDay', { nextDay: nextDay.toISOString() });
+            }
 
-async findAllGroupedByDirection(
-    etat?: string,
-    status?: string,
-    direction?: string,
-    province?: string,
-    titre?: string,
-    dateDebut?: string,
-    dateFin?: string,
-    page: string = '1',
-    limit: number = 7
-): Promise<{
-    activites: Record<string, Activity[]>;
-    totalCount: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-}> {
-    try {
-        const queryBuilder = this.activityRepository.createQueryBuilder('activity')
-            .leftJoinAndSelect('activity.subactivities', 'subactivities')
-            .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
-            .leftJoinAndSelect('activity.livrable', 'activityLivrable')
-            .leftJoinAndSelect('activity.annotations', 'annotations')
-            .leftJoinAndSelect('activity.demandes', 'demandes');
+            // Pagination
+            const [activities, totalCount] = await queryBuilder
+                .take(limit)
+                .skip((parseInt(page, 10) - 1) * limit)
+                .getManyAndCount();
 
-        // Application des filtres
-        if (etat) queryBuilder.andWhere('activity.etat = :etat', { etat });
-        if (status) queryBuilder.andWhere('activity.status = :status', { status });
-        if (direction) queryBuilder.andWhere('activity.direction = :direction', { direction });
-        if (province) queryBuilder.andWhere('activity.province = :province', { province });
-        if (titre) queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
-        if (dateDebut && dateFin) {
-            const nextDay = new Date(dateFin);
-            nextDay.setDate(nextDay.getDate() + 1);
-            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { dateDebut, dateFin: nextDay.toISOString() });
-        } else if (dateDebut) {
-            queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
-        } else if (dateFin) {
-            const nextDay = new Date(dateFin);
-            nextDay.setDate(nextDay.getDate() + 1);
-            queryBuilder.andWhere('activity.dateFin <= :nextDay', { nextDay: nextDay.toISOString() });
+            // Mettre à jour les informations des activités en fonction des sous-activités
+            for (const activity of activities) {
+                await this.updateActivityFromSubactivities(activity);
+            }
+
+            // Groupement des activités par direction
+            const grouped = activities.reduce((acc, activity) => {
+                acc[activity.direction] = acc[activity.direction] || [];
+                acc[activity.direction].push(activity);
+                return acc;
+            }, {} as Record<string, Activity[]>);
+
+            // Métadonnées de pagination
+            const totalPages = Math.ceil(totalCount / limit);
+            const hasNextPage = parseInt(page, 10) < totalPages;
+            const hasPrevPage = parseInt(page, 10) > 1;
+
+            return {
+                activites: grouped,
+                totalCount,
+                totalPages,
+                hasNextPage,
+                hasPrevPage,
+            };
+        } catch (error) {
+            throw new BadRequestException(`Échec de la récupération des activités : ${error.message}`);
         }
+    }
 
-        // Pagination
-        const [activities, totalCount] = await queryBuilder
-            .take(limit)
-            .skip((parseInt(page, 10) - 1) * limit)
-            .getManyAndCount();
+    private async updateActivityFromSubactivities(activity: Activity): Promise<void> {
+        if (!activity.subactivities || activity.subactivities.length === 0) return;
 
-        // Mettre à jour les informations des activités en fonction des sous-activités
-        for (const activity of activities) {
-            await this.updateActivityFromSubactivities(activity);
-        }
+        // Calcul des nouvelles dates et du budget total
+        const result = activity.subactivities.reduce((acc, subactivity) => {
+            acc.minDebut = acc.minDebut
+                ? (new Date(subactivity.debut) < new Date(acc.minDebut) ? subactivity.debut : acc.minDebut)
+                : subactivity.debut;
 
-        // Groupement des activités par direction
-        const grouped = activities.reduce((acc, activity) => {
-            acc[activity.direction] = acc[activity.direction] || [];
-            acc[activity.direction].push(activity);
+            acc.maxFin = acc.maxFin
+                ? (new Date(subactivity.fin) > new Date(acc.maxFin) ? subactivity.fin : acc.maxFin)
+                : subactivity.fin;
+
+            acc.totalBudget += subactivity.budget || 0;
             return acc;
-        }, {} as Record<string, Activity[]>);
+        }, { minDebut: null, maxFin: null, totalBudget: 0 });
 
-        // Métadonnées de pagination
-        const totalPages = Math.ceil(totalCount / limit);
-        const hasNextPage = parseInt(page, 10) < totalPages;
-        const hasPrevPage = parseInt(page, 10) > 1;
+        // Mise à jour de l'activité
+        activity.dateDebut = result.minDebut;
+        activity.dateFin = result.maxFin;
+        activity.budget = result.totalBudget;
 
-        return {
-            activites: grouped,
-            totalCount,
-            totalPages,
-            hasNextPage,
-            hasPrevPage,
-        };
-    } catch (error) {
-        throw new BadRequestException(`Échec de la récupération des activités : ${error.message}`);
-    }
-}
-
-
-
-private async updateActivityFromSubactivities(activity: Activity): Promise<void> {
-    if (!activity.subactivities || activity.subactivities.length === 0) return;
-
-    // Calcul des nouvelles dates et du budget total
-    const result = activity.subactivities.reduce((acc, subactivity) => {
-        acc.minDebut = acc.minDebut
-            ? (new Date(subactivity.debut) < new Date(acc.minDebut) ? subactivity.debut : acc.minDebut)
-            : subactivity.debut;
-
-        acc.maxFin = acc.maxFin
-            ? (new Date(subactivity.fin) > new Date(acc.maxFin) ? subactivity.fin : acc.maxFin)
-            : subactivity.fin;
-
-        acc.totalBudget += subactivity.budget || 0;
-        return acc;
-    }, { minDebut: null, maxFin: null, totalBudget: 0 });
-
-    // Mise à jour de l'activité
-    activity.dateDebut = result.minDebut;
-    activity.dateFin = result.maxFin;
-    activity.budget = result.totalBudget;
-
-    // Enregistrer les modifications
-    await this.activityRepository.update(activity.id, {
-        dateDebut: activity.dateDebut,
-        dateFin: activity.dateFin,
-        budget: activity.budget
-    });
-}
-
-
-
-async findAllByStatus(status: string): Promise<Activity[]> {
-    try {
-        // Vérifier si le statut est valide avant d'effectuer la recherche
-        const validStatuses = ['En attente', 'Validé', 'Retourné', 'Approuvé', 'Reprogrammé', 'Cloturé']; // Liste des statuts possibles
-        if (!validStatuses.includes(status)) {
-            throw new BadRequestException(`Statut invalide: ${status}`);
-        }
-
-        // Trouver toutes les activités avec le statut passé en paramètre
-        return await this.activityRepository.find({
-            where: {
-                etat: status,
-            },
+        // Enregistrer les modifications
+        await this.activityRepository.update(activity.id, {
+            dateDebut: activity.dateDebut,
+            dateFin: activity.dateFin,
+            budget: activity.budget
         });
-    } catch (error) {
-        // Gérer les erreurs lors de la récupération et les envoyer à l'appelant
-        throw new BadRequestException('Échec de la récupération des activités', error.message);
     }
-}
+
+
+    async findAllByStatus(status: string): Promise<Activity[]> {
+        try {
+            // Vérifier si le statut est valide avant d'effectuer la recherche
+            const validStatuses = ['En attente', 'Validé', 'Retourné', 'Approuvé', 'Reprogrammé', 'Cloturé']; // Liste des statuts possibles
+            if (!validStatuses.includes(status)) {
+                throw new BadRequestException(`Statut invalide: ${status}`);
+            }
+
+            // Trouver toutes les activités avec le statut passé en paramètre
+            return await this.activityRepository.find({
+                where: {
+                    etat: status,
+                },
+            });
+        } catch (error) {
+            // Gérer les erreurs lors de la récupération et les envoyer à l'appelant
+            throw new BadRequestException('Échec de la récupération des activités', error.message);
+        }
+    }
 
     // Récupérer une activité par son ID
     async findOne(id: number): Promise<Activity> {
