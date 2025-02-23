@@ -50,7 +50,7 @@ export class ActivityService {
 
           // Créer une nouvelle instance d'Activity à partir des données fournies
           activity.budget= createActivityDto.budget ? createActivityDto.budget :  budgetActivity
-          
+
           activity.dateDebut= createActivityDto.dateDebut ? createActivityDto.dateDebut : result.minDebut
           activity.dateFin=createActivityDto.dateFin ? createActivityDto.dateFin : result.maxFin
 
@@ -218,6 +218,13 @@ export class ActivityService {
             const totalPages = Math.ceil(totalCount / limit);
             const hasNextPage = parseInt(page, 10) < totalPages;
             const hasPrevPage = parseInt(page, 10) > 1;
+
+
+                    // Mettre à jour les informations des activités en fonction des sous-activités
+        for (const activity of activities) {
+            await this.updateActivityFromSubactivities(activity);
+        }
+
     
             return {
                 activites: grouped,
@@ -234,107 +241,120 @@ export class ActivityService {
         }
     }
     
-    async findAllGroupedByDirection(
-        etat?: string,
-        status?: string,
-        direction?: string,
-        province?: string,
-        titre?: string,
-        dateDebut?: string,
-        dateFin?: string,
-        page: string = '1',
-        limit: number = 7
-    ): Promise<{
-        activites: Record<string, Activity[]>;
-        totalCount: number;
-        totalPages: number;
-        hasNextPage: boolean;
-        hasPrevPage: boolean;
-    }> {
-        try {
-            
-                const queryBuilder = this.activityRepository.createQueryBuilder('activity')
-                    .leftJoinAndSelect('activity.subactivities', 'subactivities')
-                    .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
-                    .leftJoinAndSelect('subactivityLivrable.agentValidateur', 'subactivityLivrableAgentValidateur')
-                    .leftJoinAndSelect('subactivityLivrableAgentValidateur.user', 'subactivityLivrableAgentValidateurUser') // Ajouté
-                    .leftJoinAndSelect('activity.livrable', 'activityLivrable')
-                    .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur')
-                    .leftJoinAndSelect('activityLivrableAgentValidateur.user', 'activityLivrableAgentValidateurUser') // Ajouté
-                    .leftJoinAndSelect('activity.annotations', 'annotations')
-                    .leftJoinAndSelect('activity.demandes', 'demandes')
-                    .leftJoinAndSelect('demandes.user', 'demandesUser'); // Ajouté
-                    
-            // Application des filtres
-            if (etat) {
-                queryBuilder.andWhere('activity.etat = :etat', { etat });
-            }
-    
-            if (status) {
-                queryBuilder.andWhere('activity.status = :status', { status });
-            }
-    
-            if (direction) {
-                queryBuilder.andWhere('activity.direction = :direction', { direction });
-            }
-    
-            if (province) {
-                queryBuilder.andWhere('activity.province = :province', { province });
-            }
-    
-            if (titre) {
-                queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
-            }
-    
-            if (dateDebut && dateFin) {
-                const nextDay = new Date(dateFin);
-                nextDay.setDate(nextDay.getDate() + 1);
-                queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { dateDebut, dateFin: nextDay.toISOString() });
-            } else if (dateDebut) {
-                queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
-            } else if (dateFin) {
-                const nextDay = new Date(dateFin);
-                nextDay.setDate(nextDay.getDate() + 1);
-                queryBuilder.andWhere('activity.dateFin <= :nextDay', { nextDay: nextDay.toISOString() });
-            }
-    
-            // Pagination
-            const [activities, totalCount] = await queryBuilder
-                .take(limit)
-                .skip((parseInt(page, 10) - 1) * limit)
-                .getManyAndCount();
-    
-            // Groupement des activités par direction
-            const grouped = activities.reduce((directionAcc, activity) => {
-                const { direction } = activity;
-                if (!directionAcc[direction]) {
-                    directionAcc[direction] = [];
-                }
-                directionAcc[direction].push(activity);
-                return directionAcc;
-            }, {} as Record<string, Activity[]>);
-    
-            // Métadonnées de pagination
-            const totalPages = Math.ceil(totalCount / limit);
-            const hasNextPage = parseInt(page, 10) < totalPages;
-            const hasPrevPage = parseInt(page, 10) > 1;
-    
-            return {
-                activites: grouped,
-                totalCount,
-                totalPages,
-                hasNextPage,
-                hasPrevPage,
-            };
-        } catch (error) {
-            throw new BadRequestException(
-                `Échec de la récupération des activités par direction : ${error.message}`
-            );
-        }
-    }
 
-    
-    
+
+
+async findAllGroupedByDirection(
+    etat?: string,
+    status?: string,
+    direction?: string,
+    province?: string,
+    titre?: string,
+    dateDebut?: string,
+    dateFin?: string,
+    page: string = '1',
+    limit: number = 7
+): Promise<{
+    activites: Record<string, Activity[]>;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+}> {
+    try {
+        const queryBuilder = this.activityRepository.createQueryBuilder('activity')
+            .leftJoinAndSelect('activity.subactivities', 'subactivities')
+            .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
+            .leftJoinAndSelect('activity.livrable', 'activityLivrable')
+            .leftJoinAndSelect('activity.annotations', 'annotations')
+            .leftJoinAndSelect('activity.demandes', 'demandes');
+
+        // Application des filtres
+        if (etat) queryBuilder.andWhere('activity.etat = :etat', { etat });
+        if (status) queryBuilder.andWhere('activity.status = :status', { status });
+        if (direction) queryBuilder.andWhere('activity.direction = :direction', { direction });
+        if (province) queryBuilder.andWhere('activity.province = :province', { province });
+        if (titre) queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
+        if (dateDebut && dateFin) {
+            const nextDay = new Date(dateFin);
+            nextDay.setDate(nextDay.getDate() + 1);
+            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { dateDebut, dateFin: nextDay.toISOString() });
+        } else if (dateDebut) {
+            queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
+        } else if (dateFin) {
+            const nextDay = new Date(dateFin);
+            nextDay.setDate(nextDay.getDate() + 1);
+            queryBuilder.andWhere('activity.dateFin <= :nextDay', { nextDay: nextDay.toISOString() });
+        }
+
+        // Pagination
+        const [activities, totalCount] = await queryBuilder
+            .take(limit)
+            .skip((parseInt(page, 10) - 1) * limit)
+            .getManyAndCount();
+
+        // Mettre à jour les informations des activités en fonction des sous-activités
+        for (const activity of activities) {
+            await this.updateActivityFromSubactivities(activity);
+        }
+
+        // Groupement des activités par direction
+        const grouped = activities.reduce((acc, activity) => {
+            acc[activity.direction] = acc[activity.direction] || [];
+            acc[activity.direction].push(activity);
+            return acc;
+        }, {} as Record<string, Activity[]>);
+
+        // Métadonnées de pagination
+        const totalPages = Math.ceil(totalCount / limit);
+        const hasNextPage = parseInt(page, 10) < totalPages;
+        const hasPrevPage = parseInt(page, 10) > 1;
+
+        return {
+            activites: grouped,
+            totalCount,
+            totalPages,
+            hasNextPage,
+            hasPrevPage,
+        };
+    } catch (error) {
+        throw new BadRequestException(`Échec de la récupération des activités : ${error.message}`);
+    }
+}
+
+
+
+private async updateActivityFromSubactivities(activity: Activity): Promise<void> {
+    if (!activity.subactivities || activity.subactivities.length === 0) return;
+
+    // Calcul des nouvelles dates et du budget total
+    const result = activity.subactivities.reduce((acc, subactivity) => {
+        acc.minDebut = acc.minDebut
+            ? (new Date(subactivity.debut) < new Date(acc.minDebut) ? subactivity.debut : acc.minDebut)
+            : subactivity.debut;
+
+        acc.maxFin = acc.maxFin
+            ? (new Date(subactivity.fin) > new Date(acc.maxFin) ? subactivity.fin : acc.maxFin)
+            : subactivity.fin;
+
+        acc.totalBudget += subactivity.budget || 0;
+        return acc;
+    }, { minDebut: null, maxFin: null, totalBudget: 0 });
+
+    // Mise à jour de l'activité
+    activity.dateDebut = result.minDebut;
+    activity.dateFin = result.maxFin;
+    activity.budget = result.totalBudget;
+
+    // Enregistrer les modifications
+    await this.activityRepository.update(activity.id, {
+        dateDebut: activity.dateDebut,
+        dateFin: activity.dateFin,
+        budget: activity.budget
+    });
+}
+
+
 
 async findAllByStatus(status: string): Promise<Activity[]> {
     try {
@@ -627,4 +647,64 @@ async findAllByStatus(status: string): Promise<Activity[]> {
     }
     
 
+    async updateAllActivities(): Promise<void> {
+        const activities = await this.activityRepository.find({ relations: ['subactivities'] });
+    
+        for (const activity of activities) {
+            await this.updateActivityFromSubactivities(activity);
+        }
+    }
+
+    async updateActivityFromSubactivitiesById(activityId: number): Promise<void> {
+        try {
+            // Récupérer l'activité avec ses sous-activités
+            const activity = await this.activityRepository.findOne({
+                where: { id: activityId },
+                relations: ['subactivities'],
+            });
+    
+            if (!activity) {
+                throw new NotFoundException(`Activité avec l'ID ${activityId} non trouvée.`);
+            }
+    
+            if (activity.subactivities.length === 0) {
+                throw new BadRequestException(`L'activité ${activityId} n'a pas de sous-activités.`);
+            }
+    
+            // Calculer les nouvelles dates et le budget total
+            const result = activity.subactivities.reduce(
+                (acc, subactivity) => {
+                    acc.minDebut = acc.minDebut
+                        ? new Date(subactivity.debut) < new Date(acc.minDebut)
+                            ? subactivity.debut
+                            : acc.minDebut
+                        : subactivity.debut;
+    
+                    acc.maxFin = acc.maxFin
+                        ? new Date(subactivity.fin) > new Date(acc.maxFin)
+                            ? subactivity.fin
+                            : acc.maxFin
+                        : subactivity.fin;
+    
+                    acc.totalBudget += subactivity.budget || 0;
+                    return acc;
+                },
+                { minDebut: null, maxFin: null, totalBudget: 0 }
+            );
+    
+            // Mise à jour de l'activité
+            await this.activityRepository.update(activityId, {
+                dateDebut: result.minDebut,
+                dateFin: result.maxFin,
+                budget: result.totalBudget,
+            });
+    
+        } catch (error) {
+            throw new BadRequestException(
+                `Erreur lors de la mise à jour de l'activité ${activityId} : ${error.message}`
+            );
+        }
+    }
+    
+    
 }
