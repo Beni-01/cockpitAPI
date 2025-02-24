@@ -201,4 +201,15 @@ export class ActivityController {
   remove(@Param('id') id: string) {
     return this.activityService.remove(+id);
   }
+
+
+  @Get('all/actualisation')  
+  actualisationActivities() {
+    return this.activityService.updateAllActivities();
+  }
+
+  @Get('one/actualisation/:id')  
+  actualisationActivitie(@Param('idActivity') idActivity: string) {
+    return this.activityService.updateActivityFromSubactivitiesById(+idActivity);
+  }
 }
