@@ -320,7 +320,7 @@ export class ActivityService {
         }
     }
 
-    private async updateActivityFromSubactivities(activity: Activity): Promise<any> {
+    private async updateActivityFromSubactivities(activity: Activity){
         if (!activity.subactivities || activity.subactivities.length === 0) return;
 
         // Calcul des nouvelles dates et du budget total
@@ -349,7 +349,7 @@ export class ActivityService {
             budget: activity.budget
         });
 
-        return {message:"L'actualisation s'est effectuée avec succèss", code:200};
+       
     }
 
 
@@ -644,15 +644,17 @@ export class ActivityService {
     }
     
 
-    async updateAllActivities(): Promise<void> {
+    async updateAllActivities() {
         const activities = await this.activityRepository.find({ relations: ['subactivities'] });
     
         for (const activity of activities) {
             await this.updateActivityFromSubactivities(activity);
         }
+
+        return {message:"L'actualisation s'est effectuée avec succèss", code:200};
     }
 
-    async updateActivityFromSubactivitiesById(activityId: number): Promise<any> {
+    async updateActivityFromSubactivitiesById(activityId: number)  {
         try {
             // Récupérer l'activité avec ses sous-activités
             const activity = await this.activityRepository.findOne({
