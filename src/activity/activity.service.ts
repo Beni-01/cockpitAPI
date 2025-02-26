@@ -320,7 +320,7 @@ export class ActivityService {
         }
     }
 
-    private async updateActivityFromSubactivities(activity: Activity): Promise<void> {
+    private async updateActivityFromSubactivities(activity: Activity): Promise<any> {
         if (!activity.subactivities || activity.subactivities.length === 0) return;
 
         // Calcul des nouvelles dates et du budget total
@@ -348,6 +348,8 @@ export class ActivityService {
             dateFin: activity.dateFin,
             budget: activity.budget
         });
+
+        return {message:"L'actualisation s'est effectuée avec succèss", code:200};
     }
 
 
@@ -650,7 +652,7 @@ export class ActivityService {
         }
     }
 
-    async updateActivityFromSubactivitiesById(activityId: number): Promise<void> {
+    async updateActivityFromSubactivitiesById(activityId: number): Promise<any> {
         try {
             // Récupérer l'activité avec ses sous-activités
             const activity = await this.activityRepository.findOne({
@@ -693,6 +695,8 @@ export class ActivityService {
                 dateFin: result.maxFin,
                 budget: result.totalBudget,
             });
+
+            return {message:"L'actualisation s'est effectuée avec succèss", code:200};
     
         } catch (error) {
             throw new BadRequestException(
