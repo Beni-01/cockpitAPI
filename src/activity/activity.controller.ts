@@ -161,8 +161,7 @@ export class ActivityController {
       throw new BadRequestException(error.message);
     }
   }
-
-
+    
     // Route pour récupérer toutes les activités
     @Get('etat/:etat')
     @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
@@ -170,7 +169,7 @@ export class ActivityController {
     findAllDraft(@Param('etat') etat:string) {
       return this.activityService.findAllByStatus(etat);
     }
-
+     
   // Route pour récupérer une activité spécifique par son ID
   @Get(':id')
   @ApiOperation({ summary: "Récupérer une activité par son ID" })
@@ -180,7 +179,7 @@ export class ActivityController {
   findOne(@Param('id') id: string) {
     return this.activityService.findOne(+id);
   }
-
+   
   // Route pour mettre à jour une activité existante
   @Patch(':id')
   @ApiOperation({ summary: 'Mettre à jour une activité' })
