@@ -14,7 +14,7 @@ export class DemandeProlongation extends Timestamp {
 
     @Column({
         name:'description',
-        type:'varchar'
+        type:'text'
     })
     description:string
 
@@ -40,7 +40,7 @@ export class DemandeProlongation extends Timestamp {
 
     @Column({
         name:'commentaire',
-        type:'varchar'
+        type:'text'
     })
     commentaire: string
 

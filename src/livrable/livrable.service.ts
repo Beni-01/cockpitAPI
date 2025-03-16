@@ -46,7 +46,7 @@ export class LivrableService {
 
   async findAll(): Promise<Livrable[]> {
     try {
-      return await this.livrableRepository.find({relations:['agentValidateur'] });
+      return await this.livrableRepository.find({relations:['agentValidateur']});
     } catch (error) {
       throw new InternalServerErrorException(
         'Une erreur est survenue lors de la récupération des livrables.',
