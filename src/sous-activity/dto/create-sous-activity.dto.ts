@@ -90,6 +90,14 @@ status?: string;
   @IsString()
   resultatObtenu:string
 
+  @IsOptional() 
+  @IsNumber()
+  deadlineRate:number
+
+  @IsOptional() 
+  @IsNumber()
+  nbre_ressource:number
+
   @ApiProperty({ description: 'Budget consommé à la sous-activité', example: 5000 })
   @IsOptional()
   @IsNumber()

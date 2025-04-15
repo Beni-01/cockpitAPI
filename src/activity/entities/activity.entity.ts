@@ -121,6 +121,23 @@ export class Activity extends Timestamp {
     })
     etat:string
 
+
+    @Column({
+        name:'deadlineRate',
+        type:'int',
+        nullable:true,
+        length:3
+    })
+    deadlineRate:number
+
+    @Column({
+        name:'nbre_ressource',
+        type:'int',
+        nullable:true,
+        length:3
+    })
+    nbre_ressource:number
+
     @Column({
         name:'userId',
         type:'int',

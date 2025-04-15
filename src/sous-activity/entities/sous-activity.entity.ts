@@ -144,6 +144,22 @@ export class SousActivity  extends Timestamp{
     })
     livrableId:number
 
+    @Column({
+        name:'deadlineRate',
+        type:'int',
+        nullable:true,
+        length:3
+    })
+    deadlineRate:number
+
+    @Column({
+        name:'nbre_ressource',
+        type:'int',
+        nullable:true,
+        length:3
+    })
+    nbre_ressource:number
+
     @ManyToOne(()=>User, (user)=>user.subactivities, {eager:true})
     user:User
 

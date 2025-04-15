@@ -28,8 +28,8 @@ import {
                 tableName,
                 entityId,
                 action,
-                body,
                 null, // Vous pouvez capturer l'ancien état de l'entité avant la mise à jour
+                body,
                 userId,
               );
           }
@@ -61,13 +61,10 @@ import {
       return parts[1]; // Assurez-vous que l'URL est structurée correctement
     }
 
-
     private getEntityId(url: string): string {
         const match = url.match(/^\/?[^\/]+\/(\d+)/);
         return match ? match[1] : '';
       }
-      
-      
       
       
   }

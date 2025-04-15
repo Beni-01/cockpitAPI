@@ -97,6 +97,14 @@ export class Livrable extends Timestamp {
     })
     commentaire:string
 
+    @Column({
+        name:'livrableQuality',
+        type:'int',
+        nullable:true,
+        length:3
+    })
+    livrableQuality:number
+
     @OneToOne(()=>Activity, (activity)=>activity.livrable)
     activity:Activity
 

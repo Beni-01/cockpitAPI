@@ -97,6 +97,10 @@ export class CreateLivrableDto {
       @IsOptional()
       @IsDateString()
       dateValidationReel?: string;
+
+      @IsOptional()
+      @IsNumber()
+      livrableQuality:number
     
       @ApiPropertyOptional({
         description: 'Commentaires sur le livrable',

@@ -45,6 +45,16 @@ export class CreateActivityDto {
     @IsDateString()  // Vérifie que la valeur est une date valide
     dateFin?: string;
 
+
+    @IsOptional() 
+    @IsNumber()
+    deadlineRate:number
+
+
+    @IsOptional() 
+    @IsNumber()
+    nbre_ressource:number
+
     @ApiProperty({
         description: 'Le statut de l\'activité',
         type: String,
