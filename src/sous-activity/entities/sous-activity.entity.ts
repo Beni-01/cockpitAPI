@@ -148,7 +148,7 @@ export class SousActivity  extends Timestamp{
         name:'deadlineRate',
         type:'int',
         nullable:true,
-        length:3
+        width:3
     })
     deadlineRate:number
 
@@ -156,7 +156,7 @@ export class SousActivity  extends Timestamp{
         name:'nbre_ressource',
         type:'int',
         nullable:true,
-        length:3
+        width:3
     })
     nbre_ressource:number
 

@@ -101,7 +101,7 @@ export class Livrable extends Timestamp {
         name:'livrableQuality',
         type:'int',
         nullable:true,
-        length:3
+        width:3
     })
     livrableQuality:number
 
