@@ -517,7 +517,7 @@ export class ActivityService {
         }
     }
 
-    async getDirectionProgressDeepSeek3(): Promise<any[]> {
+    async getDirectionProgressDeepSeek4(): Promise<any[]> {
         try {
             const activities = await this.activityRepository.find({ 
                 relations: ['subactivities'] 
@@ -593,7 +593,7 @@ export class ActivityService {
     }
 
 
-    async getDirectionProgressDeepSeek2(): Promise<any[]> {
+    async getDirectionProgressDeepSeek3(): Promise<any[]> {
         try {
             const activities = await this.activityRepository.find({ 
                 relations: ['subactivities'] 
@@ -676,7 +676,7 @@ export class ActivityService {
         }
     }
 
-    async getDirectionProgressDeepSeek(): Promise<any[]> {
+    async getDirectionProgressDeepSeek2(): Promise<any[]> {
         try {
             const activities = await this.activityRepository.find({ 
                 relations: ['subactivities'] 
@@ -758,6 +758,117 @@ export class ActivityService {
                         progression: 0,
                         kpi2: 0,
                         kpi2_percent: 0
+                    });
+                }
+            });
+    
+            return result.filter(r => r.direction);
+        } catch (error) {
+            throw new BadRequestException('Erreur lors du calcul de la progression', error.message);
+        }
+    }
+
+
+    async getDirectionProgressDeepSeek(): Promise<any[]> {
+        try {
+            const activities = await this.activityRepository.find({ 
+                relations: ['subactivities', 'subactivities.livrable'] 
+            });
+    
+            const directionStats = {};
+    
+            activities.forEach(activity => {
+                const direction = activity.direction;
+                if (!direction) return;
+    
+                if (!directionStats[direction]) {
+                    directionStats[direction] = {
+                        // Métriques existantes
+                        totalActivity: 0,
+                        closedActivity: 0,
+                        totalSub: 0,
+                        closedSub: 0,
+                        
+                        // KPI2 (deadlineRate)
+                        deadlineRateSum: 0,
+                        totalDeadlineRates: 0,
+                        
+                        // KPI3 (livrableQuality)
+                        livrableQualitySum: 0,
+                        validLivrableCount: 0  // Ne compte que les non-null
+                    };
+                }
+    
+                // Compter les activités et sous-activités (existant)
+                directionStats[direction].totalActivity += 1;
+                if (activity.status.toLowerCase() === 'cloturé') {
+                    directionStats[direction].closedActivity += 1;
+                }
+    
+                const subactivities = activity.subactivities || [];
+                directionStats[direction].totalSub += subactivities.length;
+                directionStats[direction].closedSub += subactivities.filter(sub => 
+                    sub.status?.toLowerCase() === 'cloturé'
+                ).length;
+    
+                // Calcul des KPIs
+                subactivities.forEach(sub => {
+                    // KPI2 (traitement existant)
+                    directionStats[direction].deadlineRateSum += sub.deadlineRate ?? 0;
+                    directionStats[direction].totalDeadlineRates += 1;
+    
+                    // KPI3 - Nouveau traitement spécifique
+                    if (sub.livrable && sub.livrable.livrableQuality !== null) {
+                        directionStats[direction].livrableQualitySum += sub.livrable.livrableQuality;
+                        directionStats[direction].validLivrableCount += 1;
+                    }
+                });
+            });
+    
+            // Construction du résultat
+            const result = Object.keys(directionStats).map(direction => ({
+                direction,
+                // Métriques existantes
+                totalActivity: directionStats[direction].totalActivity,
+                closedActivity: directionStats[direction].closedActivity,
+                totalSub: directionStats[direction].totalSub,
+                closedSub: directionStats[direction].closedSub,
+                progression: directionStats[direction].totalSub > 0 
+                    ? Number((directionStats[direction].closedSub / directionStats[direction].totalSub * 100).toFixed(2))
+                    : 0,
+                
+                // KPI2 (existant)
+                kpi2: directionStats[direction].deadlineRateSum,
+                kpi2_percent: directionStats[direction].totalSub > 0
+                    ? Number((directionStats[direction].deadlineRateSum / directionStats[direction].totalSub * 100).toFixed(2))
+                    : 0,
+                
+                // KPI3 - Nouveau
+                kpi3: directionStats[direction].livrableQualitySum,
+                kpi3_percent: directionStats[direction].validLivrableCount > 0
+                    ? Number((directionStats[direction].livrableQualitySum / directionStats[direction].validLivrableCount * 100).toFixed(2))
+                    : 0  // 0% si aucune donnée valide
+            }));
+    
+            // Gestion des directions manquantes
+            const allDirections = await this.activityRepository
+                .createQueryBuilder('activity')
+                .select('DISTINCT activity.direction', 'direction')
+                .getRawMany();
+    
+            allDirections.forEach(({ direction }) => {
+                if (direction && !result.find(r => r.direction === direction)) {
+                    result.push({
+                        direction,
+                        totalActivity: 0,
+                        closedActivity: 0,
+                        totalSub: 0,
+                        closedSub: 0,
+                        progression: 0,
+                        kpi2: 0,
+                        kpi2_percent: 0,
+                        kpi3: 0,
+                        kpi3_percent: 0
                     });
                 }
             });
