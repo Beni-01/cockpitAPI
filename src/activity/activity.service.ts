@@ -517,7 +517,7 @@ export class ActivityService {
         }
     }
 
-    async getDirectionProgressDeepSeek(): Promise<any[]> {
+    async getDirectionProgressDeepSeek3(): Promise<any[]> {
         try {
             const activities = await this.activityRepository.find({ 
                 relations: ['subactivities'] 
@@ -582,6 +582,182 @@ export class ActivityService {
                         totalSub: 0,
                         closedSub: 0,
                         progression: 0
+                    });
+                }
+            });
+    
+            return result.filter(r => r.direction);
+        } catch (error) {
+            throw new BadRequestException('Erreur lors du calcul de la progression', error.message);
+        }
+    }
+
+
+    async getDirectionProgressDeepSeek2(): Promise<any[]> {
+        try {
+            const activities = await this.activityRepository.find({ 
+                relations: ['subactivities'] 
+            });
+    
+            const directionStats = {};
+    
+            activities.forEach(activity => {
+                const direction = activity.direction;
+                if (!direction) return;
+    
+                if (!directionStats[direction]) {
+                    directionStats[direction] = {
+                        totalActivity: 0,
+                        closedActivity: 0,
+                        totalSub: 0,
+                        closedSub: 0,
+                        deadlineRateSum: 0
+                    };
+                }
+    
+                // Compter les activités
+                directionStats[direction].totalActivity += 1;
+                if (activity.status.toLowerCase() === 'cloturé') {
+                    directionStats[direction].closedActivity += 1;
+                }
+    
+                // Compter les sous-activités
+                const subactivities = activity.subactivities || [];
+                directionStats[direction].totalSub += subactivities.length;
+                directionStats[direction].closedSub += subactivities.filter(sub => 
+                    sub.status?.toLowerCase() === 'cloturé'
+                ).length;
+                
+                // Ajouter la somme des deadlineRate (en traitant les null comme 0)
+                directionStats[direction].deadlineRateSum += subactivities.reduce(
+                    (sum, sub) => sum + (sub.deadlineRate ?? 0), 0
+                );
+            });
+    
+            // Créer le résultat final
+            const result = Object.keys(directionStats).map(direction => ({
+                direction,
+                totalActivity: directionStats[direction].totalActivity,
+                closedActivity: directionStats[direction].closedActivity,
+                totalSub: directionStats[direction].totalSub,
+                closedSub: directionStats[direction].closedSub,
+                progression: directionStats[direction].totalSub > 0 
+                    ? Number(
+                        (directionStats[direction].closedSub / directionStats[direction].totalSub * 100)
+                        .toFixed(2)
+                      ) 
+                    : 0,
+                kpi2: directionStats[direction].deadlineRateSum
+            }));
+    
+            // Ajouter les directions manquantes
+            const allDirections = await this.activityRepository
+                .createQueryBuilder('activity')
+                .select('DISTINCT activity.direction', 'direction')
+                .getRawMany();
+    
+            allDirections.forEach(({ direction }) => {
+                if (direction && !result.find(r => r.direction === direction)) {
+                    result.push({
+                        direction,
+                        totalActivity: 0,
+                        closedActivity: 0,
+                        totalSub: 0,
+                        closedSub: 0,
+                        progression: 0,
+                        kpi2: 0
+                    });
+                }
+            });
+    
+            return result.filter(r => r.direction);
+        } catch (error) {
+            throw new BadRequestException('Erreur lors du calcul de la progression', error.message);
+        }
+    }
+
+    async getDirectionProgressDeepSeek(): Promise<any[]> {
+        try {
+            const activities = await this.activityRepository.find({ 
+                relations: ['subactivities'] 
+            });
+    
+            const directionStats = {};
+    
+            activities.forEach(activity => {
+                const direction = activity.direction;
+                if (!direction) return;
+    
+                if (!directionStats[direction]) {
+                    directionStats[direction] = {
+                        totalActivity: 0,
+                        closedActivity: 0,
+                        totalSub: 0,
+                        closedSub: 0,
+                        deadlineRateSum: 0,
+                        totalDeadlineRates: 0 // Toutes les sous-activités (y compris null)
+                    };
+                }
+    
+                // Compter les activités
+                directionStats[direction].totalActivity += 1;
+                if (activity.status.toLowerCase() === 'cloturé') {
+                    directionStats[direction].closedActivity += 1;
+                }
+    
+                // Compter les sous-activités
+                const subactivities = activity.subactivities || [];
+                directionStats[direction].totalSub += subactivities.length;
+                directionStats[direction].closedSub += subactivities.filter(sub => 
+                    sub.status?.toLowerCase() === 'cloturé'
+                ).length;
+                
+                // Calcul des KPI2 (null = 0)
+                subactivities.forEach(sub => {
+                    directionStats[direction].deadlineRateSum += sub.deadlineRate ?? 0;
+                    directionStats[direction].totalDeadlineRates += 1;
+                });
+            });
+    
+            // Créer le résultat final
+            const result = Object.keys(directionStats).map(direction => ({
+                direction,
+                totalActivity: directionStats[direction].totalActivity,
+                closedActivity: directionStats[direction].closedActivity,
+                totalSub: directionStats[direction].totalSub,
+                closedSub: directionStats[direction].closedSub,
+                progression: directionStats[direction].totalSub > 0 
+                    ? Number(
+                        (directionStats[direction].closedSub / directionStats[direction].totalSub * 100)
+                        .toFixed(2)
+                      ) 
+                    : 0,
+                kpi2: directionStats[direction].deadlineRateSum,
+                kpi2_percent: directionStats[direction].totalSub > 0
+                    ? Number(
+                        (directionStats[direction].deadlineRateSum / directionStats[direction].totalSub * 100)
+                        .toFixed(2)
+                      )
+                    : 0 // 0% si aucune sous-activité
+            }));
+    
+            // Ajouter les directions manquantes
+            const allDirections = await this.activityRepository
+                .createQueryBuilder('activity')
+                .select('DISTINCT activity.direction', 'direction')
+                .getRawMany();
+    
+            allDirections.forEach(({ direction }) => {
+                if (direction && !result.find(r => r.direction === direction)) {
+                    result.push({
+                        direction,
+                        totalActivity: 0,
+                        closedActivity: 0,
+                        totalSub: 0,
+                        closedSub: 0,
+                        progression: 0,
+                        kpi2: 0,
+                        kpi2_percent: 0
                     });
                 }
             });

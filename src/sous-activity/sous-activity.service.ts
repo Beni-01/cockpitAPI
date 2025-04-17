@@ -258,8 +258,6 @@ export class SousActivityService {
     }
   }
   
-
-
   async update(
     id: number,
     idActivity: number,
