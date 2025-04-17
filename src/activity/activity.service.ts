@@ -334,8 +334,12 @@ export class ActivityService {
                 : subactivity.fin;
 
             acc.totalBudget += subactivity.budget || 0;
+
             return acc;
-        }, { minDebut: null, maxFin: null, totalBudget: 0 });
+        }, { minDebut: null, maxFin: null, totalBudget: 0, taux_deadline:null });
+
+
+        await this.updateDeadlineRateFromSubactivities(activity)
 
         // Mise à jour de l'activité
         activity.dateDebut = result.minDebut;
@@ -348,8 +352,28 @@ export class ActivityService {
             dateFin: activity.dateFin,
             budget: activity.budget
         });
+    }
 
-       
+
+   async updateDeadlineRateFromSubactivities(activity: Activity) {
+        if (!activity.subactivities || activity.subactivities.length === 0) return;
+        
+        // Mise à jour des deadlineRate
+        activity.subactivities.forEach(subactivity => {
+            if (subactivity.dateFinReel === null) {
+                subactivity.deadlineRate = null;
+            } else if (subactivity.dateFinReel <= subactivity.fin) {
+                subactivity.deadlineRate = 1;
+            } else {
+                subactivity.deadlineRate = 0;
+            }
+        });
+    
+        // Sauvegarde dans la base de données
+        const result = await this.subActivityRepository.save(activity.subactivities);
+     
+
+        return result
     }
 
 
