@@ -803,6 +803,10 @@ export class ActivityService {
             // Construction du résultat final
             const result = Object.keys(directionStats).map(direction => {
                 const stats = directionStats[direction];
+
+                const rateBudget=stats.totalBudget > 0
+                ? Number((100 - ((stats.totalBudgetConsomme / stats.totalBudget) * 100)).toFixed(2))
+                : 0
                 
                 return {
                     direction,
@@ -811,6 +815,7 @@ export class ActivityService {
                     closedActivity: stats.closedActivity,
                     totalSub: stats.totalSub,
                     closedSub: stats.closedSub,
+                    passedSub:stats.passedSub,
                     progression: stats.totalSub > 0 
                         ? Number((stats.closedSub / stats.totalSub * 100).toFixed(2))
                         : 0,
@@ -828,9 +833,7 @@ export class ActivityService {
                         : 0,
                     
                     // kpi5 - Budget
-                    kpi5_percent: stats.totalBudget > 0
-                        ? Number((100 - ((stats.totalBudgetConsomme / stats.totalBudget) * 100)).toFixed(2))
-                        : 0
+                    kpi5_percent: rateBudget==100 ? 0 : rateBudget
                 };
             });
     
@@ -848,6 +851,7 @@ export class ActivityService {
                         closedActivity: 0,
                         totalSub: 0,
                         closedSub: 0,
+                        passedSub:0,
                         progression: 0,
                         kpi2: 0,
                         kpi2_percent: 0,
