@@ -10,20 +10,10 @@ import {
   
   @Injectable()
   export class AuditInterceptor implements NestInterceptor {
-
-    userId:number;
-
     constructor(private readonly auditLogService: AuditLogService) {}
   
     intercept(context: ExecutionContext, next: CallHandler){
       const request = context.switchToHttp().getRequest();
-      const response = context.switchToHttp().getResponse();
-
-
-      if(request.url.includes('auth/login')){
-        this.userId=response.req.user?.data?.user?.id
-      }
-     
       const { method, url, body, user, queryRunner } = request;
       const entityId = +this.getEntityId(url)// Assurez-vous que l'ID est disponible dans le corps de la requête
   
@@ -31,7 +21,7 @@ import {
         tap(() => {
           const action = this.getAction(method);
           const tableName = this.getTableName(url);
-          const userId = request.url.includes('auth/login') ?  this.userId : (body?.performedId ? body?.performedId : +queryRunner?.data?.userId);
+          const userId = body.performedId ? body.performedId : queryRunner.data.userId;
 
           if(action!='READ'){
             this.auditLogService.log(
@@ -39,10 +29,11 @@ import {
                 entityId,
                 action,
                 null, // Vous pouvez capturer l'ancien état de l'entité avant la mise à jour
-                request.url.includes('auth') ? null : body, 
+                body,
                 userId,
               );
           }
+
 
         }),
       );
@@ -75,5 +66,5 @@ import {
         return match ? match[1] : '';
       }
       
- 
+      
   }

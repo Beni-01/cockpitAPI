@@ -1,4 +1,3 @@
-
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
 import { PrimaryGeneratedColumn, Column, CreateDateColumn, Entity, ManyToOne } from "typeorm";

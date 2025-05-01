@@ -38,9 +38,8 @@ export class AuditLogController {
     @Query('table') tableName?: string,
     @Query('action') action?: string,
     @Query('userId') userId?: string,
-    @Query('entityId') entityId?: string,
   ): Promise<AuditLog[]> {
-    return await this.auditLogService.findLogs(tableName, action, +userId,+entityId);
+    return await this.auditLogService.findLogs(tableName, action, +userId);
   }
 
   // Récupérer les logs par ID

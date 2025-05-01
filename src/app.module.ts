@@ -15,7 +15,7 @@ import { DemandeProlongationModule } from './demande-prolongation/demande-prolon
 import { AuditLogModule } from './audit-log/audit-log.module';
 import { AnnotationActivityModule } from './annotation-activity/annotation-activity.module';
 import { LivrableModule } from './livrable/livrable.module';
-import { AuditInitializerService } from './audit-log/audit-initializer.service';
+
 
 import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
 import { UserLivrableModule } from './user-livrable/user-livrable.module';

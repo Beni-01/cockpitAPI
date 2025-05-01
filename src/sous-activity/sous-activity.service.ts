@@ -280,12 +280,16 @@ export class SousActivityService {
             // Crée un objet de livrable en fonction de la présence de typelivrable
             const livrableData = updateSousActivityDto.typelivrable ? { livrable: updateSousActivityDto.livrable, typelivrable: updateSousActivityDto.typelivrable } : { livrable: updateSousActivityDto.livrable };
 
+         
             // Crée et sauvegarde le livrable
             const createLivrable = this.livrableRepository.create(livrableData);
+       
+
             const savedLivrable = await this.livrableRepository.save(createLivrable);
 
+          
             // Ajoute l'ID du livrable sauvegardé à sousActivity
-            sousActivity['livrableId'] = savedLivrable.id; // Assurez-vous que `livrableId` est la bonne propriété
+            sousActivity.livrableId = savedLivrable.id; // Assurez-vous que `livrableId` est la bonne propriété
         }
 
         if (idLivrable) {
@@ -293,11 +297,14 @@ export class SousActivityService {
             await this.livrableRepository.update(idLivrable, livrableData);
         }
 
+        const {livrable, typelivrable, ...subactivityToUpdate}=updateSousActivityDto
         // Mettre à jour les données de la sous-activité
-        Object.assign(sousActivity, updateSousActivityDto);
+        Object.assign(sousActivity, subactivityToUpdate);
+
 
         // Enregistrer les modifications sur la sous-activité
         const sousActivityResult = await this.sousActivityRepository.save(sousActivity);
+
 
         // Trouver l'activité associée avec toutes ses sous-activités
         const activity = await this.activityRepository.findOne(idActivity);
