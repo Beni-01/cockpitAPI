@@ -264,8 +264,9 @@ export class ActivityService {
                 .leftJoinAndSelect('activity.subactivities', 'subactivities')
                 .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
                 .leftJoinAndSelect('activity.livrable', 'activityLivrable')
+                .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur')
                 .leftJoinAndSelect('activity.annotations', 'annotations')
-                .leftJoinAndSelect('activity.demandes', 'demandes');
+                .leftJoinAndSelect('activity.demandes', 'demandes'); 
 
             // Application des filtres
             if (etat) queryBuilder.andWhere('activity.etat = :etat', { etat });
@@ -273,6 +274,7 @@ export class ActivityService {
             if (direction) queryBuilder.andWhere('activity.direction = :direction', { direction });
             if (province) queryBuilder.andWhere('activity.province = :province', { province });
             if (titre) queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
+
             if (dateDebut && dateFin) {
                 const nextDay = new Date(dateFin);
                 nextDay.setDate(nextDay.getDate() + 1);
@@ -541,194 +543,10 @@ export class ActivityService {
         }
     }
 
-    async getDirectionProgressDeepSeek4(): Promise<any[]> {
-        try {
-            const activities = await this.activityRepository.find({ 
-                relations: ['subactivities'] 
-            });
-    
-            const directionStats = {};
-    
-            activities.forEach(activity => {
-                const direction = activity.direction;
-                if (!direction) return;
-    
-                if (!directionStats[direction]) {
-                    directionStats[direction] = {
-                        totalActivity: 0,
-                        closedActivity: 0,
-                        totalSub: 0,
-                        closedSub: 0
-                    };
-                }
-    
-                // Compter les activités
-                directionStats[direction].totalActivity += 1;
-                if (activity.status.toLowerCase() === 'cloturé') {
-                    directionStats[direction].closedActivity += 1;
-                }
-    
-                // Compter les sous-activités
-                const subactivities = activity.subactivities || [];
-                directionStats[direction].totalSub += subactivities.length;
-                directionStats[direction].closedSub += subactivities.filter(sub => 
-                    sub.status.toLowerCase() === 'cloturé'
-                ).length;
-            });
-    
-            // Créer le résultat final
-            const result = Object.keys(directionStats).map(direction => ({
-                direction,
-                totalActivity: directionStats[direction].totalActivity,
-                closedActivity: directionStats[direction].closedActivity,
-                totalSub: directionStats[direction].totalSub,
-                closedSub: directionStats[direction].closedSub,
-                progression: directionStats[direction].totalSub > 0 
-                    ? Number(
-                        (directionStats[direction].closedSub / directionStats[direction].totalSub * 100)
-                        .toFixed(2)
-                      ) 
-                    : 0
-            }));
-    
-            // Ajouter les directions manquantes (avec activités mais sans sous-activités)
-            const allDirections = await this.activityRepository
-                .createQueryBuilder('activity')
-                .select('DISTINCT activity.direction', 'direction')
-                .getRawMany();
-    
-            allDirections.forEach(({ direction }) => {
-                if (direction && !result.find(r => r.direction === direction)) {
-                    result.push({
-                        direction,
-                        totalActivity: 0,
-                        closedActivity: 0,
-                        totalSub: 0,
-                        closedSub: 0,
-                        progression: 0
-                    });
-                }
-            });
-    
-            return result.filter(r => r.direction);
-        } catch (error) {
-            throw new BadRequestException('Erreur lors du calcul de la progression', error.message);
-        }
-    }
 
 
-    async getDirectionProgressDeepSeek2(): Promise<any[]> {
-        try {
-            const activities = await this.activityRepository.find({ 
-                relations: ['subactivities', 'subactivities.livrable'] 
-            });
-    
-            const directionStats = {};
-    
-            activities.forEach(activity => {
-                const direction = activity.direction;
-                if (!direction) return;
-    
-                if (!directionStats[direction]) {
-                    directionStats[direction] = {
-                        // Métriques existantes
-                        totalActivity: 0,
-                        closedActivity: 0,
-                        totalSub: 0,
-                        closedSub: 0,
-                        
-                        // KPI2 (deadlineRate)
-                        deadlineRateSum: 0,
-                        totalDeadlineRates: 0,
-                        
-                        // KPI3 (livrableQuality)
-                        livrableQualitySum: 0,
-                        validLivrableCount: 0  // Ne compte que les non-null
-                    };
-                }
-    
-                // Compter les activités et sous-activités (existant)
-                directionStats[direction].totalActivity += 1;
-                if (activity.status.toLowerCase() === 'cloturé') {
-                    directionStats[direction].closedActivity += 1;
-                }
-    
-                const subactivities = activity.subactivities || [];
-                directionStats[direction].totalSub += subactivities.length;
-                directionStats[direction].closedSub += subactivities.filter(sub => 
-                    sub.status?.toLowerCase() === 'cloturé'
-                ).length;
-    
-                // Calcul des KPIs
-                subactivities.forEach(sub => {
-                    // KPI2 (traitement existant)
-                    directionStats[direction].deadlineRateSum += sub.deadlineRate ?? 0;
-                    directionStats[direction].totalDeadlineRates += 1;
-    
-                    // KPI3 - Nouveau traitement spécifique
-                    if (sub.livrable && sub.livrable.livrableQuality !== null) {
-                        directionStats[direction].livrableQualitySum += sub.livrable.livrableQuality;
-                        directionStats[direction].validLivrableCount += 1;
-                    }
-                });
-            });
-    
-            // Construction du résultat
-            const result = Object.keys(directionStats).map(direction => ({
-                direction,
-                // Métriques existantes
-                totalActivity: directionStats[direction].totalActivity,
-                closedActivity: directionStats[direction].closedActivity,
-                totalSub: directionStats[direction].totalSub,
-                closedSub: directionStats[direction].closedSub,
-                progression: directionStats[direction].totalSub > 0 
-                    ? Number((directionStats[direction].closedSub / directionStats[direction].totalSub * 100).toFixed(2))
-                    : 0,
-                
-                // KPI2 (existant)
-                kpi2: directionStats[direction].deadlineRateSum,
-                kpi2_percent: directionStats[direction].totalSub > 0
-                    ? Number((directionStats[direction].deadlineRateSum / directionStats[direction].totalSub * 100).toFixed(2))
-                    : 0,
-                
-                // KPI3 - Nouveau
-                kpi3: directionStats[direction].livrableQualitySum,
-                kpi3_percent: directionStats[direction].validLivrableCount > 0
-                    ? Number((directionStats[direction].livrableQualitySum / directionStats[direction].validLivrableCount * 100).toFixed(2))
-                    : 0  // 0% si aucune donnée valide
-            }));
-    
-            // Gestion des directions manquantes
-            const allDirections = await this.activityRepository
-                .createQueryBuilder('activity')
-                .select('DISTINCT activity.direction', 'direction')
-                .getRawMany();
-    
-            allDirections.forEach(({ direction }) => {
-                if (direction && !result.find(r => r.direction === direction)) {
-                    result.push({
-                        direction,
-                        totalActivity: 0,
-                        closedActivity: 0,
-                        totalSub: 0,
-                        closedSub: 0,
-                        progression: 0,
-                        kpi2: 0,
-                        kpi2_percent: 0,
-                        kpi3: 0,
-                        kpi3_percent: 0
-                    });
-                }
-            });
-    
-            return result.filter(r => r.direction);
-        } catch (error) {
-            throw new BadRequestException('Erreur lors du calcul de la progression', error.message);
-        }
-    }
 
-
-    async getDirectionProgressDeepSeek(): Promise<any[]> {
+    async getDirectionProgressDeepSeekBis(): Promise<any[]> {
         try {
             const activities = await this.activityRepository.find({ 
                 relations: ['subactivities', 'subactivities.livrable'] 
@@ -748,6 +566,8 @@ export class ActivityService {
                         totalSub: 0,
                         closedSub: 0,
                         passedSub: 0,
+                        pendingSub:0,
+                        retardSub:0,
                         
                         // KPI2 (deadlineRate)
                         deadlineRateSum: 0,
@@ -778,8 +598,16 @@ export class ActivityService {
                     sub.status?.toLowerCase() === 'cloturé'
                 ).length;
 
+                directionStats[direction].pendingSub += subactivities.filter(sub => 
+                    sub.status?.toLowerCase() === 'en cours'
+                ).length;
+
                 directionStats[direction].passedSub += subactivities.filter(sub => 
                     sub.status?.toLowerCase() === 'dépassé'
+                ).length;
+
+                directionStats[direction].retardSub += subactivities.filter(sub => 
+                    sub.status?.toLowerCase() === 'en retard'
                 ).length;
     
                 // Calcul des KPIs
@@ -817,19 +645,19 @@ export class ActivityService {
                     closedSub: stats.closedSub,
                     passedSub:stats.passedSub,
                     progression: stats.totalSub > 0 
-                        ? Number((stats.closedSub / stats.totalSub * 100).toFixed(2))
+                        ? Number(((stats.closedSub / stats.totalSub) * 100).toFixed(2))
                         : 0,
                     
                     // KPI2 - Taux d'échéance
                     kpi2: stats.deadlineRateSum,
                     kpi2_percent: stats.totalSub > 0
-                        ? Number((stats.deadlineRateSum / (stats.closedSub+stats.passedSub) * 100).toFixed(2))
+                        ? Number(((stats.deadlineRateSum / (stats.closedSub+stats.passedSub+stats.pendingSub+stats.retardSub)) * 100).toFixed(2))
                         : 0,
                     
                     // KPI3 - Qualité livrable
                     kpi3: stats.livrableQualitySum,
                     kpi3_percent: stats.validLivrableCount > 0
-                        ? Number((stats.livrableQualitySum / stats.validLivrableCount * 100).toFixed(2))
+                        ? Number(((stats.livrableQualitySum / stats.validLivrableCount) * 100).toFixed(2))
                         : 0,
                     
                     // kpi5 - Budget
@@ -867,6 +695,217 @@ export class ActivityService {
             throw new BadRequestException('Erreur lors du calcul des indicateurs', error.message);
         }
     }
+
+
+async getDirectionProgressDeepSeek(dateDebut?: string, dateFin?: string): Promise<any[]> {
+    try {
+        // Création du queryBuilder avec les relations nécessaires
+        const queryBuilder = this.activityRepository
+            .createQueryBuilder('activity')
+            .leftJoinAndSelect('activity.subactivities', 'subactivities')
+            .leftJoinAndSelect('subactivities.livrable', 'livrable');
+
+        // Application des filtres de date
+        if (dateDebut && dateFin) {
+            const nextDay = new Date(dateFin);
+            nextDay.setDate(nextDay.getDate() + 1);
+            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { 
+                dateDebut, 
+                dateFin: nextDay.toISOString() 
+            });
+        } else if (dateDebut) {
+            queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
+        } else if (dateFin) {
+            const nextDay = new Date(dateFin);
+            nextDay.setDate(nextDay.getDate() + 1);
+            queryBuilder.andWhere('activity.dateFin <= :nextDay', { 
+                nextDay: nextDay.toISOString() 
+            });
+        }
+
+        // Exécution de la requête
+        const activities = await queryBuilder.getMany();
+
+        // Effectifs par direction (données statiques)
+        const directionEffectives = {
+            "ACCES A LA JUSTICE": 20,
+            "ADMINISTRATION ET MOYENS GENERAUX": 66,
+            "AUDIT INTERNE": 8,
+            "BUREAU DU PCA": 3,
+            "CELLULE DE PASSATION DES MARCHES": 4,
+            "CELLULE DE SECURITE": 2,
+            "COMMUNICATION": 17,
+            "DIRECTION GENERALE": 9,
+            "ETUDES": 60,
+            "FINANCE": 37,
+            "MEDIATION": 1,
+            "REPARATIONS": 54,
+            "RH ET JURIDIQUE": 12
+        };
+
+        const directionStats = {};
+
+        activities.forEach(activity => {
+            const direction = activity.direction;
+            if (!direction) return;
+
+            if (!directionStats[direction]) {
+                directionStats[direction] = {
+                    // Métriques de base
+                    totalActivity: 0,
+                    closedActivity: 0,
+                    totalSub: 0,
+                    closedSub: 0,
+                    passedSub: 0,
+                    pendingSub: 0,
+                    retardSub: 0,
+                    totalRessources: 0, // Nouveau: Somme des ressources des sous-activités clôturées
+                    
+                    // KPI2 (deadlineRate)
+                    deadlineRateSum: 0,
+                    totalDeadlineRates: 0,
+                    
+                    // KPI3 (livrableQuality)
+                    livrableQualitySum: 0,
+                    validLivrableCount: 0,
+                    
+                    // KPI5 (budget)
+                    totalBudget: 0,
+                    totalBudgetConsomme: 0,
+
+                    // KPI4: Effectif de la direction
+                    directionEffective: directionEffectives[direction] || 1 // Fallback à 1 pour éviter division par 0
+                };
+            }
+
+            // Compter les activités
+            directionStats[direction].totalActivity += 1;
+            if (activity.status.toLowerCase() === 'cloturé' || activity.status.toLowerCase() === 'terminé') {
+                directionStats[direction].closedActivity += 1;
+            }
+
+            // Traitement des sous-activités
+            const subactivities = activity.subactivities || [];
+            directionStats[direction].totalSub += subactivities.length;
+
+            directionStats[direction].closedSub += subactivities.filter(sub => 
+                sub.status?.toLowerCase() === 'cloturé'
+            ).length;
+
+            directionStats[direction].pendingSub += subactivities.filter(sub => 
+                sub.status?.toLowerCase() === 'en cours'
+            ).length;
+
+            directionStats[direction].passedSub += subactivities.filter(sub => 
+                sub.status?.toLowerCase() === 'dépassé'
+            ).length;
+
+            directionStats[direction].retardSub += subactivities.filter(sub => 
+                sub.status?.toLowerCase() === 'en retard'
+            ).length;
+
+            // Calcul des KPIs
+            subactivities.forEach(sub => {
+                // KPI2 - Taux d'échéance
+                directionStats[direction].deadlineRateSum += sub.deadlineRate ?? 0;
+                directionStats[direction].totalDeadlineRates += 1;
+
+                // KPI3 - Qualité livrable
+                if (sub.livrable?.livrableQuality !== null) {
+                    directionStats[direction].livrableQualitySum += sub.livrable?.livrableQuality ?? 0;
+                    directionStats[direction].validLivrableCount += 1;
+                }
+
+                // KPI4 - Ressources utilisées (uniquement pour les sous-activités clôturées)
+                if (sub.status?.toLowerCase() === 'cloturé') {
+                    directionStats[direction].totalRessources += sub.nbre_ressource ?? 0;
+                }
+
+                // KPI5 - Budget
+                directionStats[direction].totalBudget += sub.budget ?? 0;
+                directionStats[direction].totalBudgetConsomme += sub.budgetConsomme ?? 0;
+            });
+        });
+
+        // Construction du résultat final
+        const result = Object.keys(directionStats).map(direction => {
+            const stats = directionStats[direction];
+
+            // Calcul KPI5 (taux de budget restant)
+            const rateBudget = stats.totalBudget > 0
+                ? Number((100 - ((stats.totalBudgetConsomme / stats.totalBudget) * 100)).toFixed(2))
+                : 0;
+
+            return {
+                direction,
+                // Métriques de base
+                totalActivity: stats.totalActivity,
+                closedActivity: stats.closedActivity,
+                totalSub: stats.totalSub,
+                closedSub: stats.closedSub,
+                passedSub: stats.passedSub,
+                progression: stats.totalSub > 0 
+                    ? Number(((stats.closedSub / stats.totalSub) * 100).toFixed(2))
+                    : 0,
+                
+                // KPI2 - Taux d'échéance
+                kpi2: stats.deadlineRateSum,
+                kpi2_percent: stats.totalSub > 0
+                    ? Number(((stats.deadlineRateSum / (stats.closedSub + stats.passedSub + stats.pendingSub + stats.retardSub)) * 100).toFixed(2))
+                    : 0,
+                
+                // KPI3 - Qualité livrable
+                kpi3: stats.livrableQualitySum,
+                kpi3_percent: stats.validLivrableCount > 0
+                    ? Number(((stats.livrableQualitySum / stats.validLivrableCount) * 100).toFixed(2))
+                    : 0,
+                
+                // KPI4 - Efficacité des ressources
+                kpi4_percent: stats.totalSub > 0 && stats.directionEffective > 0
+                    ? Number(
+                        ((stats.closedSub * stats.totalRessources) / 
+                        (stats.totalSub * stats.directionEffective) * 100)
+                      ).toFixed(2)
+                    : 0,
+                
+                // KPI5 - Budget
+                kpi5_percent: rateBudget === 100 ? 0 : rateBudget
+            };
+        });
+
+        // Ajout des directions manquantes (avec toutes les métriques à 0)
+        const allDirections = await this.activityRepository
+            .createQueryBuilder('activity')
+            .select('DISTINCT activity.direction', 'direction')
+            .getRawMany();
+
+        allDirections.forEach(({ direction }) => {
+            if (direction && !result.find(r => r.direction === direction)) {
+                result.push({
+                    direction,
+                    totalActivity: 0,
+                    closedActivity: 0,
+                    totalSub: 0,
+                    closedSub: 0,
+                    passedSub: 0,
+                    progression: 0,
+                    kpi2: 0,
+                    kpi2_percent: 0,
+                    kpi3: 0,
+                    kpi3_percent: 0,
+                    kpi4_percent: 0,
+                    kpi5_percent: 0
+                });
+            }
+        });
+
+        return result.filter(r => r.direction);
+    } catch (error) {
+        throw new BadRequestException('Erreur lors du calcul des indicateurs', error.message);
+    }
+}
+
+
 
 
     async getDirectionStats(): Promise<any[]> {
