@@ -265,6 +265,7 @@ export class ActivityService {
                 .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
                 .leftJoinAndSelect('activity.livrable', 'activityLivrable')
                 .leftJoinAndSelect('activityLivrable.agentValidateur', 'activityLivrableAgentValidateur')
+                .leftJoinAndSelect('activityLivrableAgentValidateur.user', 'activityLivrableAgentValidateurUser') // Ajouté
                 .leftJoinAndSelect('activity.annotations', 'annotations')
                 .leftJoinAndSelect('activity.demandes', 'demandes'); 
 
