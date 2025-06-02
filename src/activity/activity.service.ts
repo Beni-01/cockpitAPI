@@ -864,8 +864,8 @@ async getDirectionProgressDeepSeek(dateDebut?: string, dateFin?: string): Promis
                 // KPI4 - Efficacité des ressources
                 kpi4_percent: stats.totalSub > 0 && stats.directionEffective > 0
                     ? Number(
-                        ((stats.closedSub * stats.totalRessources) / 
-                        (stats.totalSub * stats.directionEffective) * 100)
+                        (((stats.closedSub * stats.totalRessources) / 
+                        (stats.totalSub * stats.directionEffective)) * 100)
                       ).toFixed(2)
                     : 0,
                 
