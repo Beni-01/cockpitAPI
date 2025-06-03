@@ -24,6 +24,7 @@ import { RequestContextMiddleware } from './user/request-context.middleware';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditLogService } from './audit-log/audit-log.service';
 import { AuditInterceptor } from './audit-log/audti-log.interceptor';
+import { PassationMarcheModule } from './passation-marche/passation-marche.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -51,7 +52,8 @@ import { AuditInterceptor } from './audit-log/audti-log.interceptor';
     LivrableModule,
     AuthModule,
     UserLivrableModule,
-    DemandeUserModule
+    DemandeUserModule,
+    PassationMarcheModule
    
   ],
   controllers: [AppController],

@@ -729,7 +729,7 @@ async getDirectionProgressDeepSeek(dateDebut?: string, dateFin?: string): Promis
 
         // Effectifs par direction (données statiques)
         const directionEffectives = {
-            "ACCES A LA JUSTICE": 20,
+            "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
             "ADMINISTRATION ET MOYENS GENERAUX": 66,
             "AUDIT INTERNE": 8,
             "BUREAU DU PCA": 3,
