@@ -6,6 +6,7 @@ export class MODIFYPASSATION1748961731063 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
 
 
+        await queryRunner.query(`ALTER TABLE \`passation_marche\` DROP COLUMN \`intitule\``);
         await queryRunner.query(`ALTER TABLE \`passation_marche\` ADD \`intitule\` text NOT NULL`);
 
        
