@@ -37,94 +37,94 @@ export class CreatePassationMarcheDto {
     deadline: string;
 
     @ApiPropertyOptional({ description: 'Dispose de TDR' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    asTDR?: boolean;
+    asTDR?: string;
 
     @ApiPropertyOptional({ description: 'Dispose de AMIDAO' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    asAMIDAO?: boolean;
+    asAMIDAO?: string;
 
     @ApiPropertyOptional({ description: 'Dispose de ANO' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    asANO?: boolean;
+    asANO?: string;
 
     @ApiPropertyOptional({ description: 'Est public' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    asPublic?: boolean;
+    asPublic?: string;
 
     @ApiPropertyOptional({ description: 'Dispose de dépôt' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    asDepot?: boolean;
+    asDepot?: string;
 
     @ApiPropertyOptional({ description: 'Sous-commission analyse' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    subCommission_analyse?: boolean;
+    subCommission_analyse?: string;
 
     @ApiPropertyOptional({ description: 'Commission PM' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    commission_pm?: boolean;
+    commission_pm?: string;
 
     @ApiPropertyOptional({ description: 'Demande de proposition' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    demande_prop?: boolean;
+    demande_prop?: string;
 
     @ApiPropertyOptional({ description: 'Dépôt proposition technique' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    depot_prop_Tech?: boolean;
+    depot_prop_Tech?: string;
 
     @ApiPropertyOptional({ description: 'Analyse technique' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    analyse_tech?: boolean;
+    analyse_tech?: string;
 
     @ApiPropertyOptional({ description: 'Analyse proposition financière' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    analyse_prop_fin?: boolean;
+    analyse_prop_fin?: string;
 
     @ApiPropertyOptional({ description: 'Analyse combinée' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    analyse_comb?: boolean;
+    analyse_comb?: string;
 
     @ApiPropertyOptional({ description: 'Notification' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    notif?: boolean;
+    notif?: string;
 
     @ApiPropertyOptional({ description: 'Deuxième publication' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    publication2?: boolean;
+    publication2?: string;
 
     @ApiPropertyOptional({ description: 'ANO rapport analyse' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    ano_rapport_analyse?: boolean;
+    ano_rapport_analyse?: string;
 
     @ApiPropertyOptional({ description: 'Mise au point contrat' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    mise_point_contrat?: boolean;
+    mise_point_contrat?: string;
 
     @ApiPropertyOptional({ description: 'Approbation tutelle PM' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    approb_tut_pm?: boolean;
+    approb_tut_pm?: string;
 
     @ApiPropertyOptional({ description: 'Notification définitive' })
-    @IsBoolean()
+    @IsString()
     @IsOptional()
-    notif_def?: boolean;
+    notif_def?: string;
 
     @ApiPropertyOptional({ description: 'Observations' })
     @IsString()

@@ -46,77 +46,77 @@ export class PassationMarche extends Timestamp {
     @ApiProperty({ description: 'Date limite' })
     deadline: string;
 
-    @Column({ name: 'as_tdr', type: 'boolean', nullable: true })
+    @Column({ name: 'as_tdr', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Dispose de TDR' })
-    asTDR?: boolean;
+    asTDR?: string;
 
-    @Column({ name: 'as_amidao', type: 'boolean', nullable: true })
+    @Column({ name: 'as_amidao', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Dispose de AMIDAO' })
-    asAMIDAO: boolean | null;
+    asAMIDAO: string | null;
 
-    @Column({ name: 'as_ano', type: 'boolean', nullable: true })
+    @Column({ name: 'as_ano', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Dispose de ANO' })
-    asANO: boolean | null;
+    asANO: string | null;
 
-    @Column({ name: 'as_public', type: 'boolean', nullable: true })
+    @Column({ name: 'as_public', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Est public' })
-    asPublic: boolean | null;
+    asPublic: string | null;
 
-    @Column({ name: 'as_depot', type: 'boolean', nullable: true })
+    @Column({ name: 'as_depot', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Dispose de dépôt' })
-    asDepot: boolean | null;
+    asDepot: string | null;
 
-    @Column({ name: 'sub_commission_analyse', type: 'boolean', nullable: true })
+    @Column({ name: 'sub_commission_analyse', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Sous-commission analyse' })
-    subCommission_analyse: boolean | null;
+    subCommission_analyse: string | null;
 
-    @Column({ name: 'commission_pm', type: 'boolean', nullable: true })
+    @Column({ name: 'commission_pm', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Commission PM' })
-    commission_pm: boolean | null;
+    commission_pm: string | null;
 
-    @Column({ name: 'demande_proposition', type: 'boolean', nullable: true })
+    @Column({ name: 'demande_proposition', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Demande de proposition' })
-    demande_prop: boolean | null;
+    demande_prop: string | null;
 
-    @Column({ name: 'depot_proposition_tech', type: 'boolean', nullable: true })
+    @Column({ name: 'depot_proposition_tech', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Dépôt proposition technique' })
-    depot_prop_Tech: boolean | null;
+    depot_prop_Tech: string | null;
 
-    @Column({ name: 'analyse_technique', type: 'boolean', nullable: true })
+    @Column({ name: 'analyse_technique', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Analyse technique' })
-    analyse_tech: boolean | null;
+    analyse_tech: string | null;
 
-    @Column({ name: 'analyse_proposition_fin', type: 'boolean', nullable: true })
+    @Column({ name: 'analyse_proposition_fin', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Analyse proposition financière' })
-    analyse_prop_fin: boolean | null;
+    analyse_prop_fin: string | null;
 
-    @Column({ name: 'analyse_combinee', type: 'boolean', nullable: true })
+    @Column({ name: 'analyse_combinee', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Analyse combinée' })
-    analyse_comb: boolean | null;
+    analyse_comb: string | null;
 
-    @Column({ name: 'notification', type: 'boolean', nullable: true })
+    @Column({ name: 'notification', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Notification' })
-    notif: boolean | null;
+    notif: string | null;
 
-    @Column({ name: 'publication_2', type: 'boolean', nullable: true })
+    @Column({ name: 'publication_2', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Deuxième publication' })
-    publication2: boolean | null;
+    publication2: string | null;
 
-    @Column({ name: 'ano_rapport_analyse', type: 'boolean', nullable: true })
+    @Column({ name: 'ano_rapport_analyse', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'ANO rapport analyse' })
-    ano_rapport_analyse: boolean | null;
+    ano_rapport_analyse: string | null;
 
-    @Column({ name: 'mise_point_contrat', type: 'boolean', nullable: true })
+    @Column({ name: 'mise_point_contrat', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Mise au point contrat' })
-    mise_point_contrat: boolean | null;
+    mise_point_contrat: string | null;
 
-    @Column({ name: 'approbation_tutelle_pm', type: 'boolean', nullable: true })
+    @Column({ name: 'approbation_tutelle_pm', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Approbation tutelle PM' })
-    approb_tut_pm: boolean | null;
+    approb_tut_pm: string | null;
 
-    @Column({ name: 'notification_definitive', type: 'boolean', nullable: true })
+    @Column({ name: 'notification_definitive', type: 'varchar', nullable: true })
     @ApiPropertyOptional({ description: 'Notification définitive' })
-    notif_def: boolean | null;
+    notif_def: string | null;
 
     @Column({ name: 'observations', type: 'text', nullable: true })
     @ApiPropertyOptional({ description: 'Observations' })
