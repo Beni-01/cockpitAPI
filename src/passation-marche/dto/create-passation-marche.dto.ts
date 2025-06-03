@@ -6,7 +6,6 @@ export class CreatePassationMarcheDto {
      @ApiProperty({ description: 'Intitulé du marché' })
     @IsString()
     @IsNotEmpty()
-    @MaxLength(255)
     intitule: string;
 
     @ApiProperty({ description: 'Service concerné' })

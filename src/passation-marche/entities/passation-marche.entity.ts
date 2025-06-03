@@ -22,7 +22,7 @@ export class PassationMarche extends Timestamp {
     @ApiProperty({ description: 'ID de la passation de marché' })
     id: number;
 
-    @Column({ name: 'intitule', type: 'varchar' })
+    @Column({ name: 'intitule', type: 'text' })
     @ApiProperty({ description: 'Intitulé du marché' })
     intitule: string;
 

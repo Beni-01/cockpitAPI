@@ -42,37 +42,73 @@ export class PassationMarcheService {
   }
 
 
-    async createBulk(dtos: CreatePassationMarcheDto[]) {
-    const queryRunner = this.dataSource.createQueryRunner();
+async createBulk(dtos: CreatePassationMarcheDto[]) {
+  const queryRunner = this.dataSource.createQueryRunner();
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-    try {
-      const entities = dtos.map(dto =>
-        this.passationMarcheRepository.create(dto),
-      );
+  try {
+    const cleanedDtos = dtos.map((dto) => {
+      const cleanedDto = {} as CreatePassationMarcheDto;
 
-      for (const entity of entities) {
-        await queryRunner.manager.save(entity);
+      for (const key in dto) {
+        if (Object.prototype.hasOwnProperty.call(dto, key)) {
+          const value = dto[key];
+
+          if (typeof value === 'string') {
+            // Nettoyage des chaînes de caractères
+            cleanedDto[key] = value.trim();
+          } else if (
+            typeof value === 'number' ||
+            (typeof value === 'string' && !isNaN(Number(value)))
+          ) {
+            // Conversion des strings numériques avec espaces → number
+            cleanedDto[key] = parseFloat(String(value).trim());
+          } else {
+            cleanedDto[key] = value;
+          }
+        }
       }
 
-      await queryRunner.commitTransaction();
-      return entities;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
+      return cleanedDto;
+    });
 
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
+    const entities = cleanedDtos.map(dto =>
+      this.passationMarcheRepository.create(dto),
+    );
 
-      throw new InternalServerErrorException(
-        'An error occurred while creating multiple passations',
-      );
-    } finally {
-      await queryRunner.release();
+    for (const entity of entities) {
+      await queryRunner.manager.save(entity);
     }
+
+    await queryRunner.commitTransaction();
+    return entities;
+  } catch (error) {
+
+    
+    
+    await queryRunner.rollbackTransaction();
+
+    return error    
+
+    if (error instanceof NotFoundException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      'An error occurred while creating multiple passations',
+    );
+
+    
+
+    
+  } finally {
+    await queryRunner.release();
   }
+}
+
+
 
   async findAll(paginationDto:  PassationMarchePaginationDto) {
     try {
