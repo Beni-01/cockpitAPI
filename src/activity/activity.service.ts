@@ -698,7 +698,12 @@ export class ActivityService {
     }
 
 
-async getDirectionProgressDeepSeek(dateDebut?: string, dateFin?: string): Promise<any[]> {
+async getDirectionProgressDeepSeek(
+    dateDebut?: string,
+    dateFin?: string,
+    periode?: string, // 'janvier', 'février', etc. OU 'T1', 'T2', 'T3', 'T4' OU 'S1', 'S2'
+    annee?: number
+): Promise<any[]> {
     try {
         // Création du queryBuilder avec les relations nécessaires
         const queryBuilder = this.activityRepository
@@ -706,21 +711,81 @@ async getDirectionProgressDeepSeek(dateDebut?: string, dateFin?: string): Promis
             .leftJoinAndSelect('activity.subactivities', 'subactivities')
             .leftJoinAndSelect('subactivities.livrable', 'livrable');
 
+        // Déterminer l'année à utiliser (courante par défaut)
+        const currentYear = annee || new Date().getFullYear();
+
         // Application des filtres de date
         if (dateDebut && dateFin) {
+            // Priorité aux dates exactes si elles sont fournies
             const nextDay = new Date(dateFin);
             nextDay.setDate(nextDay.getDate() + 1);
-            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { 
-                dateDebut, 
-                dateFin: nextDay.toISOString() 
+            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', {
+                dateDebut,
+                dateFin: nextDay.toISOString()
             });
         } else if (dateDebut) {
             queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
         } else if (dateFin) {
             const nextDay = new Date(dateFin);
             nextDay.setDate(nextDay.getDate() + 1);
-            queryBuilder.andWhere('activity.dateFin <= :nextDay', { 
-                nextDay: nextDay.toISOString() 
+            queryBuilder.andWhere('activity.dateFin <= :nextDay', {
+                nextDay: nextDay.toISOString()
+            });
+        } else if (periode) {
+            // Filtrage par période (mois, trimestre ou semestre)
+            const periodeLower = periode.toLowerCase();
+            let dateStart: Date, dateEnd: Date;
+
+            // Mapping des mois
+            const moisMap: { [key: string]: number } = {
+                'janvier': 0, 'février': 1, 'mars': 2, 'avril': 3,
+                'mai': 4, 'juin': 5, 'juillet': 6, 'août': 7,
+                'septembre': 8, 'octobre': 9, 'novembre': 10, 'décembre': 11
+            };
+
+            if (moisMap.hasOwnProperty(periodeLower)) {
+                // Filtrage par mois
+                const moisIndex = moisMap[periodeLower];
+                dateStart = new Date(currentYear, moisIndex, 1);
+                dateEnd = new Date(currentYear, moisIndex + 1, 0);
+            } else {
+                // Filtrage par trimestre ou semestre
+                switch (periode.toUpperCase()) {
+                    // Trimestres
+                    case 'T1':
+                        dateStart = new Date(currentYear, 0, 1);
+                        dateEnd = new Date(currentYear, 2, 31);
+                        break;
+                    case 'T2':
+                        dateStart = new Date(currentYear, 3, 1);
+                        dateEnd = new Date(currentYear, 5, 30);
+                        break;
+                    case 'T3':
+                        dateStart = new Date(currentYear, 6, 1);
+                        dateEnd = new Date(currentYear, 8, 30);
+                        break;
+                    case 'T4':
+                        dateStart = new Date(currentYear, 9, 1);
+                        dateEnd = new Date(currentYear, 11, 31);
+                        break;
+                    // Semestres
+                    case 'S1':
+                        dateStart = new Date(currentYear, 0, 1);
+                        dateEnd = new Date(currentYear, 5, 30);
+                        break;
+                    case 'S2':
+                        dateStart = new Date(currentYear, 6, 1);
+                        dateEnd = new Date(currentYear, 11, 31);
+                        break;
+                    default:
+                        throw new BadRequestException('Période non valide. Utilisez un mois (janvier, février...), un trimestre (T1-T4) ou un semestre (S1-S2)');
+                }
+            }
+
+            // Ajout du filtre
+            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateStart AND :dateEnd)', {
+                dateStart: dateStart.toISOString(),
+                dateEnd: dateEnd.toISOString()
             });
         }
 

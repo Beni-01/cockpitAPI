@@ -37,8 +37,10 @@ export class ActivityController {
   getDirectionProgress(
     @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
     @Query('dateFin') dateFin?: string, 
+    @Query('periode') periode?: string,
+     @Query('annee') annee?: number,
   ) {
-    return this.activityService.getDirectionProgressDeepSeek(dateDebut,dateFin);
+    return this.activityService.getDirectionProgressDeepSeek(dateDebut,dateFin,periode,annee);
   }
 
 
