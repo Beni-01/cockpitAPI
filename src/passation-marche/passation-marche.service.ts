@@ -194,7 +194,7 @@ async createBulk(dtos: CreatePassationMarcheDto[]) {
 
   async remove(id: number) {
     try {
-      const result = await this.passationMarcheRepository.delete(id);
+      const result = await this.passationMarcheRepository.softDelete(id);
 
       if (result.affected === 0) {
         throw new NotFoundException(

@@ -886,7 +886,6 @@ async getDirectionProgressDeepSeek(
                 if (sub.status?.toLowerCase() === 'cloturé') {
                     directionStats[direction].totalRessources += sub.nbre_ressource ?? 0;
                 }
-
                 // KPI5 - Budget
                 directionStats[direction].totalBudget += sub.budget ?? 0;
                 directionStats[direction].totalBudgetConsomme += sub.budgetConsomme ?? 0;
@@ -935,7 +934,9 @@ async getDirectionProgressDeepSeek(
                     : 0,
                 
                 // KPI5 - Budget
-                kpi5_percent: rateBudget === 100 ? 0 : rateBudget
+                totalBudget:stats.totalBudget, 
+                totalBudgetConsomme:stats.totalBudgetConsomme,
+                kpi5_percent: rateBudget == 100 ? 0 : rateBudget
             };
         });
 
@@ -960,6 +961,8 @@ async getDirectionProgressDeepSeek(
                     kpi3: 0,
                     kpi3_percent: 0,
                     kpi4_percent: 0,
+                    totalBudget:0,
+                    totalBudgetConsomme:0,
                     kpi5_percent: 0
                 });
             }
