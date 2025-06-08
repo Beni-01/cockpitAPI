@@ -896,10 +896,12 @@ async getDirectionProgressDeepSeek(
         const result = Object.keys(directionStats).map(direction => {
             const stats = directionStats[direction];
 
+            const bonus=Number((((stats.totalBudget-stats.totalBudgetConsomme)/stats.totalBudget)*100).toFixed(2))
+
             // Calcul KPI5 (taux de budget restant)
-            const rateBudget = stats.totalBudget > 0
+            const rateBudget = stats.totalBudget > 0 && stats.totalBudget<=stats.totalBudgetConsomme
                 ? Number((((stats.totalBudget / stats.totalBudgetConsomme) * 100)).toFixed(2))
-                : 0;
+                : 100+bonus;
 
             return {
                 direction,
@@ -936,7 +938,7 @@ async getDirectionProgressDeepSeek(
                 // KPI5 - Budget
                 totalBudget:stats.totalBudget, 
                 totalBudgetConsomme:stats.totalBudgetConsomme,
-                kpi5_percent: rateBudget == 100 ? 0 : rateBudget
+                kpi5_percent: rateBudget
             };
         });
 
