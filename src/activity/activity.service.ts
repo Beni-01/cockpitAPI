@@ -938,7 +938,7 @@ async getDirectionProgressDeepSeek(
                 // KPI5 - Budget
                 totalBudget:stats.totalBudget, 
                 totalBudgetConsomme:stats.totalBudgetConsomme,
-                kpi5_percent: Number(rateBudget.toFixed(2))
+                kpi5_percent:  stats.totalBudgetConsomme==0 ? 0 : Number(rateBudget.toFixed(2))
             };
         });
 
