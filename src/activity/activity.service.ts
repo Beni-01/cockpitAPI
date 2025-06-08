@@ -898,7 +898,7 @@ async getDirectionProgressDeepSeek(
 
             // Calcul KPI5 (taux de budget restant)
             const rateBudget = stats.totalBudget > 0
-                ? Number((100 - ((stats.totalBudgetConsomme / stats.totalBudget) * 100)).toFixed(2))
+                ? Number((((stats.totalBudget / stats.totalBudgetConsomme) * 100)).toFixed(2))
                 : 0;
 
             return {
