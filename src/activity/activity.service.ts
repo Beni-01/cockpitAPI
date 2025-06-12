@@ -843,7 +843,6 @@ async getDirectionProgressDeepSeek(
                     directionEffective: directionEffectives[direction] || 1 // Fallback à 1 pour éviter division par 0
                 };
             }
-
             // Compter les activités
             directionStats[direction].totalActivity += 1;
             if (activity.status.toLowerCase() === 'cloturé' || activity.status.toLowerCase() === 'terminé') {
