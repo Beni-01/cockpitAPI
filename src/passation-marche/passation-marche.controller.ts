@@ -93,6 +93,22 @@ export class PassationMarcheController {
     }
   }
 
+    @Get('all/marche')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Lister toutes les passations de marché' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Liste des passations de marché récupérée avec succès',
+    type: [PassationMarche],
+  })
+  async findAllMarche() {
+    try {
+      return await this.passationMarcheService.findAllMarche();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Récupérer une passation de marché par ID' })
