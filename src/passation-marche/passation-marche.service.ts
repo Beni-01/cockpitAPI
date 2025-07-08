@@ -109,6 +109,16 @@ async createBulk(dtos: CreatePassationMarcheDto[]) {
 }
 
 
+  async findAllMarche(): Promise<any[]> {
+    try {
+      return await this.passationMarcheRepository.find();
+    } catch (error) {
+      throw new NotFoundException(
+        'Une erreur est survenue lors de la récupération des marchés.',
+      );
+    }
+  }
+
 
   async findAll(paginationDto:  PassationMarchePaginationDto) {
     try {

@@ -49,6 +49,7 @@ export class CreateUserDto {
   @IsNumber()
   directeurId?:number;
 
+
   @IsOptional()
   @IsNumber()
   agentDelegueId?:number;
