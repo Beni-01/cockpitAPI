@@ -118,7 +118,6 @@ export class ActivityController {
   }
 
 
-
   @Get('division')
   @ApiOperation({ summary: 'Obtenir les activités groupées par direction et responsable' })
   @ApiQuery({ name: 'etat', required: false, type: String, description: 'Filtrer par état des activités' })

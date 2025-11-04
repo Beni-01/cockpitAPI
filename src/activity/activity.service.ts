@@ -927,12 +927,20 @@ async getDirectionProgressDeepSeek(
                     : 0,
                 
                 // KPI4 - Efficacité des ressources
-                kpi4_percent: stats.totalSub > 0 && stats.directionEffective > 0 && stats.totalRessources > 0
-                    ? Number((
-                        (((stats.closedSub * stats.directionEffective) / 
-                        (stats.totalSub * stats.totalRessources)) * 100)
-                      ).toFixed(2))
-                    : 0,
+                // kpi4_percent: stats.totalSub > 0 && stats.directionEffective > 0 && stats.totalRessources > 0
+                //     ? Number((
+                //         (((stats.closedSub * stats.directionEffective) / 
+                //         (stats.totalSub * stats.totalRessources)) * 100)
+                //       ).toFixed(2))
+                //     : 0,
+
+                kpi4_percent :  stats.totalSub > 0 && stats.totalRessources > 0
+                  ? Number(
+                      ((((stats.closedSub / stats.totalSub) / (stats.totalRessources / stats.directionEffective)) 
+                        * (stats.kpi3 / 100)) * 100).toFixed(2)
+                    )
+                  : 0,
+
                 totalRessources:stats.totalRessources,
                 // KPI5 - Budget
                 totalBudget:stats.totalBudget, 

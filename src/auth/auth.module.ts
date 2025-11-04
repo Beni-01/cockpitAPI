@@ -23,7 +23,7 @@ const configService=new ConfigService()
     JwtModule.register({
       global:true,
       secret: configService.get('SECRET_CLE_AUTH'),
-      signOptions: { expiresIn: '5d' },
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [AuthController],
