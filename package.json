@@ -19,11 +19,11 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node --require tsconfig-paths/register ./node_modules/typeorm/cli",
-    "migration:create": "npm run typeorm -- migration:create ./db/migrations/$npm_config_name",
-    "migration:generate": "npm run typeorm -- -d ./db/typeorm.config.ts migration:generate ./db/migrations/$npm_config_name",
-    "migration:run": "npm run typeorm migration:run -- -d ./db/typeorm.config.ts",
-    "migration:revert": "npm run typeorm -- -d ./db/typeorm.config.ts migration:revert",
-    "migration:show": "npm run typeorm -- migration:show -d ./db/typeorm.config.ts"
+    "migration:create": "npm run typeorm -- migration:create db/migrations/$npm_config_name",
+    "migration:generate": "npm run typeorm -- -d db/typeorm.config.ts migration:generate db/migrations/$npm_config_name",
+    "migration:run": "npm run typeorm -- migration:run -d db/typeorm.config.ts",
+    "migration:revert": "npm run typeorm -- migration:revert -d db/typeorm.config.ts",
+    "migration:show": "npm run typeorm -- migration:show -d db/typeorm.config.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.1.2",

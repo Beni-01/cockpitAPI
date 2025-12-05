@@ -1,27 +1,44 @@
+// db/typeorm.config.ts
 import { DataSource } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
+import { join } from 'path';
 
-
+// Charge les variables d'environnement
 config();
-
-const configService = new ConfigService();
 
 export default new DataSource({
   type: 'mysql',
-  host: configService.getOrThrow('DB_HOST'),
-  port: +configService.getOrThrow('DB_PORT'),
-  username: configService.getOrThrow('DB_USER'),
-  password: configService.getOrThrow('DB_PASSWORD'),
-  database: configService.getOrThrow('DB_NAME'),
-  entities: [`${__dirname}/../src/**/*/*.entity{.ts,.js}`],
-  synchronize: configService.getOrThrow('NODE_ENV') === 'development',
-  logging: configService.getOrThrow('NODE_ENV') === 'development',
-  migrations: [`${__dirname}/migrations/*{.ts,.js}`],
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 3306,
+  username: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'test',
+
+  // ✅ Chemin des entités (cohérent avec database.config.ts)
+  entities: [join(__dirname, '../**/*.entity.{ts,js}')],
+
+  // ✅ Chemin des migrations
+  migrations: [join(__dirname, './migrations/*.{ts,js}')],
   migrationsTableName: 'migrations',
-  
+
+  // Ne pas synchroniser automatiquement
+  synchronize: false,
+
+  // Logging uniquement en développement
+  logging: process.env.NODE_ENV === 'development',
+
+  // Configuration supplémentaire pour la connexion
   extra: {
-    timezone: 'Z', // Pour UTC
-    // timezone: 'Africa/Kinshasa', // Pour un fuseau horaire spécifique
+    connectionLimit: 50,
+    connectTimeout: 60000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
+    idleTimeout: 60000,
+    charset: 'utf8mb4',
+    decimalNumbers: true,
+    timezone: 'Z',
   },
+
+  // Log les requêtes lentes > 1s
+  maxQueryExecutionTime: 1000,
 });

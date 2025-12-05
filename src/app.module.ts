@@ -21,11 +21,12 @@ import { AttachUserMiddleware } from './audit-log/attachUser.middleware';
 import { UserLivrableModule } from './user-livrable/user-livrable.module';
 import { DemandeUserModule } from './demande-user/demande-user.module';
 import { RequestContextMiddleware } from './user/request-context.middleware';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditLogService } from './audit-log/audit-log.service';
 import { AuditInterceptor } from './audit-log/audti-log.interceptor';
 import { PassationMarcheModule } from './passation-marche/passation-marche.module';
 import { VictimeModule } from './victime/victime.module';
+import { JwtAuthGuard } from './auth/guards/jwt.guard';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -34,14 +35,33 @@ import { VictimeModule } from './victime/victime.module';
       load: [AppConfig, DatabaseConfig],
     }),
 
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        ...configService.get('database'),
+TypeOrmModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => {
+    // Récupération de la configuration database
+    const db = configService.get('database');
 
-      }),
-      inject: [ConfigService],
-    }),
+    return {
+      type: db.type,
+      host: db.host,
+      port: Number(db.port),
+      username: db.username,
+      password: db.password,
+      database: db.database,
+      entities: db.entities,
+      migrations: db.migrations,
+      migrationsTableName: db.migrationsTableName,
+
+      // Ne jamais synchroniser automatiquement en prod
+      synchronize: false,
+      logging: db.logging,
+
+      // Options supplémentaires
+      extra: db.extra,
+    };
+  },
+}),
     AuthModule,
     UserModule,
     PassportModule,
@@ -60,7 +80,11 @@ import { VictimeModule } from './victime/victime.module';
   ],
   controllers: [AppController],
   providers: [
-    AppService,  
+    AppService,
+    {
+       provide: APP_GUARD,
+       useClass: JwtAuthGuard,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
