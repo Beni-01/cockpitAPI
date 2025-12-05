@@ -25,7 +25,6 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditLogService } from './audit-log/audit-log.service';
 import { AuditInterceptor } from './audit-log/audti-log.interceptor';
 import { PassationMarcheModule } from './passation-marche/passation-marche.module';
-import { VictimeModule } from './victime/victime.module';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
 @Module({
   imports: [
@@ -74,9 +73,7 @@ TypeOrmModule.forRootAsync({
     AuthModule,
     UserLivrableModule,
     DemandeUserModule,
-    PassationMarcheModule,
-    VictimeModule
-   
+    PassationMarcheModule
   ],
   controllers: [AppController],
   providers: [

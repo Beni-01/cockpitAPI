@@ -14,10 +14,9 @@ export default registerAs('database', () => ({
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
 
-  // 👉 CHARGEMENT DES ENTITES (cohérent avec typeorm.config.ts)
+
   entities: [join(__dirname, '/../**/*.entity.{ts,js}')],
 
-  // 👉 CHARGEMENT DES MIGRATIONS
   migrations: [join(__dirname, '../../db/migrations/*.{ts,js}')],
   migrationsTableName: 'migrations',
 

@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { Activity } from "src/activity/entities/activity.entity";
 import { DemandeUser } from "src/demande-user/entities/demande-user.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
@@ -5,66 +6,108 @@ import { User } from "src/user/entities/user.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({
-    name:"demandeProlongation"
+    name: "demandeProlongation"
 })
 export class DemandeProlongation extends Timestamp {
 
+    @ApiProperty({
+        description: "Identifiant unique de la demande de prolongation",
+        example: 1
+    })
     @PrimaryGeneratedColumn()
-    id:number
+    id: number;
 
-    @Column({
-        name:'description',
-        type:'text'
+    @ApiProperty({
+        description: "Description détaillée de la demande de prolongation",
+        example: "Besoin de 15 jours supplémentaires pour finaliser le rapport."
     })
-    description:string
-
     @Column({
-        name:'impact',
-        type:'varchar'
+        name: 'description',
+        type: 'text'
     })
-    impact:string
+    description: string;
 
+    @ApiProperty({
+        description: "Impact de cette prolongation sur l'activité",
+        example: "Retard léger sur la livraison"
+    })
     @Column({
-        name:'niveau',
-        type:'varchar'
+        name: 'impact',
+        type: 'varchar'
     })
-    niveau:string
+    impact: string;
 
+    @ApiProperty({
+        description: "Niveau d'impact de la demande (Faible, Moyen, Élevé)",
+        example: "Élevé"
+    })
     @Column({
-        name:'reponse',
-        type:'varchar',
-        nullable:false,
-        default:'En attente'
+        name: 'niveau',
+        type: 'varchar'
     })
-    reponse:string
+    niveau: string;
 
+    @ApiProperty({
+        description: "Réponse du manager ou superviseur",
+        example: "En attente",
+        default: "En attente"
+    })
     @Column({
-        name:'commentaire',
-        type:'text'
+        name: 'reponse',
+        type: 'varchar',
+        nullable: false,
+        default: 'En attente'
     })
-    commentaire: string
+    reponse: string;
 
-
+    @ApiProperty({
+        description: "Commentaire ajouté après la décision",
+        example: "Prolongation accordée sous condition."
+    })
     @Column({
-        name:'activityId',
-        type:'number'
+        name: 'commentaire',
+        type: 'text'
     })
-    activityId:number
+    commentaire: string;
 
+    @ApiProperty({
+        description: "ID de l'activité concernée par cette demande",
+        example: 12
+    })
     @Column({
-        name:'userId',
-        type:'number'
+        name: 'activityId',
+        type: 'int'
     })
-    userId:number
+    activityId: number;
 
-    @ManyToOne(()=>User, (user)=>user.demandeProlongations, {eager:true})
-    user:User
+    @ApiProperty({
+        description: "ID de l'utilisateur ayant fait la demande",
+        example: 4
+    })
+    @Column({
+        name: 'userId',
+        type: 'int'
+    })
+    userId: number;
 
-    @ManyToOne(()=>Activity, (activity)=>activity.demandes)
-    activity:Activity
+    @ApiProperty({
+        description: "Utilisateur ayant soumis la demande",
+        type: () => User
+    })
+    @ManyToOne(() => User, (user) => user.demandeProlongations, { eager: true })
+    user: User;
 
+    @ApiProperty({
+        description: "Activité liée à cette demande de prolongation",
+        type: () => Activity
+    })
+    @ManyToOne(() => Activity, (activity) => activity.demandes)
+    activity: Activity;
 
-    @OneToMany(()=>DemandeUser,(demandeUser)=>demandeUser.demande,{eager:true})
-    demandeUser:DemandeUser[]
-
+    @ApiProperty({
+        description: "Liste des validations ou rejets des différents utilisateurs",
+        type: () => [DemandeUser]
+    })
+    @OneToMany(() => DemandeUser, (demandeUser) => demandeUser.demande, { eager: true })
+    demandeUser: DemandeUser[];
 }

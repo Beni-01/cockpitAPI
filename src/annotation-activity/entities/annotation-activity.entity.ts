@@ -8,43 +8,68 @@ import { PrimaryGeneratedColumn, Column, ManyToOne, Entity } from "typeorm";
     name: 'annotationActivity'
 })
 export class AnnotationActivity extends Timestamp {
+
+    @ApiProperty({
+        description: "Identifiant unique de l'annotation",
+        example: 1
+    })
     @PrimaryGeneratedColumn()
-    @ApiProperty({ description: "ID de l'annotation" })
     id: number;
 
+    @ApiProperty({
+        description: "Type de l'annotation",
+        example: "COMMENTAIRE",
+        default: "COMMENTAIRE"
+    })
     @Column({
         name:'type',
         type:'varchar',
         nullable:true,
         default:'COMMENTAIRE'
     })
-    type:string
+    type: string;
 
+    @ApiProperty({
+        description: "Texte complet de l'annotation",
+        example: "Le livrable doit être mis à jour avant le 15 janvier."
+    })
     @Column({
         name: 'text',
         type: 'text'
     })
-    @ApiProperty({ description: "Texte de l'annotation" })
     text: string;
 
+    @ApiProperty({
+        description: "ID de l'activité liée à cette annotation",
+        example: 12
+    })
     @Column({
         name: 'activityId',
         type: 'int'
     })
-    @ApiProperty({ description: "ID du conflit associé à l'annotation" })
     activityId: number;
 
+    @ApiProperty({
+        description: "ID de l'utilisateur ayant ajouté l'annotation",
+        example: 5
+    })
     @Column({
         name: 'userId',
         type: 'int'
     })
-    @ApiProperty({ description: "ID de l'utilisateur associé à l'annotation" })
     userId: number;
 
-    @ManyToOne(() =>Activity, (activity) => activity.annotations)
-    @ApiProperty({ description: "Conflit associé à l'annotation" })
+    @ApiProperty({
+        description: "Activité associée à l'annotation",
+        type: () => Activity
+    })
+    @ManyToOne(() => Activity, (activity) => activity.annotations)
     activity: Activity;
 
+    @ApiProperty({
+        description: "Utilisateur ayant créé l'annotation",
+        type: () => User
+    })
     @ManyToOne(() => User, (user) => user.annotations, { eager: true })
     user: User;
 }

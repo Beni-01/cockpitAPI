@@ -1,5 +1,5 @@
-import { BeforeInsert, Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
-import * as bcrypt from 'bcrypt';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
@@ -10,248 +10,139 @@ import { DemandeUser } from "src/demande-user/entities/demande-user.entity";
 import { AuditLog } from "src/audit-log/entities/audit-log.entity";
 import { PassationMarche } from "src/passation-marche/entities/passation-marche.entity";
 
-
-@Entity({
-    name:'user'
-})
+@Entity({ name:'user' })
 export class User extends Timestamp {
-    @PrimaryGeneratedColumn()
-    id:number;
 
-    @Column({
-        name:'nom',
-        type:'varchar'
-    })
-    nom:string;
+  @PrimaryGeneratedColumn()
+  @ApiProperty({ description: 'ID unique de l’utilisateur' })
+  id: number;
 
-    @Column({
-        name:'signature',
-        type:'text',
-        nullable:true
-    })
-    signature:string;
+  @Column()
+  @ApiProperty({ description: 'Nom de l’utilisateur' })
+  nom: string;
 
-    @Column({
-        name:'postnom',
-        type:'varchar',
-        nullable:true
-    })
-    postnom:string;
+  @Column({ nullable: true, type: 'varchar' })
+  @ApiPropertyOptional({ description: 'Postnom de l’utilisateur' })
+  postnom?: string;
 
-    @Column({
-        name:'prenom',
-        type:'varchar'
-    })
-    prenom:string;
+  @Column()
+  @ApiProperty({ description: 'Prénom de l’utilisateur' })
+  prenom: string;
 
-   @Column({
-        name:'email',
-        type:'varchar',
-        nullable:true
-    })
-    email:string
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Adresse e-mail de l’utilisateur' })
+  email?: string;
 
-    @Column({
-        name:'sexe',
-        type:'char'
-    })
-    sexe:string
+  @Column()
+  @ApiProperty({ description: 'Sexe de l’utilisateur (M/F)' })
+  sexe: string;
 
-    @Column({
-        name:'telephone',
-        type:'varchar',
-        nullable:true
-    })
-    telephone:string
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Numéro de téléphone de l’utilisateur' })
+  telephone?: string;
 
-    @Column({
-        name:'otp',
-        type:'text',
-        nullable:true,
-    })
-    otp:string
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Code OTP de l’utilisateur' })
+  otp?: string;
 
-    @Column({
-        name:'username',
-        type:'varchar',
-      
-    })
-    username:string;
+  @Column()
+  @ApiProperty({ description: 'Nom d’utilisateur pour la connexion' })
+  username: string;
 
-    @Column({
-        name:'password',
-        type:'varchar',
-        default:"N/A"
-      
-    })
-    password:string;
+  @Column({ default:"N/A" })
+  @ApiProperty({ description: 'Mot de passe (hashé)' })
+  password: string;
 
-    @Column(
-        {
-            name:'isSupervisor',
-            type:'boolean',
-            default:false
-        }
-    )
-    isSupervisor:boolean
+  @Column({ default: false })
+  @ApiProperty({ description: 'Indique si l’utilisateur est superviseur' })
+  isSupervisor: boolean;
 
-    @Column(
-        {
-            name:'isActive',
-            type:'boolean',
-            default:false
-        }
-    )
-    isActivate:boolean
+  @Column({ default: false })
+  @ApiProperty({ description: 'Indique si le compte est activé' })
+  isActivate: boolean;
 
-    @Column(
-        {
-            name:'status',
-            type:'boolean',
-            default:true
-        }
-    )
-    status:boolean
+  @Column({ default: true })
+  @ApiProperty({ description: 'Statut actif ou inactif de l’utilisateur' })
+  status: boolean;
 
-    @Column(
-        {
-           name:'directionId',
-           type:'int',
-           nullable:true
-        }
-    )
-    directionId?:number
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'ID de la direction' })
+  directionId?: number;
 
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'ID de la direction générale' })
+  directionGeneraleId?: number;
 
-    @Column(
-        {
-           name:'directionGeneraleId',
-           type:'int',
-           nullable:true
-        }
-    )
-    directionGeneraleId?:number
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'ID du service' })
+  serviceId?: number;
 
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'ID de la division' })
+  divisionId?: number;
 
-    @Column(
-        {
-           name:'serviceId',
-           type:'int',
-           nullable:true
-        }
-    )
-    serviceId:number
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Nom de la division' })
+  division?: string;
 
-    @Column(
-        {
-           name:'divisionId',
-           type:'int',
-           nullable:true
-        }
-    )
-    divisionId:number
+  @Column({ default: false })
+  @ApiProperty({ description: 'Indique si le mot de passe a été défini' })
+  isSetPassword: boolean;
 
-    @Column(
-        {
-            name:'division',
-            type:'varchar',
-            nullable:true
-        }
-    )
-    division?:string
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Nom du service' })
+  service?: string;
 
-    @Column(
-        {
-            name:'isSetPassword',
-            type:'boolean',
-            default:false
-        }
-    )
-    isSetPassword:boolean
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Nom de la direction' })
+  direction?: string;
 
-    @Column(
-        {
-            name:'service',
-            type:'varchar',
-            nullable:true
-        }
-    )
-    service?:string
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Fonction de l’utilisateur' })
+  fonction?: string;
 
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Grade de l’utilisateur' })
+  grade?: string;
 
-    @Column(
-        {
-            name:'direction',
-            type:'varchar',
-            nullable:true
-        }
-    )
-    direction?:string
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'ID du directeur' })
+  directeurId?: number;
 
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'ID de l’agent délégué' })
+  agentDelegueId?: number;
 
-    @Column(
-        {
-            name:'fonction',
-            type:'varchar',
-            nullable:true
-        }
-    )
-    fonction?:string
+  // Relations
+  @OneToMany(() => Activity, (activity) => activity.user)
+  @ApiProperty({ description: 'Liste des activités créées par l’utilisateur', type: () => [Activity] })
+  activities: Activity[];
 
+  @OneToMany(() => SousActivity, (subactivity) => subactivity.user)
+  @ApiProperty({ description: 'Liste des sous-activités', type: () => [SousActivity] })
+  subactivities: SousActivity[];
 
-    @Column(
-        {
-            name:'grade',
-            type:'varchar',
-            nullable:true
-        }
-    )
-    grade?:string
+  @OneToMany(() => DemandeProlongation, (demande) => demande.user)
+  @ApiProperty({ description: 'Demandes de prolongation de l’utilisateur', type: () => [DemandeProlongation] })
+  demandeProlongations: DemandeProlongation[];
 
-    @Column(
-        {
-            name:'directeurId',
-            type:'int',
-            nullable:true
-        }
-    )
-    directeurId:number
+  @OneToMany(() => AnnotationActivity, (annotation) => annotation.user)
+  @ApiProperty({ description: 'Annotations liées à l’utilisateur', type: () => [AnnotationActivity] })
+  annotations: AnnotationActivity[];
 
-    @Column(
-        {
-            name:'agentDelegueId',
-            type:'int',
-            nullable:true
-        }
-    )
-    agentDelegueId?: number; 
+  @OneToMany(() => UserLivrable, (agentValidateur) => agentValidateur.user)
+  @ApiProperty({ description: 'Livrables validés par l’utilisateur', type: () => [UserLivrable] })
+  agentValidateur: UserLivrable[];
 
+  @OneToMany(() => DemandeUser, (demandeUser) => demandeUser.user)
+  @ApiProperty({ description: 'Demandes utilisateurs liées', type: () => [DemandeUser] })
+  demandeUser: DemandeUser[];
 
-    @OneToMany(()=>Activity, (activity)=>activity.user)
-    activities:Activity[]
+  @OneToMany(() => AuditLog, (auditable) => auditable.user)
+  @ApiProperty({ description: 'Logs audités par l’utilisateur', type: () => [AuditLog] })
+  auditable: AuditLog[];
 
-    @OneToMany(()=>SousActivity, (subactivity)=> subactivity.user)
-    subactivities:SousActivity[]
-
-    @OneToMany(()=>DemandeProlongation, (demandeProlongations)=> demandeProlongations.user)
-    demandeProlongations:DemandeProlongation[]
-
-    @OneToMany(()=>AnnotationActivity, (annotation)=>annotation.user)
-    annotations:AnnotationActivity[]
-
-    @OneToMany(()=>UserLivrable,(agentValidateur)=>agentValidateur.user)
-    agentValidateur:UserLivrable[]
-
-    @OneToMany(()=>DemandeUser,(demandeUser)=>demandeUser.user)
-    demandeUser:DemandeUser[]
-
-    @OneToMany(()=>AuditLog, (auditable)=>auditable.user)
-    auditable:AuditLog[]
-
-    @OneToMany(()=>PassationMarche, (passation)=>passation.user)
-    passations:PassationMarche[]
+  @OneToMany(() => PassationMarche, (passation) => passation.user)
+  @ApiProperty({ description: 'Passations de marché liées', type: () => [PassationMarche] })
+  passations: PassationMarche[];
 }
-
-
-
-

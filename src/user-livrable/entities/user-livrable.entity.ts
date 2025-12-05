@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Livrable } from "src/livrable/entities/livrable.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
@@ -6,46 +7,37 @@ import { PrimaryGeneratedColumn, Column, ManyToOne, Entity } from "typeorm";
 @Entity({
     name:'user-livrable'
 })
-export class UserLivrable  extends Timestamp{
+export class UserLivrable extends Timestamp {
+
     @PrimaryGeneratedColumn()
-    id:number;
+    @ApiProperty({ description: 'ID unique de l’utilisateur-livrable' })
+    id: number;
 
-    @Column({
-        name:'userId',
-        type:'int'
-    })
-    userId:number;
+    @Column({ type:'int' })
+    @ApiProperty({ description: 'ID de l’utilisateur associé' })
+    userId: number;
 
-    @Column({
-        name:'livrableId',
-        type:'int'
-    })
-    livrableId:number
+    @Column({ type:'int' })
+    @ApiProperty({ description: 'ID du livrable associé' })
+    livrableId: number;
 
-    @Column({
-        name:'date_validation',
-        type:'datetime',
-        nullable:true
-    })
-    date_validation?:Date;
+    @Column({ type:'datetime', nullable:true })
+    @ApiPropertyOptional({ description: 'Date de validation du livrable' })
+    date_validation?: Date;
 
-    @Column({
-        name:'comment',
-        type:'text',
-        nullable:true
-    })
-    comment:string
+    @Column({ type:'text', nullable:true })
+    @ApiPropertyOptional({ description: 'Commentaire associé à la validation' })
+    comment?: string;
 
-    @Column({
-        name:'isValidate',
-        type:'boolean',
-        default:false
-    })
-    isValidate?:boolean
+    @Column({ type:'boolean', default:false })
+    @ApiProperty({ description: 'Indique si le livrable est validé' })
+    isValidate?: boolean;
 
-    @ManyToOne(()=>User, (agent)=>agent.agentValidateur, {eager:true})
-    user:User;
+    @ManyToOne(() => User, (agent) => agent.agentValidateur, { eager: true })
+    @ApiProperty({ description: 'Utilisateur lié à ce livrable', type: () => User })
+    user: User;
 
-    @ManyToOne(()=>Livrable, (livrable)=>livrable.agentValidateur)
-    livrable:Livrable
+    @ManyToOne(() => Livrable, (livrable) => livrable.agentValidateur)
+    @ApiProperty({ description: 'Livrable associé à l’utilisateur', type: () => Livrable })
+    livrable: Livrable;
 }
