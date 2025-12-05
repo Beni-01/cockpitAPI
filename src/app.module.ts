@@ -81,10 +81,7 @@ TypeOrmModule.forRootAsync({
   controllers: [AppController],
   providers: [
     AppService,
-    {
-       provide: APP_GUARD,
-       useClass: JwtAuthGuard,
-    },
+
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
@@ -99,3 +96,9 @@ export class AppModule  {
     consumer.apply(RequestContextMiddleware).forRoutes('*'); // Appliquer à toutes les routes   
   }
 }
+
+
+    // {
+    //    provide: APP_GUARD,
+    //    useClass: JwtAuthGuard,
+    // },
