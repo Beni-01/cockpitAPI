@@ -26,12 +26,22 @@ import { AuditLogService } from './audit-log/audit-log.service';
 import { AuditInterceptor } from './audit-log/audti-log.interceptor';
 import { PassationMarcheModule } from './passation-marche/passation-marche.module';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
+import { ThrottlerModule } from '@nestjs/throttler';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
       load: [AppConfig, DatabaseConfig],
+    }),
+
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 150,
+        },
+      ],
     }),
 
 TypeOrmModule.forRootAsync({
