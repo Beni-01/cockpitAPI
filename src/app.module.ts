@@ -90,6 +90,11 @@ TypeOrmModule.forRootAsync({
     AppService,
 
     {
+       provide: APP_GUARD,
+       useClass: JwtAuthGuard,
+    },
+
+    {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
     },],
@@ -104,8 +109,3 @@ export class AppModule  {
   }
 }
 
-
-    // {
-    //    provide: APP_GUARD,
-    //    useClass: JwtAuthGuard,
-    // },
