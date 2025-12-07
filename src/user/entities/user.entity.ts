@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
@@ -114,35 +114,36 @@ export class User extends Timestamp {
   agentDelegueId?: number;
 
   // Relations
+
   @OneToMany(() => Activity, (activity) => activity.user)
-  @ApiProperty({ description: 'Liste des activités créées par l’utilisateur', type: () => [Activity] })
+
   activities: Activity[];
 
   @OneToMany(() => SousActivity, (subactivity) => subactivity.user)
-  @ApiProperty({ description: 'Liste des sous-activités', type: () => [SousActivity] })
+ 
   subactivities: SousActivity[];
 
   @OneToMany(() => DemandeProlongation, (demande) => demande.user)
-  @ApiProperty({ description: 'Demandes de prolongation de l’utilisateur', type: () => [DemandeProlongation] })
+ 
   demandeProlongations: DemandeProlongation[];
 
   @OneToMany(() => AnnotationActivity, (annotation) => annotation.user)
-  @ApiProperty({ description: 'Annotations liées à l’utilisateur', type: () => [AnnotationActivity] })
+
   annotations: AnnotationActivity[];
 
   @OneToMany(() => UserLivrable, (agentValidateur) => agentValidateur.user)
-  @ApiProperty({ description: 'Livrables validés par l’utilisateur', type: () => [UserLivrable] })
+
   agentValidateur: UserLivrable[];
 
   @OneToMany(() => DemandeUser, (demandeUser) => demandeUser.user)
-  @ApiProperty({ description: 'Demandes utilisateurs liées', type: () => [DemandeUser] })
+
   demandeUser: DemandeUser[];
 
   @OneToMany(() => AuditLog, (auditable) => auditable.user)
-  @ApiProperty({ description: 'Logs audités par l’utilisateur', type: () => [AuditLog] })
+
   auditable: AuditLog[];
 
   @OneToMany(() => PassationMarche, (passation) => passation.user)
-  @ApiProperty({ description: 'Passations de marché liées', type: () => [PassationMarche] })
+
   passations: PassationMarche[];
 }

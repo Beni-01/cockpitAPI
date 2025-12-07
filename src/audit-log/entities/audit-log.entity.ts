@@ -73,10 +73,7 @@ export class AuditLog extends Timestamp {
     })
     userId: number;
 
-    @ApiProperty({
-        description: "Utilisateur associé au log",
-        type: () => User
-    })
+
     @ManyToOne(() => User, (user) => user.auditable, { eager: true })
     user: User;
 }

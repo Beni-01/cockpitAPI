@@ -90,15 +90,15 @@ export class SousActivity extends Timestamp {
     nbre_ressource: number;
 
     @ManyToOne(() => User, (user) => user.subactivities, { eager: true })
-    @ApiProperty({ description: 'Utilisateur lié à la sous-activité', type: () => User })
+  
     user: User;
 
     @ManyToOne(() => Activity, (activity) => activity.subactivities)
-    @ApiProperty({ description: 'Activité parente', type: () => Activity })
+
     activity: Activity;
 
     @OneToOne(() => Livrable, (livrable) => livrable.subActivity, { eager: true })
     @JoinColumn({ name: 'livrableId' })
-    @ApiPropertyOptional({ description: 'Livrable associé', type: () => Livrable })
+  
     livrable: Livrable;
 }
