@@ -174,21 +174,15 @@ export class Livrable extends Timestamp {
     })
     livrableQuality: number;
 
-    @ApiProperty({
-        description: "Activité principale associée au livrable",
-    })
+
     @OneToOne(() => Activity, (activity) => activity.livrable)
     activity: Activity;
 
-    @ApiProperty({
-        description: "Sous-activité associée au livrable",
-    })
+
     @OneToOne(() => SousActivity, (subActivity) => subActivity.livrable)
     subActivity: SousActivity;
 
-    @ApiProperty({
-        description: "Liste des agents validateurs du livrable",
-    })
+
     @OneToMany(() => UserLivrable, (agentValidateur) => agentValidateur.livrable, { eager: true })
     agentValidateur: UserLivrable[];
 }

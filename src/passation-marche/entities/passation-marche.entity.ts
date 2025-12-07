@@ -115,6 +115,6 @@ export class PassationMarche extends Timestamp {
     userId: number;
 
     @ManyToOne(() => User, (user) => user.passations)
-    @ApiProperty({ description: 'Utilisateur lié à cette passation de marché' })
+  
     user: User;
 }

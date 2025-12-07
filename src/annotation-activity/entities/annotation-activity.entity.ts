@@ -51,17 +51,11 @@ export class AnnotationActivity extends Timestamp {
     @Column({ name: 'userId', type: 'int' })
     userId: number;
 
-    @ApiProperty({
-        description: "Activité associée à l'annotation",
-        type: () => Activity
-    })
+
     @ManyToOne(() => Activity, (activity) => activity.annotations)
     activity: Activity;
 
-    @ApiProperty({
-        description: "Utilisateur ayant créé l'annotation",
-        type: () => User
-    })
+
     @ManyToOne(() => User, (user) => user.annotations, { eager: true })
     user: User;
 }

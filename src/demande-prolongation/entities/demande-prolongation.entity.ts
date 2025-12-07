@@ -90,23 +90,15 @@ export class DemandeProlongation extends Timestamp {
     })
     userId: number;
 
-    @ApiProperty({
-        description: "Utilisateur ayant soumis la demande"
-    })
+
     @ManyToOne(() => User, (user) => user.demandeProlongations, { eager: true })
     user: User;
 
-    @ApiProperty({
-        description: "Activité liée à cette demande de prolongation",
-  
-    })
+
     @ManyToOne(() => Activity, (activity) => activity.demandes)
     activity: Activity;
 
-    @ApiProperty({
-        description: "Liste des validations ou rejets des différents utilisateurs",
-   
-    })
+
     @OneToMany(() => DemandeUser, (demandeUser) => demandeUser.demande, { eager: true })
     demandeUser: DemandeUser[];
 }

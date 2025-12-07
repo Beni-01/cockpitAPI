@@ -72,15 +72,11 @@ export class DemandeUser extends Timestamp {
     })
     isValidate?: boolean;
     
-    @ApiProperty({
-        description: "Utilisateur ayant validé/rejeté la demande"
-    })
+
     @ManyToOne(() => User, (agent) => agent.demandeUser, { eager: true })
     user: User;
     
-    @ApiProperty({
-        description: "Demande de prolongation liée à cette validation",
-    })
+
     @ManyToOne(() => DemandeProlongation, (demande) => demande.demandeUser)
     demande: DemandeProlongation;
 }
