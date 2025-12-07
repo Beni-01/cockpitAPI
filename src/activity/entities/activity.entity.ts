@@ -84,24 +84,24 @@ export class Activity extends Timestamp {
     @Column({ name:'userId', type:'int', nullable:true })
     userId:number
 
-    @ApiProperty({ description: "Utilisateur associé", type: () => User })
+    @ApiProperty({ description: "Utilisateur associé" })
     @ManyToOne(()=>User, (user)=>user.activities, {eager:true})
     user:User
 
-    @ApiProperty({ description: "Livrable lié à l'activité", type: () => Livrable })
+    @ApiProperty({ description: "Livrable lié à l'activité" })
     @OneToOne(()=>Livrable, (livrable)=>livrable.activity, {eager:true})
     @JoinColumn({ name: 'livrableId' })
     livrable: Livrable
 
-    @ApiProperty({ description: "Liste des sous-activités", type: () => [SousActivity] })
+    @ApiProperty({ description: "Liste des sous-activités" })
     @OneToMany(()=>SousActivity, (subactivities)=>subactivities.activity, {eager:true})
     subactivities:SousActivity[]
 
-    @ApiProperty({ description: "Demandes de prolongation liées", type: () => [DemandeProlongation] })
+    @ApiProperty({ description: "Demandes de prolongation liées" })
     @OneToMany(()=>DemandeProlongation, (demande)=>demande.activity, {eager:true})
     demandes:DemandeProlongation[]
 
-    @ApiProperty({ description: "Annotations liées à l'activité", type: () => [AnnotationActivity] })
+    @ApiProperty({ description: "Annotations liées à l'activité" })
     @OneToMany(()=>AnnotationActivity, (annotation)=>annotation.activity, {eager:true})
     annotations:AnnotationActivity[]
 

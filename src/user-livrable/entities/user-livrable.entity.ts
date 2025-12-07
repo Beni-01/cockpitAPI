@@ -34,10 +34,10 @@ export class UserLivrable extends Timestamp {
     isValidate?: boolean;
 
     @ManyToOne(() => User, (agent) => agent.agentValidateur, { eager: true })
-    @ApiProperty({ description: 'Utilisateur lié à ce livrable', type: () => User })
+    @ApiProperty({ description: 'Utilisateur lié à ce livrable' })
     user: User;
 
     @ManyToOne(() => Livrable, (livrable) => livrable.agentValidateur)
-    @ApiProperty({ description: 'Livrable associé à l’utilisateur', type: () => Livrable })
+    @ApiProperty({ description: 'Livrable associé à l’utilisateur' })
     livrable: Livrable;
 }

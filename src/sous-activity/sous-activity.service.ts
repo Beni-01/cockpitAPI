@@ -72,8 +72,6 @@ export class SousActivityService {
     }
   }
 
-
-
   async createMany(createSousActivityDtos: CreateSousActivityDto[]): Promise<SousActivity[]> {
     const queryRunner = this.sousActivityRepository.manager.connection.createQueryRunner();
     

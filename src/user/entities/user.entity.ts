@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { BeforeInsert, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
@@ -114,6 +114,7 @@ export class User extends Timestamp {
   agentDelegueId?: number;
 
   // Relations
+
   @OneToMany(() => Activity, (activity) => activity.user)
   @ApiProperty({ description: 'Liste des activités créées par l’utilisateur', type: () => [Activity] })
   activities: Activity[];
