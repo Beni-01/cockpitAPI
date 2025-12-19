@@ -27,6 +27,7 @@ import { AuditInterceptor } from './audit-log/audti-log.interceptor';
 import { PassationMarcheModule } from './passation-marche/passation-marche.module';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { DisbursementModule } from './disbursement/disbursement.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -83,7 +84,8 @@ TypeOrmModule.forRootAsync({
     AuthModule,
     UserLivrableModule,
     DemandeUserModule,
-    PassationMarcheModule
+    PassationMarcheModule,
+    DisbursementModule
   ],
   controllers: [AppController],
   providers: [
