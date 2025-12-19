@@ -59,7 +59,7 @@ export class User extends Timestamp {
 
   @Column({ default: false })
   @ApiProperty({ description: 'Indique si le compte est activé' })
-  isActivate: boolean;
+  isActive: boolean;
 
   @Column({ default: true })
   @ApiProperty({ description: 'Statut actif ou inactif de l’utilisateur' })
