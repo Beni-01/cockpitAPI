@@ -33,6 +33,13 @@ export class DisbursementController {
     return this.disbursementService.create(createDisbursementDto);
   }
 
+  @Post('bulk')
+createBulk(
+  @Body() createDisbursementDtos: CreateDisbursementDto[],
+): Promise<Disbursement[]> {
+  return this.disbursementService.createBulk(createDisbursementDtos);
+}
+
   /**
    * Liste paginée avec filtres
    */

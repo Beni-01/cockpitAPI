@@ -127,6 +127,114 @@ export class DisbursementService {
     }
   }
 
+
+  async createBulk(
+  createDisbursementDtos: CreateDisbursementDto[],
+): Promise<Disbursement[]> {
+  if (!Array.isArray(createDisbursementDtos) || createDisbursementDtos.length === 0) {
+    throw new BadRequestException('Le payload doit être un tableau non vide');
+  }
+
+  const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
+
+  try {
+    this.logger.log(`Bulk creating ${createDisbursementDtos.length} disbursements`);
+
+    /* =========================
+       1. Vérifier doublons internes
+       ========================= */
+    const references = createDisbursementDtos.map(d => d.reference);
+    const duplicatedRefs = references.filter(
+      (ref, index) => references.indexOf(ref) !== index,
+    );
+
+    if (duplicatedRefs.length > 0) {
+      throw new BadRequestException(
+        `Références dupliquées dans le payload: ${[...new Set(duplicatedRefs)].join(', ')}`,
+      );
+    }
+
+    /* =========================
+       2. Vérifier références existantes en DB
+       ========================= */
+    const existing = await queryRunner.manager.find(Disbursement, {
+      where: { reference: In(references) },
+      select: ['reference'],
+    });
+
+    if (existing.length > 0) {
+      throw new BadRequestException(
+        `Références déjà existantes: ${existing.map(e => e.reference).join(', ')}`,
+      );
+    }
+
+    /* =========================
+       3. Validation métier + mapping
+       ========================= */
+    const disbursements: Disbursement[] = createDisbursementDtos.map(dto => {
+      // Direction
+      if (!this.DIRECTION_VALUES.includes(dto.direction.toUpperCase())) {
+        throw new BadRequestException(
+          `Direction invalide (${dto.reference}). Valeurs acceptées: ${this.DIRECTION_VALUES.join(', ')}`,
+        );
+      }
+
+      // Source paiement
+      if (!this.PAYMENT_SOURCES.includes(dto.paymentSource.toUpperCase())) {
+        throw new BadRequestException(
+          `Source de paiement invalide (${dto.reference}). Valeurs acceptées: ${this.PAYMENT_SOURCES.join(', ')}`,
+        );
+      }
+
+      // Statut
+      if (dto.status && !this.STATUS_VALUES.includes(dto.status.toUpperCase())) {
+        throw new BadRequestException(
+          `Statut invalide (${dto.reference}). Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`,
+        );
+      }
+
+      const documentDate = new Date(dto.documentDate);
+      const month = dto.month || this.getMonthName(documentDate);
+      const period = dto.period || this.generatePeriod(documentDate);
+
+      return queryRunner.manager.create(Disbursement, {
+        ...dto,
+        documentDate,
+        month,
+        period,
+        status: dto.status || 'EN ATTENTE',
+      });
+    });
+
+    /* =========================
+       4. Sauvegarde en masse
+       ========================= */
+    const savedDisbursements = await queryRunner.manager.save(disbursements);
+
+    await queryRunner.commitTransaction();
+
+    this.logger.log(`Bulk disbursement created successfully (${savedDisbursements.length})`);
+
+    return savedDisbursements;
+
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    this.logger.error(`Bulk create failed: ${error.message}`, error.stack);
+
+    if (error instanceof BadRequestException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      'Erreur lors de la création en masse des décaissements',
+    );
+  } finally {
+    await queryRunner.release();
+  }
+}
+
   /**
    * Récupérer tous les décaissements avec filtres
    */
@@ -140,7 +248,7 @@ export class DisbursementService {
         paymentSource, 
         beneficiary, 
         month, 
-  
+        period,
         startDate,
         endDate,
       } = filterDto;
@@ -152,6 +260,11 @@ export class DisbursementService {
       if (direction) {
         queryBuilder.andWhere('disbursement.direction = :direction', { direction });
       }
+
+      if (period) {
+        queryBuilder.andWhere('disbursement.period = :period', { period });
+      }
+
 
       if (status) {
         queryBuilder.andWhere('disbursement.status = :status', { status });
