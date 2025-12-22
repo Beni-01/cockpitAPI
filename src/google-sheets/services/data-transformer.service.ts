@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Activity } from '../../activity/entities/activity.entity';
+import { BudgetData } from '../entities/budget-data.entity';
 
 interface ValidationResult {
     valid: boolean;
@@ -43,6 +44,159 @@ export class DataTransformerService {
         }
 
         return activity;
+    }
+
+    /**
+     * Transform sheet row to BudgetData entity
+     */
+    transformToBudgetData(
+        row: any,
+        columnMapping: ColumnMapping,
+    ): Partial<BudgetData> {
+        const budgetData: Partial<BudgetData> = {};
+
+        // Log the raw row data for debugging
+        this.logger.debug(`Raw row data: ${JSON.stringify(row)}`);
+        this.logger.debug(`Column mapping: ${JSON.stringify(columnMapping)}`);
+
+        // If no column mapping, use default field names
+        if (!columnMapping || Object.keys(columnMapping).length === 0) {
+            // Map common field names automatically
+            budgetData.external_id = row['ID'] || row['External ID'] || row['Code'];
+            budgetData.project_name = row['Project'] || row['Project Name'] || row['Projet'];
+            budgetData.budget_category = row['Category'] || row['Budget Category'] || row['Catégorie'];
+            budgetData.allocated_amount = this.parseNumber(row['Allocated'] || row['Budget Alloué'] || row['Budget']);
+            budgetData.spent_amount = this.parseNumber(row['Spent'] || row['Dépensé'] || row['Consommé']) || 0;
+            budgetData.budget_period = row['Period'] || row['Période'] || row['Year'];
+            budgetData.start_date = this.parseDate(row['Start Date'] || row['Date Début']);
+            budgetData.end_date = this.parseDate(row['End Date'] || row['Date Fin']);
+            budgetData.status = this.mapBudgetStatus(row['Status'] || row['Statut']);
+            budgetData.notes = row['Notes'] || row['Remarques'] || row['Comments'];
+        } else {
+            // Apply column mapping
+            console.log('🔍 TRANSFORMER DEBUG:');
+            console.log('Row keys:', Object.keys(row));
+            console.log('Mapping keys:', Object.keys(columnMapping));
+            console.log('First row value sample:', row[Object.keys(row)[0]]);
+
+            for (const [sheetColumn, entityField] of Object.entries(columnMapping)) {
+                const value = row[sheetColumn];
+
+                console.log(`Checking: "${sheetColumn}" -> ${entityField}: value = ${value}`);
+
+                if (value !== undefined && value !== null && value !== '') {
+                    // Transform based on field type
+                    budgetData[entityField] = this.transformBudgetValue(entityField, value);
+                    console.log(`✅ Mapped: ${entityField} = ${budgetData[entityField]}`);
+                }
+            }
+        }
+
+        // Calculate remaining amount if not provided
+        if (budgetData.allocated_amount && budgetData.spent_amount !== undefined) {
+            budgetData.remaining_amount = budgetData.allocated_amount - budgetData.spent_amount;
+        }
+
+        // Set default status
+        if (!budgetData.status) {
+            budgetData.status = 'active';
+        }
+
+        this.logger.debug(`Transformed budget data: ${JSON.stringify(budgetData)}`);
+
+        return budgetData;
+    }
+
+    /**
+     * Transform value for budget data fields
+     */
+    private transformBudgetValue(fieldName: string, value: any): any {
+        // Date fields
+        if (fieldName.includes('date') || fieldName.includes('Date')) {
+            return this.parseDate(value);
+        }
+
+        // Numeric fields
+        if (fieldName.includes('amount') || fieldName.includes('Amount')) {
+            return this.parseNumber(value);
+        }
+
+        // Boolean fields
+        if (fieldName === 'synced_from_sheet') {
+            return this.parseBoolean(value);
+        }
+
+        // String fields - trim whitespace
+        if (typeof value === 'string') {
+            return value.trim();
+        }
+
+        return value;
+    }
+
+    /**
+     * Map budget status from various formats
+     */
+    private mapBudgetStatus(value: any): string {
+        if (!value) return 'active';
+
+        const str = String(value).toLowerCase().trim();
+
+        if (str.includes('actif') || str.includes('active') || str.includes('en cours')) {
+            return 'active';
+        }
+        if (str.includes('terminé') || str.includes('completed') || str.includes('fini')) {
+            return 'completed';
+        }
+        if (str.includes('annulé') || str.includes('cancelled') || str.includes('canceled')) {
+            return 'cancelled';
+        }
+
+        return 'active';
+    }
+
+    /**
+     * Validate budget data
+     */
+    validateBudgetData(budgetData: Partial<BudgetData>): ValidationResult {
+        const errors: string[] = [];
+
+        // Project name is recommended but not required
+        if (!budgetData.project_name || budgetData.project_name.trim() === '') {
+            // Just a warning, not an error
+            this.logger.warn('Project name is empty');
+        }
+
+        // Amount validation
+        if (budgetData.allocated_amount !== undefined && budgetData.allocated_amount !== null) {
+            if (budgetData.allocated_amount < 0) {
+                errors.push('Allocated amount cannot be negative');
+            }
+        }
+
+        if (budgetData.spent_amount !== undefined && budgetData.spent_amount !== null) {
+            if (budgetData.spent_amount < 0) {
+                errors.push('Spent amount cannot be negative');
+            }
+        }
+
+        // Date validation
+        if (budgetData.start_date && budgetData.end_date) {
+            if (budgetData.start_date > budgetData.end_date) {
+                errors.push('Start date must be before end date');
+            }
+        }
+
+        // Status validation
+        const validStatuses = ['active', 'completed', 'cancelled'];
+        if (budgetData.status && !validStatuses.includes(budgetData.status)) {
+            errors.push(`Invalid status: ${budgetData.status}`);
+        }
+
+        return {
+            valid: errors.length === 0,
+            errors,
+        };
     }
 
     /**

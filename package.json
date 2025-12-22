@@ -35,8 +35,9 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
-    "@nestjs/platform-socket.io": "^10.4.8",
+    "@nestjs/platform-socket.io": "^10.4.20",
     "@nestjs/platform-ws": "^10.4.8",
+    "@nestjs/schedule": "^6.1.0",
     "@nestjs/swagger": "^8.0.7",
     "@nestjs/throttler": "^6.2.1",
     "@nestjs/typeorm": "^10.0.2",
@@ -60,7 +61,8 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "speakeasy": "^2.0.0",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",

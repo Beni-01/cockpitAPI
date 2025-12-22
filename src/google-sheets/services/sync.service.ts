@@ -3,9 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { GoogleSheetConfig } from '../entities/google-sheet-config.entity';
+import { BudgetData } from '../entities/budget-data.entity';
+import { SyncLog } from '../entities/sync-log.entity';
+import { BudgetDataChangeLog } from '../entities/budget-data-change-log.entity';
 import { SheetReaderService } from './sheet-reader.service';
 import { DataTransformerService } from './data-transformer.service';
-import { Activity } from '../../activity/entities/activity.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 interface SyncResult {
@@ -29,8 +31,12 @@ export class SyncService {
     constructor(
         @InjectRepository(GoogleSheetConfig)
         private sheetConfigRepository: Repository<GoogleSheetConfig>,
-        @InjectRepository(Activity)
-        private activityRepository: Repository<Activity>,
+        @InjectRepository(BudgetData)
+        private budgetDataRepository: Repository<BudgetData>,
+        @InjectRepository(SyncLog)
+        private syncLogRepository: Repository<SyncLog>,
+        @InjectRepository(BudgetDataChangeLog)
+        private changeLogRepository: Repository<BudgetDataChangeLog>,
         private sheetReaderService: SheetReaderService,
         private dataTransformerService: DataTransformerService,
         private eventEmitter: EventEmitter2,
@@ -66,6 +72,7 @@ export class SyncService {
      */
     async syncSheet(configId: number): Promise<SyncResult> {
         const startTime = new Date();
+        let syncLog: SyncLog | null = null;
 
         // Check if sync is already in progress
         if (this.syncInProgress.get(configId)) {
@@ -91,29 +98,77 @@ export class SyncService {
 
             this.logger.log(`Starting sync for: ${config.name}`);
 
+            // Create sync log entry
+            syncLog = this.syncLogRepository.create({
+                config_id: configId,
+                trigger_source: 'polling',
+                status: 'in_progress',
+                started_at: startTime,
+            });
+            await this.syncLogRepository.save(syncLog);
+
             // Emit sync started event
             this.eventEmitter.emit('sheet.sync.started', { configId, config });
 
             // Read data from sheet
+            const range = config.range || config.worksheet_name;
             const sheetData = await this.sheetReaderService.readSheetWithHeaders(
                 config.spreadsheetId,
-                config.range,
+                range,
             );
 
             if (!sheetData || sheetData.length === 0) {
                 this.logger.warn(`No data found in sheet for config ${configId}`);
-                return this.createSyncResult(configId, startTime, {
+
+                // Update sync log before returning
+                if (syncLog) {
+                    syncLog.status = 'success';
+                    syncLog.records_fetched = 0;
+                    syncLog.records_inserted = 0;
+                    syncLog.records_updated = 0;
+                    syncLog.records_skipped = 0;
+                    syncLog.error_message = 'No data found in sheet';
+                    syncLog.completed_at = new Date();
+                    await this.syncLogRepository.save(syncLog);
+                }
+
+                // Update config
+                config.lastSyncAt = new Date();
+                config.lastSyncStatus = 'success';
+                config.lastSyncMessage = 'No data found in sheet';
+                await this.sheetConfigRepository.save(config);
+
+                const endTime = new Date();
+                const syncResult = this.createSyncResult(configId, startTime, {
                     success: true,
                     recordsProcessed: 0,
                     recordsCreated: 0,
                     recordsUpdated: 0,
                     recordsSkipped: 0,
                     errors: ['No data found in sheet'],
+                    endTime,
                 });
+
+                // Emit sync completed event
+                this.eventEmitter.emit('sheet.sync.completed', syncResult);
+
+                return syncResult;
             }
 
             // Transform and sync data
-            const result = await this.transformAndSyncData(config, sheetData);
+            const result = await this.transformAndSyncData(config, sheetData, syncLog);
+
+            // Update sync log with results
+            if (syncLog) {
+                syncLog.status = result.success ? 'success' : 'failed';
+                syncLog.records_fetched = result.recordsProcessed;
+                syncLog.records_inserted = result.recordsCreated;
+                syncLog.records_updated = result.recordsUpdated;
+                syncLog.records_skipped = result.recordsSkipped;
+                syncLog.error_message = result.errors.join('; ') || null;
+                syncLog.completed_at = new Date();
+                await this.syncLogRepository.save(syncLog);
+            }
 
             // Update last sync time
             config.lastSyncAt = new Date();
@@ -137,6 +192,14 @@ export class SyncService {
             return syncResult;
         } catch (error) {
             this.logger.error(`Sync failed for config ${configId}`, error);
+
+            // Update sync log with error
+            if (syncLog) {
+                syncLog.status = 'failed';
+                syncLog.error_message = error.message;
+                syncLog.completed_at = new Date();
+                await this.syncLogRepository.save(syncLog);
+            }
 
             const endTime = new Date();
             const syncResult = this.createSyncResult(configId, startTime, {
@@ -164,6 +227,7 @@ export class SyncService {
     private async transformAndSyncData(
         config: GoogleSheetConfig,
         sheetData: any[],
+        syncLog?: SyncLog,
     ): Promise<{
         success: boolean;
         recordsProcessed: number;
@@ -179,15 +243,15 @@ export class SyncService {
 
         for (const row of sheetData) {
             try {
-                // Transform row data to activity entity
-                const activityData = this.dataTransformerService.transformToActivity(
+                // Transform row data to budget data entity
+                const budgetData = this.dataTransformerService.transformToBudgetData(
                     row,
                     config.columnMapping,
                 );
 
                 // Validate data
-                const validation = this.dataTransformerService.validateActivityData(
-                    activityData,
+                const validation = this.dataTransformerService.validateBudgetData(
+                    budgetData,
                 );
 
                 if (!validation.valid) {
@@ -198,21 +262,37 @@ export class SyncService {
                     continue;
                 }
 
-                // Check if activity already exists (by external ID or title)
-                const existingActivity = await this.findExistingActivity(
-                    activityData,
-                    config,
+                // Check if budget data already exists (by external ID or project name)
+                const existingBudget = await this.findExistingBudgetData(
+                    budgetData,
+                    config.id,
                 );
 
-                if (existingActivity) {
-                    // Update existing activity
-                    Object.assign(existingActivity, activityData);
-                    await this.activityRepository.save(existingActivity);
+                if (existingBudget) {
+                    // Detect changes before updating
+                    const changes = await this.detectChanges(existingBudget, budgetData, config.id, syncLog?.id);
+
+                    // Update existing budget data
+                    Object.assign(existingBudget, budgetData);
+                    existingBudget.last_synced_at = new Date();
+                    await this.budgetDataRepository.save(existingBudget);
+
+                    // Log the changes
+                    if (changes.length > 0) {
+                        await this.changeLogRepository.save(changes);
+                        this.logger.log(`Updated budget ${existingBudget.id}: ${changes.length} fields changed`);
+                    }
+
                     recordsUpdated++;
                 } else {
-                    // Create new activity
-                    const newActivity = this.activityRepository.create(activityData);
-                    await this.activityRepository.save(newActivity);
+                    // Create new budget data
+                    const newBudget = this.budgetDataRepository.create({
+                        ...budgetData,
+                        config_id: config.id,
+                        synced_from_sheet: true,
+                        last_synced_at: new Date(),
+                    });
+                    await this.budgetDataRepository.save(newBudget);
                     recordsCreated++;
                 }
             } catch (error) {
@@ -232,21 +312,44 @@ export class SyncService {
     }
 
     /**
-     * Find existing activity
-     */
-    private async findExistingActivity(
-        activityData: Partial<Activity>,
-        config: GoogleSheetConfig,
-    ): Promise<Activity | null> {
-        // Try to find by title and direction (assuming unique combination)
-        if (activityData.titre && activityData.direction) {
-            const activity = await this.activityRepository.findOne({
+ * Find existing budget data
+ */
+    private async findExistingBudgetData(
+        budgetData: Partial<BudgetData>,
+        configId: number,
+    ): Promise<BudgetData | null> {
+        // Try to find by external_id and config_id first
+        if (budgetData.external_id) {
+            const existing = await this.budgetDataRepository.findOne({
                 where: {
-                    titre: activityData.titre,
-                    direction: activityData.direction,
+                    external_id: budgetData.external_id,
+                    config_id: configId,
                 },
             });
-            if (activity) return activity;
+            if (existing) return existing;
+        }
+
+        // Try to find by project_name, budget_category and config_id
+        if (budgetData.project_name && budgetData.budget_category) {
+            const existing = await this.budgetDataRepository.findOne({
+                where: {
+                    project_name: budgetData.project_name,
+                    budget_category: budgetData.budget_category,
+                    config_id: configId,
+                },
+            });
+            if (existing) return existing;
+        }
+
+        // Try to find by project_name and config_id only
+        if (budgetData.project_name) {
+            const existing = await this.budgetDataRepository.findOne({
+                where: {
+                    project_name: budgetData.project_name,
+                    config_id: configId,
+                },
+            });
+            if (existing) return existing;
         }
 
         return null;
@@ -317,5 +420,61 @@ export class SyncService {
             lastSync: config?.lastSyncAt || null,
             lastStatus: config?.lastSyncStatus || null,
         };
+    }
+
+    /**
+     * Detect changes between existing and new budget data
+     */
+    private async detectChanges(
+        existing: BudgetData,
+        newData: Partial<BudgetData>,
+        configId: number,
+        syncLogId?: number,
+    ): Promise<BudgetDataChangeLog[]> {
+        const changes: BudgetDataChangeLog[] = [];
+
+        // Fields to track for changes
+        const fieldsToTrack = [
+            'project_name',
+            'budget_category',
+            'allocated_amount',
+            'spent_amount',
+            'remaining_amount',
+            'budget_type',
+            'cost_center',
+            'account_code',
+            'budget_period',
+            'fiscal_year',
+            'quarter',
+            'month',
+            'status',
+            'approval_status',
+            'notes',
+            'responsible_person',
+            'province',
+            'territory',
+        ];
+
+        for (const field of fieldsToTrack) {
+            const oldValue = existing[field];
+            const newValue = newData[field];
+
+            // Check if value actually changed
+            if (newValue !== undefined && oldValue !== newValue) {
+                const changeLog = this.changeLogRepository.create({
+                    budget_data_id: existing.id,
+                    config_id: configId,
+                    field_name: field,
+                    old_value: oldValue != null ? String(oldValue) : null,
+                    new_value: newValue != null ? String(newValue) : null,
+                    changed_by: 'sync',
+                    sync_log_id: syncLogId,
+                });
+
+                changes.push(changeLog);
+            }
+        }
+
+        return changes;
     }
 }

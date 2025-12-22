@@ -27,6 +27,8 @@ import { AuditInterceptor } from './audit-log/audti-log.interceptor';
 import { PassationMarcheModule } from './passation-marche/passation-marche.module';
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { GoogleSheetsModule } from './google-sheets/google-sheets.module';
+import { MasterDataModule } from './master-data/master-data.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -44,33 +46,52 @@ import { ThrottlerModule } from '@nestjs/throttler';
       ],
     }),
 
-TypeOrmModule.forRootAsync({
-  imports: [ConfigModule],
-  inject: [ConfigService],
-  useFactory: (configService: ConfigService) => {
-    // Récupération de la configuration database
-    const db = configService.get('database');
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        // Récupération de la configuration database
+        const db = configService.get('database');
 
-    return {
-      type: db.type,
-      host: db.host,
-      port: Number(db.port),
-      username: db.username,
-      password: db.password,
-      database: db.database,
-      entities: db.entities,
-      migrations: db.migrations,
-      migrationsTableName: db.migrationsTableName,
+        return {
+          type: db.type,
+          host: db.host,
+          port: Number(db.port),
+          username: db.username,
+          password: db.password,
+          database: db.database,
+          entities: db.entities,
+          migrations: db.migrations,
+          migrationsTableName: db.migrationsTableName,
 
-      // Ne jamais synchroniser automatiquement en prod
-      synchronize: false,
-      logging: db.logging,
+          // Ne jamais synchroniser automatiquement en prod
+          synchronize: false,
+          logging: db.logging,
 
-      // Options supplémentaires
-      extra: db.extra,
-    };
-  },
-}),
+          // Options supplémentaires
+          extra: db.extra,
+        };
+      },
+    }),
+    TypeOrmModule.forRootAsync({
+      name: 'master_connection',
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const db = configService.get('database');
+        return {
+          type: db.type,
+          host: db.host,
+          port: Number(db.port),
+          username: db.username,
+          password: db.password,
+          database: 'master_api_db',
+          entities: [],
+          synchronize: false,
+          logging: false,
+        };
+      },
+    }),
     AuthModule,
     UserModule,
     PassportModule,
@@ -83,23 +104,26 @@ TypeOrmModule.forRootAsync({
     AuthModule,
     UserLivrableModule,
     DemandeUserModule,
-    PassationMarcheModule
+    PassationMarcheModule,
+    GoogleSheetsModule,
+    MasterDataModule
   ],
   controllers: [AppController],
   providers: [
     AppService,
 
-    {
-       provide: APP_GUARD,
-       useClass: JwtAuthGuard,
-    },
+    // Temporarily disabled for local testing
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
 
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
     },],
 })
-export class AppModule  {
+export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AttachUserMiddleware) // Appliquer le middleware

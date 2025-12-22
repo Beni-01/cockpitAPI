@@ -10,6 +10,7 @@ import { SyncSchedule } from './entities/sync-schedule.entity';
 import { WebhookConfig } from './entities/webhook-config.entity';
 import { SyncLog } from './entities/sync-log.entity';
 import { BudgetData } from './entities/budget-data.entity';
+import { BudgetDataChangeLog } from './entities/budget-data-change-log.entity';
 import { Activity } from '../activity/entities/activity.entity';
 import { GoogleSheetsGateway } from './google-sheets.gateway';
 import { RealtimeNotifierService } from './services/realtime-notifier.service';
@@ -19,6 +20,7 @@ import { SyncService } from './services/sync.service';
 import { SheetReaderService } from './services/sheet-reader.service';
 import { GoogleAuthService } from './services/google-auth.service';
 import { WebhookService } from './services/webhook.service';
+import { AutoDetectionService } from './services/auto-detection.service';
 
 @Module({
     imports: [
@@ -29,6 +31,7 @@ import { WebhookService } from './services/webhook.service';
             WebhookConfig,
             SyncLog,
             BudgetData,
+            BudgetDataChangeLog,
             Activity,
         ]),
         EventEmitterModule.forRoot(),
@@ -37,7 +40,7 @@ import { WebhookService } from './services/webhook.service';
     controllers: [GoogleSheetsController],
     providers: [
         GoogleSheetsService,
-        // GoogleSheetsGateway, // Temporarily disabled - WebSocket error
+        GoogleSheetsGateway,
         RealtimeNotifierService,
         PollingService,
         DataTransformerService,
@@ -45,6 +48,7 @@ import { WebhookService } from './services/webhook.service';
         SheetReaderService,
         GoogleAuthService,
         WebhookService,
+        AutoDetectionService,
     ],
     exports: [GoogleSheetsService, RealtimeNotifierService],
 })

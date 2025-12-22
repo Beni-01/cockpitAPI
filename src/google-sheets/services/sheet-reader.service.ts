@@ -71,11 +71,14 @@ export class SheetReaderService {
 
         const [headers, ...rows] = data.values;
 
-        // Convert rows to objects using headers
+        // Convert rows to objects using headers (trim to match auto-detection)
         return rows.map((row) => {
             const obj: any = {};
             headers.forEach((header, index) => {
-                obj[header] = row[index] || null;
+                const cleanHeader = header ? String(header).trim() : '';
+                if (cleanHeader) {
+                    obj[cleanHeader] = row[index] || null;
+                }
             });
             return obj;
         });
