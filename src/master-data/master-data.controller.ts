@@ -6,7 +6,7 @@ import { DataSource } from 'typeorm';
 @Controller('master-data')
 export class MasterDataController {
     constructor(
-        @InjectDataSource('master_connection') private dataSource: DataSource
+        @InjectDataSource() private dataSource: DataSource
     ) { }
 
     @Get('departments')

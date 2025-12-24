@@ -74,25 +74,7 @@ import { DisbursementModule } from './disbursement/disbursement.module';
         };
       },
     }),
-    TypeOrmModule.forRootAsync({
-      name: 'master_connection',
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const db = configService.get('database');
-        return {
-          type: db.type,
-          host: db.host,
-          port: Number(db.port),
-          username: db.username,
-          password: db.password,
-          database: 'master_api_db',
-          entities: [],
-          synchronize: false,
-          logging: false,
-        };
-      },
-    }),
+
     AuthModule,
     UserModule,
     PassportModule,

@@ -22,7 +22,7 @@ export class GoogleSheetsService {
         private syncService: SyncService,
         private autoDetectionService: AutoDetectionService,
         private googleAuthService: GoogleAuthService,
-        @InjectDataSource('master_connection') private masterDataSource: DataSource,
+        @InjectDataSource() private dataSource: DataSource,
     ) { }
 
     async createConfig(createConfigDto: CreateConfigDto): Promise<GoogleSheetConfig> {
@@ -153,14 +153,14 @@ export class GoogleSheetsService {
     }
 
     async getDepartments(): Promise<string[]> {
-        const result = await this.masterDataSource.query(
+        const result = await this.dataSource.query(
             'SELECT DISTINCT department FROM master_data_hierarchy ORDER BY department'
         );
         return result.map((row: any) => row.department);
     }
 
     async getActivities(department: string): Promise<string[]> {
-        const result = await this.masterDataSource.query(
+        const result = await this.dataSource.query(
             'SELECT DISTINCT activity FROM master_data_hierarchy WHERE department = ? ORDER BY activity',
             [department]
         );
