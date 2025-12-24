@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsBoolean, IsObject } from 'class-validator';
 
 export class UpdateConfigDto {
     @IsString()
@@ -13,6 +13,10 @@ export class UpdateConfigDto {
     @IsOptional()
     worksheet_name?: string;
 
+    @IsString()
+    @IsOptional()
+    range?: string;
+
     @IsEnum(['oauth', 'service_account'])
     @IsOptional()
     auth_type?: string;
@@ -20,4 +24,8 @@ export class UpdateConfigDto {
     @IsBoolean()
     @IsOptional()
     is_active?: boolean;
+
+    @IsObject()
+    @IsOptional()
+    columnMapping?: any;
 }

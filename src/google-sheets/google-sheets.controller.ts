@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Query } from '@nestjs/common';
 import { GoogleSheetsService } from './google-sheets.service';
 import { CreateConfigDto } from './dto/create-config.dto';
 import { UpdateConfigDto } from './dto/update-config.dto';
@@ -30,5 +30,40 @@ export class GoogleSheetsController {
     @Delete('config/:id')
     async deleteConfig(@Param('id') id: number) {
         return this.googleSheetsService.deleteConfig(id);
+    }
+
+    @Post('sync/:id')
+    async manualSync(@Param('id') id: number) {
+        return this.googleSheetsService.triggerSync(id);
+    }
+
+    @Get('logs')
+    async getSyncLogs() {
+        return this.googleSheetsService.getSyncLogs();
+    }
+
+    @Get('budget-data')
+    async getBudgetData() {
+        return this.googleSheetsService.getBudgetData();
+    }
+
+    @Post('auto-detect/:id')
+    async autoDetect(@Param('id') id: number) {
+        return this.googleSheetsService.autoDetectAndSync(id);
+    }
+
+    @Get('audit-logs')
+    async getAuditLogs() {
+        return this.googleSheetsService.getAuditLogs();
+    }
+
+    @Get('departments')
+    async getDepartments() {
+        return this.googleSheetsService.getDepartments();
+    }
+
+    @Get('activities')
+    async getActivities(@Query('department') department: string) {
+        return this.googleSheetsService.getActivities(department);
     }
 }

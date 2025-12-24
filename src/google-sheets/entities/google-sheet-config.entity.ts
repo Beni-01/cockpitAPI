@@ -66,7 +66,24 @@ export class GoogleSheetConfig {
   @Column({ type: 'text', nullable: true })
   lastSyncMessage: string;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({
+    type: 'json',
+    nullable: true,
+    transformer: {
+      to: (value: any) => value ? JSON.stringify(value) : null,
+      from: (value: any) => {
+        if (!value) return null;
+        if (typeof value === 'string') {
+          try {
+            return JSON.parse(value);
+          } catch {
+            return null;
+          }
+        }
+        return value;
+      }
+    }
+  })
   columnMapping: any;
 
   @Column({ type: 'int' })

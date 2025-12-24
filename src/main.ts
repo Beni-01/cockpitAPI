@@ -10,7 +10,7 @@ import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import * as bodyParser from 'body-parser';
 
-import { WsAdapter } from '@nestjs/platform-ws';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { AuditInterceptor } from './audit-log/audti-log.interceptor';
@@ -21,13 +21,13 @@ import { CustomValidationPipe } from './custom-app.pipe';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
-   
+
   app.set('trust proxy', true);
-  
+
   // Utilisation du middleware helmet pour renforcer la sécurité
   app.use(helmet());
 
- 
+
   // Configuration des pipes de validation pour transformer et sécuriser les requêtes
   app.useGlobalPipes(new CustomValidationPipe());
 
@@ -53,7 +53,7 @@ async function bootstrap() {
   app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 
   // Récupération de la configuration du port via ConfigService
- 
+
   const port = configService.get('PORT') || 3000;
 
   // Configuration de la documentation Swagger
@@ -68,10 +68,10 @@ async function bootstrap() {
   SwaggerModule.setup('api/v1', app, document);
 
   // Configuration du niveau de journalisation
-//  app.useLogger(['error', 'warn', 'log', 'debug', 'verbose']); // Choisissez les niveaux de journalisation que vous souhaitez
+  //  app.useLogger(['error', 'warn', 'log', 'debug', 'verbose']); // Choisissez les niveaux de journalisation que vous souhaitez
 
   // Utilisation de l'adaptateur WebSocket pour les notifications en temps réel
-  app.useWebSocketAdapter(new WsAdapter(app));
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Ajout de l'intercepteur CSRF pour gérer le token dans les réponses
   // app.useGlobalInterceptors(new CsrfInterceptor());

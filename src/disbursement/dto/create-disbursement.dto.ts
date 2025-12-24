@@ -113,6 +113,11 @@ export class DisbursementFilterDto {
   @IsString()
   month?: string;
 
+  @ApiPropertyOptional({ example: 'SEMAINE DU 08 au 12 Decembre 2025' })
+  @IsOptional()
+  @IsString()
+  period?: string;
+
   @ApiPropertyOptional({ example: 'JONATHAN DITUTU' })
   @IsOptional()
   @IsString()
