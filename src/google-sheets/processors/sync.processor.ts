@@ -4,7 +4,7 @@ import {
 } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
-import { SyncService } from './sync.service';
+import { SyncService } from '../services/sync.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 export interface SyncJobData {
