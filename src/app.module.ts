@@ -29,6 +29,7 @@ import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { GoogleSheetsModule } from './google-sheets/google-sheets.module';
 import { MasterDataModule } from './master-data/master-data.module';
+import { DisbursementModule } from './disbursement/disbursement.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -106,7 +107,8 @@ import { MasterDataModule } from './master-data/master-data.module';
     DemandeUserModule,
     PassationMarcheModule,
     GoogleSheetsModule,
-    MasterDataModule
+    MasterDataModule,
+    DisbursementModule
   ],
   controllers: [AppController],
   providers: [
