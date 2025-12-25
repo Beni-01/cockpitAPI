@@ -24,7 +24,7 @@ export class SyncProcessor {
     ) { }
 
     @Process('sync-sheet')
-    async handleSync(job: Job<SyncJobData>) {
+    async handleSync(job: Job<SyncJobData>): Promise<any> {
         const { configId, userId, priority } = job.data;
 
         this.logger.log(
@@ -86,7 +86,7 @@ export class SyncProcessor {
     }
 
     @Process('scheduled-sync')
-    async handleScheduledSync(job: Job<{ configId: number }>) {
+    async handleScheduledSync(job: Job<{ configId: number }>): Promise<any> {
         const { configId } = job.data;
 
         this.logger.log(`Processing scheduled sync for config ${configId}`);
