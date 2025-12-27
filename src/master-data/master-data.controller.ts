@@ -12,48 +12,96 @@ export class MasterDataController {
     @Get('departments')
     async getDepartments() {
         const result = await this.dataSource.query(
-            'SELECT DISTINCT departement_direction as department FROM master_data ORDER BY departement_direction'
+            `SELECT DISTINCT 
+                code_departement as id,
+                departement_direction as name 
+             FROM master_data 
+             WHERE code_departement IS NOT NULL AND code_departement != ''
+             ORDER BY departement_direction`
         );
-        return result.map((row: any) => row.department);
+        return result;
     }
 
     @Get('activities')
-    async getActivities(@Query('department') department: string) {
-        if (!department) return [];
+    async getActivities(@Query('departmentId') departmentId: string) {
+        if (!departmentId) return [];
         const result = await this.dataSource.query(
-            'SELECT DISTINCT activites as activity FROM master_data WHERE departement_direction = ? ORDER BY activites',
-            [department]
+            `SELECT DISTINCT 
+                code_activite as id,
+                activites as name 
+             FROM master_data 
+             WHERE code_departement = ? 
+             AND code_activite IS NOT NULL 
+             AND code_activite != ''
+             ORDER BY activites`,
+            [departmentId]
         );
-        return result.map((row: any) => row.activity);
+        return result;
     }
 
     @Get('sub-activities')
     async getSubActivities(
-        @Query('department') department: string,
-        @Query('activity') activity: string
+        @Query('departmentId') departmentId: string,
+        @Query('activityId') activityId: string
     ) {
-        if (!department || !activity) return [];
+        if (!departmentId || !activityId) return [];
         const result = await this.dataSource.query(
-            'SELECT DISTINCT sous_activites as sub_activity FROM master_data WHERE departement_direction = ? AND activites = ? ORDER BY sous_activites',
-            [department, activity]
+            `SELECT DISTINCT 
+                code_sous_activite as id,
+                sous_activites as name 
+             FROM master_data 
+             WHERE code_departement = ? 
+             AND code_activite = ? 
+             AND code_sous_activite IS NOT NULL 
+             AND code_sous_activite != ''
+             ORDER BY sous_activites`,
+            [departmentId, activityId]
         );
-        return result.map((row: any) => row.sub_activity);
+        return result;
     }
 
     @Get('tasks')
     async getTasks(
-        @Query('department') department: string,
-        @Query('activity') activity: string,
-        @Query('sub_activity') subActivity: string
+        @Query('departmentId') departmentId: string,
+        @Query('activityId') activityId: string,
+        @Query('subActivityId') subActivityId: string
     ) {
-        if (!department || !activity || !subActivity) return [];
+        if (!departmentId || !activityId || !subActivityId) return [];
 
         return this.dataSource.query(
-            `SELECT id, taches as name, cost_code as code, code_tache 
+            `SELECT 
+                id, 
+                code_tache as id,
+                taches as name, 
+                cost_code as code
              FROM master_data 
-             WHERE departement_direction = ? AND activites = ? AND sous_activites = ?
+             WHERE code_departement = ? 
+             AND code_activite = ? 
+             AND code_sous_activite = ?
+             AND code_tache IS NOT NULL
+             AND code_tache != ''
              ORDER BY taches`,
-            [department, activity, subActivity]
+            [departmentId, activityId, subActivityId]
         );
+    }
+
+    @Get('hierarchy')
+    async getFullHierarchy() {
+        const result = await this.dataSource.query(
+            `SELECT 
+                code_departement as department_id,
+                departement_direction as department_name,
+                code_activite as activity_id,
+                activites as activity_name,
+                code_sous_activite as sub_activity_id,
+                sous_activites as sub_activity_name,
+                code_tache as task_id,
+                taches as task_name,
+                cost_code
+             FROM master_data 
+             WHERE code_departement IS NOT NULL
+             ORDER BY departement_direction, activites, sous_activites, taches`
+        );
+        return result;
     }
 }
