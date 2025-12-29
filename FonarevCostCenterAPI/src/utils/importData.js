@@ -41,9 +41,8 @@ const importFromExcel = async (filePath) => {
 
             for (const row of data) {
                 try {
-                    // Map Excel columns to database fields
-                    // Using the actual column names from the Excel file
-                    const record = {
+                    // Process OPEX section (columns 1-13)
+                    const opexRecord = {
                         mapping_cashflow: row['Mapping CashFlow'] || null,
                         departement_direction: row['DEPARTEMENT / DIRECTION'] || null,
                         activites: row['ACTIVITES'] || null,
@@ -56,64 +55,72 @@ const importFromExcel = async (filePath) => {
                         cost_code: row['COST CODE'] || null
                     };
 
-                    // Debug: Log first few records
-                    if (inserted + skipped < 3) {
-                        console.log('\n🔍 Debug - Record:', JSON.stringify(record, null, 2));
-                    }
+                    // Process CAPEX section (columns 14-29)
+                    const capexRecord = {
+                        mapping_cashflow: 'Dépenses en capital', // CAPEX is capital expenses
+                        departement_direction: row['DEPARTEMENT / DIRECTION_1'] || null,
+                        activites: row['ACTIVITES_1'] || null,
+                        sous_activites: row['SOUS ACTVITES_1'] || null,
+                        taches: row['TACHES_1'] || null,
+                        code_departement: row['CODE DEPARTEMENT_1'] || null,
+                        code_activite: row['CODE ACTIVITE_1'] !== undefined ? String(row['CODE ACTIVITE_1']) : null,
+                        code_sous_activite: row['CODE SOUS ACTIVITE_1'] !== undefined ? String(row['CODE SOUS ACTIVITE_1']) : null,
+                        code_tache: row['CODE TACHE_1'] || null,
+                        cost_code: row['COST CODE_1'] || null
+                    };
 
-                    // Skip if no cost code or if it's a header row
-                    if (!record.cost_code ||
-                        typeof record.cost_code !== 'string' ||
-                        record.cost_code.trim() === '') {
-                        if (inserted + skipped < 3) {
-                            console.log('⚠️  Skipped - No valid cost code');
+                    // Array of records to process (OPEX and CAPEX)
+                    const records = [opexRecord, capexRecord];
+
+                    for (const record of records) {
+                        // Skip if no cost code
+                        if (!record.cost_code ||
+                            typeof record.cost_code !== 'string' ||
+                            record.cost_code.trim() === '') {
+                            skipped++;
+                            continue;
                         }
-                        skipped++;
-                        continue;
-                    }
 
-                    // Skip if department is missing
-                    if (!record.departement_direction || record.departement_direction.trim() === '') {
-                        if (inserted + skipped < 3) {
-                            console.log('⚠️  Skipped - No department');
+                        // Skip if department is missing
+                        if (!record.departement_direction || record.departement_direction.trim() === '') {
+                            skipped++;
+                            continue;
                         }
-                        skipped++;
-                        continue;
-                    }
 
-                    // Insert into database
-                    await connection.query(
-                        `INSERT INTO cost_center 
-                        (mapping_cashflow, departement_direction, activites, sous_activites, taches, 
-                         code_departement, code_activite, code_sous_activite, code_tache, cost_code) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ON DUPLICATE KEY UPDATE
-                        mapping_cashflow = VALUES(mapping_cashflow),
-                        departement_direction = VALUES(departement_direction),
-                        activites = VALUES(activites),
-                        sous_activites = VALUES(sous_activites),
-                        taches = VALUES(taches),
-                        code_departement = VALUES(code_departement),
-                        code_activite = VALUES(code_activite),
-                        code_sous_activite = VALUES(code_sous_activite),
-                        code_tache = VALUES(code_tache)`,
-                        [
-                            record.mapping_cashflow,
-                            record.departement_direction,
-                            record.activites,
-                            record.sous_activites,
-                            record.taches,
-                            record.code_departement,
-                            record.code_activite,
-                            record.code_sous_activite,
-                            record.code_tache,
-                            record.cost_code
-                        ]
-                    );
-                    inserted++;
+                        // Insert into database
+                        await connection.query(
+                            `INSERT INTO cost_center 
+                            (mapping_cashflow, departement_direction, activites, sous_activites, taches, 
+                             code_departement, code_activite, code_sous_activite, code_tache, cost_code) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ON DUPLICATE KEY UPDATE
+                            mapping_cashflow = VALUES(mapping_cashflow),
+                            departement_direction = VALUES(departement_direction),
+                            activites = VALUES(activites),
+                            sous_activites = VALUES(sous_activites),
+                            taches = VALUES(taches),
+                            code_departement = VALUES(code_departement),
+                            code_activite = VALUES(code_activite),
+                            code_sous_activite = VALUES(code_sous_activite),
+                            code_tache = VALUES(code_tache)`,
+                            [
+                                record.mapping_cashflow,
+                                record.departement_direction,
+                                record.activites,
+                                record.sous_activites,
+                                record.taches,
+                                record.code_departement,
+                                record.code_activite,
+                                record.code_sous_activite,
+                                record.code_tache,
+                                record.cost_code
+                            ]
+                        );
+                        inserted++;
 
-                    if (inserted % 50 === 0) {
-                        console.log(`✅ Processed ${inserted} records...`);
+                        if (inserted % 50 === 0) {
+                            console.log(`✅ Processed ${inserted} records...`);
+                        }
                     }
                 } catch (error) {
                     console.error('Error inserting row:', error.message);
