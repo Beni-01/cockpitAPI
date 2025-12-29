@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fonarev Cost Center - Cascading Dropdowns</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .status {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #f44336;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: #4caf50;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .dropdown-section {
+            margin-bottom: 25px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-section.hidden {
+            display: none;
+        }
+
+        .dropdown-section label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .dropdown-section label .number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        select:hover {
+            border-color: #667eea;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .task-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.5s forwards;
+        }
+
+        .task-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .cost-code {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .budget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .budget-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .budget-item label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .budget-item span {
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
+        .budget-item.highlight span {
+            color: #4caf50;
+            font-size: 1.3em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Fonarev Cost Center</h1>
+            <p>Hierarchical Budget Management System</p>
+        </div>
+
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <div>
+                <strong>API Status:</strong> <span id="statusText">Checking...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <!-- Step 1: Department -->
+            <div class="dropdown-section" id="step1">
+                <label>
+                    <span class="number">1</span>
+                    Select Department
+                </label>
+                <select id="departmentSelect">
+                    <option value="">-- Choose a Department --</option>
+                </select>
+            </div>
+
+            <!-- Step 2: Activity -->
+            <div class="dropdown-section hidden" id="step2">
+                <label>
+                    <span class="number">2</span>
+                    Select Activity
+                </label>
+                <select id="activitySelect">
+                    <option value="">-- Choose an Activity --</option>
+                </select>
+            </div>
+
+            <!-- Step 3: Sub-Activity -->
+            <div class="dropdown-section hidden" id="step3">
+                <label>
+                    <span class="number">3</span>
+                    Select Sub-Activity
+                </label>
+                <select id="subActivitySelect">
+                    <option value="">-- Choose a Sub-Activity --</option>
+                </select>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001/api/v1';
+
+        let selectedDept = '';
+        let selectedActivity = '';
+        let selectedSubActivity = '';
+
+        // Check API status
+        async function checkStatus() {
+            try {
+                const response = await fetch('http://localhost:3001/health');
+                await response.json();
+
+                document.getElementById('statusDot').classList.add('online');
+                document.getElementById('statusText').textContent = 'Online ✅';
+
+                loadDepartments();
+            } catch (error) {
+                document.getElementById('statusDot').classList.remove('online');
+                document.getElementById('statusText').textContent = 'Offline ❌ - Please start the server';
+            }
+        }
+
+        // Load departments
+        async function loadDepartments() {
+            try {
+                const response = await fetch(`${API_BASE}/departments`);
+                const data = await response.json();
+
+                const select = document.getElementById('departmentSelect');
+                select.innerHTML = '<option value="">-- Choose a Department --</option>';
+
+                if (data.success && data.data) {
+                    data.data.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.code;
+                        option.textContent = `${dept.name} (${dept.code})`;
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        // Load activities
+        async function loadActivities(deptCode) {
+            try {
+                const response = await fetch(`${API_BASE}/departments/${deptCode}/activities`);
+                const data = await response.json();
+
+                const select = document.getElementById('activitySelect');
+                select.innerHTML = '<option value="">-- Choose an Activity --</option>';
+
+                if (data.success && data.data) {
+                    data.data.forEach(activity => {
+                        const option = document.createElement('option');
+                        option.value = activity.code;
+                        option.textContent = `${activity.name} (${activity.code})`;
+                        select.appendChild(option);
+                    });
+
+                    // Show step 2
+                    document.getElementById('step2').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading activities:', error);
+            }
+        }
+
+        // Load sub-activities
+        async function loadSubActivities(deptCode, activityCode) {
+            try {
+                const response = await fetch(`${API_BASE}/departments/${deptCode}/activities/${activityCode}/sub-activities`);
+                const data = await response.json();
+
+                const select = document.getElementById('subActivitySelect');
+                select.innerHTML = '<option value="">-- Choose a Sub-Activity --</option>';
+
+                if (data.success && data.data) {
+                    data.data.forEach(subActivity => {
+                        const option = document.createElement('option');
+                        option.value = subActivity.code;
+                        option.textContent = `${subActivity.name} (${subActivity.code})`;
+                        select.appendChild(option);
+                    });
+
+                    // Show step 3
+                    document.getElementById('step3').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading sub-activities:', error);
+            }
+        }
+
+        // Load tasks
+        async function loadTasks(deptCode, activityCode, subActivityCode) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">Loading tasks...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/departments/${deptCode}/activities/${activityCode}/sub-activities/${subActivityCode}/tasks`);
+                const data = await response.json();
+
+                if (data.success && data.data && data.data.length > 0) {
+                    let html = '';
+
+                    data.data.forEach(task => {
+                        html += `
+                            <div class="task-card">
+                                <span class="cost-code">${task.cost_center_code}</span>
+                                <h3>${task.task_name}</h3>
+                                
+                                ${task.budget_details ? `
+                                    <div class="budget-grid">
+                                        <div class="budget-item">
+                                            <label>Budget Year</label>
+                                            <span>${task.budget_details.budget_year || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Province & Ville</label>
+                                            <span>${task.budget_details.province_ville || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Coordinations Provinciales</label>
+                                            <span>${task.budget_details.coordinations_provinciales || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Local / Etranger</label>
+                                            <span>${task.budget_details.local_etranger || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Categories / Grades</label>
+                                            <span>${task.budget_details.categories_grades || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Nature Depenses</label>
+                                            <span>${task.budget_details.nature_depenses || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Texte / Libelle</label>
+                                            <span>${task.budget_details.texte_libelle || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Unites de Mesure</label>
+                                            <span>${task.budget_details.unites_mesure || 'N/A'}</span>
+                                        </div>
+                                        <div class="budget-item">
+                                            <label>Total Unite de Mesure</label>
+                                            <span>${task.budget_details.total_unite_mesure || '0'}</span>
+                                        </div>
+                                        <div class="budget-item highlight">
+                                            <label>Total Budget USD</label>
+                                            <span>$${task.budget_details.total_budget_usd ? task.budget_details.total_budget_usd.toLocaleString() : '0'}</span>
+                                        </div>
+                                    </div>
+                                ` : '<p class="no-data">No budget details available</p>'}
+                            </div>
+                        `;
+                    });
+
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = '<div class="no-data">No tasks found for this selection.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                resultsDiv.innerHTML = '<div class="error">Error loading tasks. Please try again.</div>';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('departmentSelect').addEventListener('change', function () {
+            selectedDept = this.value;
+
+            // Hide and reset subsequent steps
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('results').innerHTML = '';
+
+            document.getElementById('activitySelect').innerHTML = '<option value="">-- Choose an Activity --</option>';
+            document.getElementById('subActivitySelect').innerHTML = '<option value="">-- Choose a Sub-Activity --</option>';
+
+            if (selectedDept) {
+                loadActivities(selectedDept);
+            }
+        });
+
+        document.getElementById('activitySelect').addEventListener('change', function () {
+            selectedActivity = this.value;
+
+            // Hide and reset subsequent steps
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('results').innerHTML = '';
+
+            document.getElementById('subActivitySelect').innerHTML = '<option value="">-- Choose a Sub-Activity --</option>';
+
+            if (selectedActivity) {
+                loadSubActivities(selectedDept, selectedActivity);
+            }
+        });
+
+        document.getElementById('subActivitySelect').addEventListener('change', function () {
+            selectedSubActivity = this.value;
+
+            document.getElementById('results').innerHTML = '';
+
+            if (selectedSubActivity) {
+                loadTasks(selectedDept, selectedActivity, selectedSubActivity);
+            }
+        });
+
+        // Initialize
+        checkStatus();
+        setInterval(checkStatus, 30000); // Check every 30 seconds instead of 5
+    </script>
+</body>
+
+</html>
