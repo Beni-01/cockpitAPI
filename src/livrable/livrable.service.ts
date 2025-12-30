@@ -27,6 +27,7 @@ export class LivrableService {
         'Une erreur est survenue lors de la création du livrable.',
       );
     }
+    
   }
 
 
@@ -41,7 +42,8 @@ export class LivrableService {
      }
      return await this.agentValidateurService.create(createAgentValidateurDto)
     })
-    
+
+   
  }
 
   async findAll(): Promise<Livrable[]> {
