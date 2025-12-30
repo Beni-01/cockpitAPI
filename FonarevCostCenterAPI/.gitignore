@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment variables
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation files (exclude from git)
+*.md
+*.txt
+docs/
+QUICK_START.md
+README.md
+BUILD_COMPLETE.txt
+DEMO_INSTRUCTIONS.txt
+FONAREV_*.md
+
+# Utility scripts (exclude from git)
+src/utils/analyzeExcel.js
+src/utils/checkExcel.js
+src/utils/testRanges.js
+
+# Demo files
+demo.html
+
+# Data files
+data/*.xlsx
+data/*.xls
+*.xlsx
+*.xls
+
+# Database migrations (keep the main one, exclude others)
+db/migrations/*_sample.sql
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
