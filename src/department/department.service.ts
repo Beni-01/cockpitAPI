@@ -1,0 +1,84 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CreateDepartmentDto } from './dto/create-department.dto';
+import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { MappingCashFlow } from 'src/budget/entities/mapping-cashflow.entity';
+import { BudgetActivity } from 'src/budget/entities/budget-activity.entity';
+import { BudgetSousActivity } from 'src/budget/entities/budget-sous-activity.entity';
+import { BudgetTache } from 'src/budget/entities/budget-tache.entity';
+import { Department } from './entities/department.entity';
+
+@Injectable()
+export class DepartmentService {
+    constructor(
+
+        @InjectRepository(Department)
+        private departmentRepo: Repository<Department>,
+        @InjectRepository(MappingCashFlow)
+        private mappingRepo: Repository<MappingCashFlow>,
+        @InjectRepository(BudgetActivity)
+        private activityRepo: Repository<BudgetActivity>,
+        @InjectRepository(BudgetSousActivity)
+        private sousRepo: Repository<BudgetSousActivity>,
+        @InjectRepository(BudgetTache)
+        private tacheRepo: Repository<BudgetTache>,
+    ) { }
+
+    async getDepartments() {
+        return this.departmentRepo.find();
+    }
+
+
+
+    async getActivities(departmentCode: string) {
+        if (departmentCode) {
+            const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
+            console.log("department", department)
+            if (!department) {
+                throw new NotFoundException(`Department with code ${departmentCode} not found`);
+            }
+            {
+                const acts = await this.activityRepo.find({ where: { department: { id: department.id } } });
+                return acts.map(a => ({ id: a.id, name: a.name || null, departmentId: a.departmentId || null }));
+            }
+        }
+        return []
+    }
+
+    async getSousActivities(departmentCode: string, activityId?: number) {
+        const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
+        if (department) {
+            const sous = await this.sousRepo.find({ where: { department: { id: department.id } }, relations: ['activity', 'department'] });
+            return sous.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
+        }
+        if (activityId) {
+            const sous = await this.sousRepo.find({ where: { activity: { id: activityId } }, relations: ['activity', 'department'] });
+            return sous.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
+        }
+        const all = await this.sousRepo.find({ relations: ['activity', 'taches', 'department'] });
+        return all.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
+    }
+
+    async getTaches(sousId?: number, activityId?: number, departmentCode?: string) {
+        if (sousId) {
+            const rows = await this.tacheRepo.find({ where: { sousActivity: { id: sousId } }, relations: ['sousActivity', 'activity', 'department', 'sousActivity.activity', 'sousActivity.department'] });
+            return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
+        }
+        if (activityId) {
+            const rows = await this.tacheRepo.find({ where: { sousActivity: { activity: { id: activityId } } }, relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
+            return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
+        }
+        if (departmentCode) {
+            const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
+            if (!department) {
+                return [];
+            }
+            const rows = await this.tacheRepo.find({ where: { sousActivity: { department: { id: department.id } } }, relations: ['sousActivity', 'sousActivity.department', 'activity', 'department'] });
+            return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
+        }
+        const rows = await this.tacheRepo.find({ relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
+        return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
+    }
+
+}
