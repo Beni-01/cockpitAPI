@@ -54,10 +54,6 @@ export class TransactionsController {
     return this.transactionsService.getDepensesParDirectionByYearPrecision(+year)
   }
 
-  @Get('total/details/consomme/direction/trimestre/:year')
-  getDepensesParDirectionEtTrimestre(@Param('year') year:string){
-    return this.transactionsService.getDepensesParDirectionEtTrimestre(+year)
-  }
 
   @Delete('removeItem/:id')
   remove(@Param('id') id: string) {

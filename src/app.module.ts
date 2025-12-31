@@ -31,6 +31,9 @@ import { GoogleSheetsModule } from './google-sheets/google-sheets.module';
 import { MasterDataModule } from './master-data/master-data.module';
 import { DisbursementModule } from './disbursement/disbursement.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { DepartmentModule } from './department/department.module';
+import { BudgetModule } from './budget/budget.module';
+import { ApexInputModule } from './apex-input/apex-input.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -92,7 +95,11 @@ import { TransactionsModule } from './transactions/transactions.module';
     GoogleSheetsModule,
     MasterDataModule,
     DisbursementModule,
-    TransactionsModule
+    TransactionsModule,
+    DisbursementModule
+    ,DepartmentModule,
+    BudgetModule
+    ,ApexInputModule
   ],
   controllers: [AppController],
   providers: [

@@ -1,81 +1,95 @@
-
+import { Budget } from "src/budget/entities/budget.entity";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
-import { User } from "src/user/entities/user.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({
-    name:'transaction'
+    name: 'transaction'
 })
-export class Transaction extends Timestamp{
+export class Transaction extends Timestamp {
 
-    @PrimaryGeneratedColumn()
-    id:number;
+    @PrimaryGeneratedColumn({
+        comment: 'Identifiant unique de la transaction'
+    })
+    id: number;
 
     @Column({
-        name:'depense',
+        name: 'depense',
         type: 'decimal',
-        precision: 20, // Précision totale (nombre total de chiffres)
-        scale: 2,      // Nombre de chiffres après la virgule
-        nullable: true // Si le champ peut être null
+        precision: 20,
+        scale: 2,
+        nullable: true,
+        comment: 'Montant réel de la dépense après ajustements ou conversions (Toujours en USD)'
     })
-    depense:number;
+    depense: number;
+
 
     @Column({
-        name:'depense_init',
+        name: 'devise',
+        type: 'varchar',
+        nullable: false,
+        default: 'USD',
+        comment: 'Devise d’origine de la transaction (ex: USD, CDF, EUR)'
+    })
+    devise: string;
+
+    @Column({
+        name: 'depense_init',
         type: 'decimal',
-        precision: 20, // Précision totale (nombre total de chiffres)
-        scale: 2,      // Nombre de chiffres après la virgule
-        nullable: true // Si le champ peut être null
+        precision: 20,
+        scale: 2,
+        nullable: true,
+        comment: 'Montant initial de la dépense avant conversion'
     })
-    depense_init:number;
-
-    @Column({
-        name:'devise',
-        nullable:false,
-        type:'varchar',
-        default:"USD"
-    })
-    devise:string;
-
-    @Column({
-        name:'devise_convert',
-        nullable:false,
-        type:'varchar',
-        default:"USD"
-    })
-    devise_convert:string
-
-    @Column({
-        name:'description',
-        type:'text',
-        nullable:true
-    })
-    description:string;
-
-    @Column({
-        name:'ref',
-        type:'varchar',
-        nullable:true
-    })
-    ref:string;
-
-    @Column({
-        name:'agent',
-        nullable:true,
-        type:'varchar'
-    })
-    agentId:string
+    depense_init: number;
 
 
     @Column({
-        name:'centreId',
-        nullable:true,
-        type:'int'
+        name: 'devise_convert',
+        type: 'varchar',
+        nullable: false,
+        default: 'USD',
+        comment: 'Devise après conversion si applicable'
     })
-    centreId:number
+    devise_convert: string;
 
+    @Column({
+        name: 'description',
+        type: 'text',
+        nullable: true,
+        comment: 'Description détaillée de la transaction'
+    })
+    description: string;
 
-    // @ManyToOne(()=>CentreCout, (centre)=>centre.transactions)
-    // centre:CentreCout
+    @Column({
+        name: 'ref',
+        type: 'varchar',
+        nullable: true,
+        comment: 'Référence externe ou interne de la transaction'
+    })
+    ref: string;
 
+    @Column({
+        name: 'agent',
+        type: 'varchar',
+        nullable: true,
+        comment: 'Nom de l’agent ayant effectué la transaction'
+    })
+    agent: string;
+
+    @Column({
+        name: 'centreId',
+        type: 'int',
+        nullable: true,
+        comment: 'Identifiant du centre budgétaire lié à la transaction'
+    })
+    centreId: number;
+
+    @ManyToOne(
+        () => Budget,
+        (centre) => centre.transactions,
+        {
+            nullable: true
+        }
+    )
+    centre: Budget;
 }
