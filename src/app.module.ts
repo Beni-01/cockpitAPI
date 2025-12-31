@@ -30,6 +30,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { GoogleSheetsModule } from './google-sheets/google-sheets.module';
 import { MasterDataModule } from './master-data/master-data.module';
 import { DisbursementModule } from './disbursement/disbursement.module';
+import { TransactionsModule } from './transactions/transactions.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -90,7 +91,8 @@ import { DisbursementModule } from './disbursement/disbursement.module';
     PassationMarcheModule,
     GoogleSheetsModule,
     MasterDataModule,
-    DisbursementModule
+    DisbursementModule,
+    TransactionsModule
   ],
   controllers: [AppController],
   providers: [
