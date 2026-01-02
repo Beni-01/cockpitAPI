@@ -914,7 +914,7 @@ async getDirectionProgressDeepSeek(
                 passedSub: stats.passedSub,
                 retardSub: stats.retardSub,
                 progression: stats.totalSub > 0 
-                    ? Number((((stats.closedSub + stats.passedSub + stats.retardSub) / stats.totalSub) * 100).toFixed(2))
+                    ? Number((((stats.closedSub + stats.retardSub) / stats.totalSub) * 100).toFixed(2))
                     : 0,
                 
                 // KPI2 - Taux d'échéance
