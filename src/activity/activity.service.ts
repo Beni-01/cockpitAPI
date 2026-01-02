@@ -645,8 +645,9 @@ export class ActivityService {
                     totalSub: stats.totalSub,
                     closedSub: stats.closedSub,
                     passedSub:stats.passedSub,
+                    retardSub:stats.retardSub,
                     progression: stats.totalSub > 0 
-                        ? Number(((stats.closedSub / stats.totalSub) * 100).toFixed(2))
+                        ? Number((((stats.closedSub+stats.retardSub+stats.passedSub) / stats.totalSub) * 100).toFixed(2))
                         : 0,
                     
                     // KPI2 - Taux d'échéance
@@ -681,6 +682,7 @@ export class ActivityService {
                         totalSub: 0,
                         closedSub: 0,
                         passedSub:0,
+                        retardSub:0,
                         progression: 0,
                         kpi2: 0,
                         kpi2_percent: 0,
