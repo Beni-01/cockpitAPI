@@ -1205,7 +1205,7 @@ async getDirectionGlobalProgressPlafone(
     return Object.keys(directionStats).map(direction => {
       const s = directionStats[direction];
 
-      // 🔹 KPI 5 – Respect du budget (plafonné à 150 %)
+      // 🔹 KPI 5 – Respect du budget (plafonné à 110 %)
       const bonus =
         s.totalBudget > 0
           ? ((s.totalBudget - s.totalBudgetConsomme) / s.totalBudget) * 100
@@ -1219,7 +1219,7 @@ async getDirectionGlobalProgressPlafone(
               : 100 + bonus;
 
       // 🔒 Plafonnement
-      rateBudget = Math.min(rateBudget, 150);
+      rateBudget = Math.min(rateBudget, 110);
 
       return {
         direction,
