@@ -40,7 +40,7 @@ export class ActivityController {
     @Query('periode') periode?: string,
      @Query('annee') annee?: number,
   ) {
-    return this.activityService.getDirectionGlobalProgress(dateDebut,dateFin,periode,annee);
+    return this.activityService.getDirectionGlobalProgressPlafone(dateDebut,dateFin,periode,annee);
   }
 
 
