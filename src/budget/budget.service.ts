@@ -101,7 +101,7 @@ export class BudgetService {
         'b.totalBudgetUsd',
         't.id',
         't.depense', // adapte selon tes champs
-        't.date', // adapte selon tes champs
+        't.createdAt', // adapte selon tes champs
       ])
       .getMany();
   }
@@ -123,7 +123,7 @@ export class BudgetService {
         'b.totalBudgetUsd',
         't.id',
         't.depense',
-        't.date'
+        't.createdAt'
       ])
       .orderBy('d.name', 'ASC');
 
