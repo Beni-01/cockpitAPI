@@ -33,7 +33,7 @@ import { DisbursementModule } from './disbursement/disbursement.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { DepartmentModule } from './department/department.module';
 import { BudgetModule } from './budget/budget.module';
-import { ApexInputModule } from './apex-input/apex-input.module';
+import ApexInputModule from './apex-input/apex-input.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -98,7 +98,7 @@ import { ApexInputModule } from './apex-input/apex-input.module';
     TransactionsModule,
     DisbursementModule
     ,DepartmentModule,
-    BudgetModule
+    BudgetModule,
     ,ApexInputModule
   ],
   controllers: [AppController],
