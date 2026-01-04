@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Budget } from './entities/budget.entity';
 import { QueryBudgetDto } from './dto/query-budget.dto';
+import { CreateBudgetDto } from './dto/create-budget.dto';
+import { UpdateBudgetDto } from './dto/update-budget.dto';
 
 @Injectable()
 export class BudgetService {
@@ -53,4 +55,174 @@ export class BudgetService {
   }
 
   
+  /** 1) Retourne la liste complète de toutes les données */
+  async findAllRaw(): Promise<Budget[]> {
+    return this.repo.find({ relations: ['department', 'transactions', 'activity', 'sousActivity', 'tache'] });
+  }
+
+  /** 2) Création d'un Budget */
+  async create(dto: CreateBudgetDto): Promise<Budget> {
+    const budget = this.repo.create(dto);
+    return this.repo.save(budget);
+  }
+
+  /** 3) Mise à jour d'un Budget */
+  async update(id: number, dto: UpdateBudgetDto): Promise<Budget> {
+    await this.repo.update(id, dto);
+    return this.repo.findOne({ where: { id }, relations: ['department', 'transactions'] });
+  }
+
+  /** 4) Retourner tout mais sélectionner uniquement certains champs */
+  async findAllSelectFields(): Promise<Partial<Budget>[]> {
+    return this.repo
+      .createQueryBuilder('b')
+      .select([
+        'b.id',
+        'b.descriptionCc',
+        'b.costCenter',
+        'b.accountOhada',
+        'b.texteLibelle',
+        'b.totalBudgetUsd'
+      ])
+      .getMany();
+  }
+
+  /** 5) Retourner tout avec transactions mais seulement certains champs du Budget */
+  async findAllWithTransactions(): Promise<any[]> {
+    return this.repo
+      .createQueryBuilder('b')
+      .leftJoinAndSelect('b.transactions', 't')
+      .select([
+        'b.id',
+        'b.descriptionCc',
+        'b.costCenter',
+        'b.accountOhada',
+        'b.texteLibelle',
+        'b.totalBudgetUsd',
+        't.id',
+        't.montant', // adapte selon tes champs
+        't.date', // adapte selon tes champs
+      ])
+      .getMany();
+  }
+
+  /** 6) Regrouper par département avec les transactions */
+  async findAllGroupedByDepartment(): Promise<any[]> {
+    const qb = this.repo
+      .createQueryBuilder('b')
+      .leftJoinAndSelect('b.transactions', 't')
+      .leftJoinAndSelect('b.department', 'd')
+      .select([
+        'd.id',
+        'd.name',
+        'b.id',
+        'b.descriptionCc',
+        'b.costCenter',
+        'b.accountOhada',
+        'b.texteLibelle',
+        'b.totalBudgetUsd',
+        't.id',
+        't.montant',
+        't.date'
+      ])
+      .orderBy('d.name', 'ASC');
+
+    const budgets = await qb.getMany();
+
+    // Regrouper par département
+    const grouped = budgets.reduce((acc, budget) => {
+      const depId = budget.department?.id || 0;
+      if (!acc[depId]) {
+        acc[depId] = {
+          departmentId: depId,
+          departmentName: budget.department?.name || 'Non défini',
+          budgets: []
+        };
+      }
+      acc[depId].budgets.push(budget);
+      return acc;
+    }, {} as Record<number, any>);
+
+    return Object.values(grouped);
+  }
+
+  /** 7) Regrouper par département et calculer montant consommé / reste à consommer */
+  async findAllWithConsumption(): Promise<any[]> {
+    const qb = this.repo
+      .createQueryBuilder('b')
+      .leftJoinAndSelect('b.transactions', 't')
+      .leftJoinAndSelect('b.department', 'd')
+      .select([
+        'd.id',
+        'd.name',
+        'b.id',
+        'b.descriptionCc',
+        'b.costCenter',
+        'b.accountOhada',
+        'b.texteLibelle',
+        'b.totalBudgetUsd',
+        't.id',
+        't.montant',
+      ]);
+
+    const budgets = await qb.getMany();
+
+    // Regrouper par département et calculer montants
+    const grouped = budgets.reduce((acc, budget) => {
+      const depId = budget.department?.id || 0;
+      if (!acc[depId]) {
+        acc[depId] = {
+          departmentId: depId,
+          departmentName: budget.department?.name || 'Non défini',
+          budgets: []
+        };
+      }
+
+      const montantConsomme = budget.transactions?.reduce((sum, t) => sum + Number(t.depense || 0), 0) || 0;
+      const resteAConsommer = Number(budget.totalBudgetUsd || 0) - montantConsomme;
+
+      acc[depId].budgets.push({
+        ...budget,
+        montantConsomme,
+        resteAConsommer
+      });
+
+      return acc;
+    }, {} as Record<number, any>);
+
+    return Object.values(grouped);
+  }
+
+  async getBudgetSummaryByCostCenter(costCenter: string) {
+  // Récupère tous les budgets correspondant au costCenter avec leurs transactions
+  const budgets = await this.repo.find({
+    where: { costCenter },
+    relations: ['transactions'],
+  });
+
+  if (!budgets || budgets.length === 0) {
+    throw new Error(`Aucun budget trouvé pour le costCenter: ${costCenter}`);
+  }
+
+  // Calcul des totaux
+  const totalBudgetUsd = budgets.reduce(
+    (sum, b) => sum + Number(b.totalBudgetUsd || 0),
+    0
+  );
+
+  const budgetDepense = budgets.reduce(
+    (sum, b) => sum + (b.transactions?.reduce((tSum, t) => tSum + Number(t.depense || 0), 0) || 0),
+    0
+  );
+
+  const budgetRestant = totalBudgetUsd - budgetDepense;
+
+  return {
+    costCenter,
+    totalBudgetUsd,
+    budgetDepense,
+    budgetRestant,
+  };
+}
+
 }
