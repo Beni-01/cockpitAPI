@@ -96,10 +96,11 @@ import ApexInputModule from './apex-input/apex-input.module';
     MasterDataModule,
     DisbursementModule,
     TransactionsModule,
-    DisbursementModule
-    ,DepartmentModule,
+    DisbursementModule,
+    DepartmentModule,
     BudgetModule,
-    ,ApexInputModule
+    ApexInputModule,
+
   ],
   controllers: [AppController],
   providers: [
