@@ -12,6 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+guest_ssh_key
 # OS
 .DS_Store
 

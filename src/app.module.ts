@@ -32,7 +32,7 @@ import { MasterDataModule } from './master-data/master-data.module';
 import { DisbursementModule } from './disbursement/disbursement.module';
 import { DepartmentModule } from './department/department.module';
 import { BudgetModule } from './budget/budget.module';
-import { ApexInputModule } from './apex-input/apex-input.module';
+import ApexInputModule from './apex-input/apex-input.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -93,10 +93,10 @@ import { ApexInputModule } from './apex-input/apex-input.module';
     PassationMarcheModule,
     GoogleSheetsModule,
     MasterDataModule,
-    DisbursementModule
-    ,DepartmentModule,
-    BudgetModule
-    ,ApexInputModule
+    DisbursementModule,
+    DepartmentModule,
+    // BudgetModule,
+    ApexInputModule
   ],
   controllers: [AppController],
   providers: [
