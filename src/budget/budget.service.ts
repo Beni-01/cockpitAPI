@@ -100,7 +100,7 @@ export class BudgetService {
         'b.texteLibelle',
         'b.totalBudgetUsd',
         't.id',
-        't.montant', // adapte selon tes champs
+        't.depense', // adapte selon tes champs
         't.date', // adapte selon tes champs
       ])
       .getMany();
@@ -122,7 +122,7 @@ export class BudgetService {
         'b.texteLibelle',
         'b.totalBudgetUsd',
         't.id',
-        't.montant',
+        't.depense',
         't.date'
       ])
       .orderBy('d.name', 'ASC');
@@ -162,7 +162,7 @@ export class BudgetService {
         'b.texteLibelle',
         'b.totalBudgetUsd',
         't.id',
-        't.montant',
+        't.depense',
       ]);
 
     const budgets = await qb.getMany();
