@@ -57,7 +57,7 @@ export class BudgetService {
   
   /** 1) Retourne la liste complète de toutes les données */
   async findAllRaw(): Promise<Budget[]> {
-    return this.repo.find({ relations: ['department', 'transactions', 'activity', 'sousActivity', 'tache'] });
+    return this.repo.find({ relations: ['department', 'transactions', 'activity'] });
   }
 
   /** 2) Création d'un Budget */
