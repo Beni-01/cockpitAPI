@@ -106,10 +106,11 @@ import ApexInputModule from './apex-input/apex-input.module';
   providers: [
     AppService,
 
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    // Temporarily disabled for local testing
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
 
     {
       provide: APP_INTERCEPTOR,
