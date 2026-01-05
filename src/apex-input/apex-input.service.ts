@@ -124,16 +124,16 @@ export class ApexInputService {
     const map = new Map<string, { category: string; department: string; budget: number; realisation: number }>();
 
     // debug small sample
-    try { console.debug('yearlyBudget budgetRows sample:', budgetRows && budgetRows.slice(0,5)); } catch (e) {}
+    try { console.debug('yearlyBudget budgetRows sample:', budgetRows && budgetRows.slice(0, 5)); } catch (e) { }
 
     for (const b of budgetRows) {
-      const key = `${(b.category||'').toString().toLowerCase()}||${(b.department||'').toString().toLowerCase()}`;
+      const key = `${(b.category || '').toString().toLowerCase()}||${(b.department || '').toString().toLowerCase()}`;
       const raw = b.budget;
       const budgetVal = Number(String(raw).replace(/[^0-9.-]+/g, '')) || 0;
       map.set(key, { category: b.category || null, department: b.department || null, budget: budgetVal, realisation: 0 });
     }
     for (const a of apexRows) {
-      const key = `${(a.category||'').toString().toLowerCase()}||${(a.department||'').toString().toLowerCase()}`;
+      const key = `${(a.category || '').toString().toLowerCase()}||${(a.department || '').toString().toLowerCase()}`;
       const existing = map.get(key);
       const rawA = a.realisation;
       const realVal = Number(String(rawA).replace(/[^0-9.-]+/g, '')) || 0;
@@ -270,13 +270,18 @@ export class ApexInputService {
 
   async findAll(query: QueryApexInputDto) {
     const qb = this.repo.createQueryBuilder('a');
-
     // resolve tache id from cost_center or resolve cost_code from tache id
     let resolvedTacheId: number | null = query.tache_id ? Number(query.tache_id) : null;
     let resolvedCostCode: string | null = null;
-    if (!resolvedTacheId && query.cost_center) {
+    console.log("query", !resolvedTacheId && query.cost_center)
+
+    if (query.cost_center) {
       const rows = await this.repo.query('SELECT id FROM `budget_tache` WHERE `cost_code` = ? LIMIT 1', [query.cost_center]);
-      if (rows && rows.length) resolvedTacheId = rows[0].id;
+      if (rows && rows.length) {
+        console.log('rows[0].id', rows[0].id)
+        resolvedTacheId = rows[0].id;
+        query.tache_id = rows[0].id;
+      }
     }
     if (query.tache_id) {
       const rows2 = await this.repo.query('SELECT cost_code FROM `budget_tache` WHERE id = ? LIMIT 1', [query.tache_id]);
