@@ -108,11 +108,10 @@ import { CategoryModule } from './category/category.module';
   providers: [
     AppService,
 
-    // Temporarily disabled for local testing
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: JwtAuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
 
     {
       provide: APP_INTERCEPTOR,

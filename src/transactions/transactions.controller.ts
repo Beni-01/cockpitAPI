@@ -13,6 +13,22 @@ export class TransactionsController {
     return this.transactionsService.create(createTransactionDto);
   }
 
+  @Post('multiple')
+    async createTransactionMultiple(
+  @Body() createTransactionDtos: CreateTransactionDto[]
+) {
+  try {
+    // Utilisation de Promise.all pour créer toutes les transactions en parallèle
+    const createdTransactions = await Promise.all(
+      createTransactionDtos.map(dto => this.create(dto))
+    );
+    return createdTransactions;
+  } catch (error) {
+    // Le service lance déjà BadRequestException
+    throw error;
+  }
+}
+
   @Post('has/transaction')
   isTransactionExist(@Body() createTransactionDto: CreateTransactionDto) {
     return this.transactionsService.isTransactionExist(createTransactionDto);
