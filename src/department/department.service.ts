@@ -8,6 +8,7 @@ import { BudgetActivity } from 'src/budget/entities/budget-activity.entity';
 import { BudgetSousActivity } from 'src/budget/entities/budget-sous-activity.entity';
 import { BudgetTache } from 'src/budget/entities/budget-tache.entity';
 import { Department } from './entities/department.entity';
+import { getRelatedCodes, getRelatedDepartmentIds } from './department-relations.data';
 
 @Injectable()
 export class DepartmentService {
@@ -33,15 +34,57 @@ export class DepartmentService {
 
     async getActivities(departmentCode: string) {
         if (departmentCode) {
-            const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
-            console.log("department", department)
-            if (!department) {
+            // Get all related codes using the helper function
+            const codes = getRelatedCodes(departmentCode);
+
+
+            // If DG or PM, fetch all activities from all departments
+            if (codes === 'ALL') {
+                const acts = await this.activityRepo
+                    .createQueryBuilder('activity')
+                    .leftJoinAndSelect('activity.department', 'department')
+                    .getMany();
+
+                return acts.map(a => ({
+                    id: a.id,
+                    name: a.name || null,
+                    departmentId: a.departmentId || null,
+                    departmentCode: a.department?.code || null,
+                    departmentName: a.department?.name || null
+                }));
+            }
+
+            if (!codes || codes.length === 0) {
                 throw new NotFoundException(`Department with code ${departmentCode} not found`);
             }
-            {
-                const acts = await this.activityRepo.find({ where: { department: { id: department.id } } });
-                return acts.map(a => ({ id: a.id, name: a.name || null, departmentId: a.departmentId || null }));
+
+            // Query departments by those codes
+            const departments = await this.departmentRepo
+                .createQueryBuilder('department')
+                .where('department.code IN (:...codes)', { codes })
+                .getMany();
+
+            if (!departments || departments.length === 0) {
+                throw new NotFoundException(`No departments found for codes ${codes.join(', ')}`);
             }
+
+            const departmentIds = departments.map(d => d.id);
+            console.log("Department IDs:", departmentIds);
+
+            // Fetch activities from all related departments
+            const acts = await this.activityRepo
+                .createQueryBuilder('activity')
+                .leftJoinAndSelect('activity.department', 'department')
+                .where('activity.department_id IN (:...ids)', { ids: departmentIds })
+                .getMany();
+
+            return acts.map(a => ({
+                id: a.id,
+                name: a.name || null,
+                departmentId: a.departmentId || null,
+                departmentCode: a.department?.code || null,
+                departmentName: a.department?.name || null
+            }));
         }
         return []
     }
