@@ -85,6 +85,13 @@ export class Budget {
   @RelationId((b: Budget) => b.department)
   departmentId?: number;
 
+  @ManyToOne(() => Department, { nullable: true })
+  @JoinColumn({ name: 'assigned_department_id' })
+  assignedDepartment?: Department;
+
+  @RelationId((b: Budget) => b.assignedDepartment)
+  assignedDepartmentId?: number;
+
   @ManyToOne(() => MappingCashFlow, { nullable: true })
   @JoinColumn({ name: 'mapping_cash_flow_id' })
   mappingCashFlow?: MappingCashFlow;

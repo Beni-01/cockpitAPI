@@ -5,6 +5,7 @@ import { ApexInput } from './apex-input.entity';
 import { Budget } from '../budget/entities/budget.entity';
 import { Department } from '../department/entities/department.entity';
 import { BudgetActivity } from '../budget/entities/budget-activity.entity';
+import { Transaction } from '../transactions/entities/transaction.entity';
 import QueryApexInputDto from './dto/query-apex-input.dto';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class ApexInputService {
     @InjectRepository(Budget) private budgetRepo: Repository<Budget>,
     @InjectRepository(Department) private deptRepo: Repository<Department>,
     @InjectRepository(BudgetActivity) private activityRepo: Repository<BudgetActivity>,
+    @InjectRepository(Transaction) private transactionRepo: Repository<Transaction>,
   ) { }
 
   // Annual summary aggregated by department (paginated)
@@ -51,7 +53,13 @@ export class ApexInputService {
     const departmentData: any[] = [];
     for (const d of deptRows) {
       const bRow = await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ?`, [d.id]);
-      const rRow = await this.repo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS realisation FROM apex_input WHERE department_id = ?`, [d.id]);
+      const rRow = await this.transactionRepo.query(
+        `SELECT COALESCE(SUM(t.depense),0) AS realisation 
+         FROM transaction t 
+         INNER JOIN budget b ON t.centreId = b.id 
+         WHERE b.department_id = ?`, 
+        [d.id]
+      );
       const budget = Number(bRow && bRow[0] ? bRow[0].budget : 0);
       const realisation = Number(rRow && rRow[0] ? rRow[0].realisation : 0);
       const percentage = budget > 0 ? Number(((realisation / budget) * 100).toFixed(2)) : 0;
@@ -84,90 +92,6 @@ export class ApexInputService {
     };
   }
 
-  async yearlyBudget(filters: {
-    category?: string;
-    department?: string;
-    min_budget?: number;
-    max_budget?: number;
-    min_realisation?: number;
-    max_realisation?: number;
-    sort_by?: string;
-    order?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    // aggregate budgets by category + department
-    const budgetRows: any[] = await this.budgetRepo.query(
-      `SELECT COALESCE(b.categorie_grade,'') AS category,
-         COALESCE(d.name, COALESCE(b.departement, '')) AS department,
-         COALESCE(SUM(COALESCE(b.total_budget_usd,0)),0) AS budget
-       FROM budget b
-       LEFT JOIN department d ON d.id = b.department_id
-       GROUP BY b.categorie_grade, d.name, b.departement`
-    );
-
-    // aggregate realisations from apex_input by category + department
-    // Use SUM per month to avoid nested expression issues in some MySQL versions
-    const apexRows: any[] = await this.repo.query(
-      `SELECT COALESCE(a.categorie_grade,'') AS category,
-         COALESCE(d.name, COALESCE(a.departement, '')) AS department,
-         COALESCE(
-           SUM(COALESCE(a.jan,0)) + SUM(COALESCE(a.feb,0)) + SUM(COALESCE(a.mar,0)) + SUM(COALESCE(a.apr,0)) + SUM(COALESCE(a.may,0)) + SUM(COALESCE(a.jun,0)) +
-           SUM(COALESCE(a.jul,0)) + SUM(COALESCE(a.aug,0)) + SUM(COALESCE(a.sep,0)) + SUM(COALESCE(a.oct,0)) + SUM(COALESCE(a.nov,0)) + SUM(COALESCE(a. dec,0)),
-         0
-         ) AS realisation
-       FROM apex_input a
-       LEFT JOIN department d ON d.id = a.department_id
-       GROUP BY a.categorie_grade, d.name, a.departement`
-    );
-
-    const map = new Map<string, { category: string; department: string; budget: number; realisation: number }>();
-
-    // debug small sample
-    try { console.debug('yearlyBudget budgetRows sample:', budgetRows && budgetRows.slice(0, 5)); } catch (e) { }
-
-    for (const b of budgetRows) {
-      const key = `${(b.category || '').toString().toLowerCase()}||${(b.department || '').toString().toLowerCase()}`;
-      const raw = b.budget;
-      const budgetVal = Number(String(raw).replace(/[^0-9.-]+/g, '')) || 0;
-      map.set(key, { category: b.category || null, department: b.department || null, budget: budgetVal, realisation: 0 });
-    }
-    for (const a of apexRows) {
-      const key = `${(a.category || '').toString().toLowerCase()}||${(a.department || '').toString().toLowerCase()}`;
-      const existing = map.get(key);
-      const rawA = a.realisation;
-      const realVal = Number(String(rawA).replace(/[^0-9.-]+/g, '')) || 0;
-      if (existing) {
-        existing.realisation = realVal;
-      } else {
-        map.set(key, { category: a.category || null, department: a.department || null, budget: 0, realisation: realVal });
-      }
-    }
-
-    let rows = Array.from(map.values());
-
-    // apply filters
-    if (filters.category) rows = rows.filter(r => (r.category || '').toString().toLowerCase() === filters.category.toString().toLowerCase());
-    if (filters.department) rows = rows.filter(r => (r.department || '').toString().toLowerCase() === filters.department.toString().toLowerCase());
-    if (typeof filters.min_budget === 'number') rows = rows.filter(r => r.budget >= filters.min_budget);
-    if (typeof filters.max_budget === 'number') rows = rows.filter(r => r.budget <= filters.max_budget);
-    if (typeof filters.min_realisation === 'number') rows = rows.filter(r => r.realisation >= filters.min_realisation);
-    if (typeof filters.max_realisation === 'number') rows = rows.filter(r => r.realisation <= filters.max_realisation);
-
-    // sort
-    const sortField = filters.sort_by === 'realisation' ? 'realisation' : filters.sort_by === 'budget' ? 'budget' : undefined;
-    if (sortField) {
-      const dir = (filters.order || 'DESC').toUpperCase() === 'ASC' ? 1 : -1;
-      rows.sort((a, b) => (a[sortField] - b[sortField]) * dir);
-    }
-
-    const page = Math.max(1, Number(filters.page || 1));
-    const limit = Math.max(1, Number(filters.limit || rows.length));
-    const start = (page - 1) * limit;
-    const paged = rows.slice(start, start + limit);
-
-    return { total: rows.length, page, limit, data: paged };
-  }
 
   // Department monthly breakdown by activity
   async departmentMonthly(departmentCode: string, yearOrOpts: number | { year?: number; period?: string; start?: string; end?: string } = {}) {
@@ -178,11 +102,16 @@ export class ApexInputService {
     const totalRow = await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS totalBudget FROM budget WHERE department_id = ?`, [d.id]);
     const totalBudget = Number(totalRow && totalRow[0] ? totalRow[0].totalBudget : 0);
 
-    const salaryRow = await this.budgetRepo.query(
-      `SELECT COALESCE(SUM(total_budget_usd),0) AS salaryAmount FROM budget WHERE department_id = ? AND (LOWER(texte_libelle) LIKE ? OR LOWER(account_ohada) LIKE ?)`,
-      [d.id, '%salaire%', '%salary%'],
+  
+    // Calculate HR (salary) planned totals from the budget table.
+    // Prefer department's own RH budgets; if none, use budgets assigned to this department.
+  
+    const assignedSalaryRow = await this.budgetRepo.query(
+      `SELECT COALESCE(SUM(total_budget_usd),0) AS salary FROM budget WHERE assigned_department_id = ? AND UPPER(cost_center) LIKE 'RH%'`,
+      [d.id],
     );
-    const salaryAmount = Number(salaryRow && salaryRow[0] ? salaryRow[0].salaryAmount : 0);
+    const assignedSalary = Number(assignedSalaryRow && assignedSalaryRow[0] ? assignedSalaryRow[0].salary : 0);
+    const salaryAmount = assignedSalary||0;
 
     const acts = await this.activityRepo.query(`SELECT id, name FROM budget_activity WHERE department_id = ?`, [d.id]);
 
@@ -242,15 +171,34 @@ export class ApexInputService {
       // select only requested months to reduce payload
       const monthSelect = monthsToReturn.map(m => 'COALESCE(SUM(`' + m.key + '`),0) AS `' + m.key + '`').join(', ');
       const bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
-      const rRow = await this.repo.query(`SELECT ${monthSelect} FROM apex_input WHERE activity_id = ?`, [a.id]);
-
+      
+      // For realisation, we need to group transactions by month from createdAt
       const monthly: Record<string, { budget: number; realisation: number }> = {};
+      
+      // First, populate budget values
       for (const mInfo of monthsToReturn) {
         const m = mInfo.key;
         const label = mInfo.label;
         const bVal = bRow && bRow[0] && bRow[0][m] ? Number(bRow[0][m]) : 0;
-        const rVal = rRow && rRow[0] && rRow[0][m] ? Number(rRow[0][m]) : 0;
-        monthly[label] = { budget: bVal, realisation: rVal };
+        monthly[label] = { budget: bVal, realisation: 0 };
+      }
+      
+      // Then, calculate realisation from transactions grouped by month
+      for (const mInfo of monthsToReturn) {
+        const label = mInfo.label;
+        const monthIndex = allMonths.indexOf(mInfo.key) + 1; // 1-based month
+        
+        const rRow = await this.transactionRepo.query(
+          `SELECT COALESCE(SUM(t.depense),0) AS realisation 
+           FROM transaction t 
+           INNER JOIN budget b ON t.centreId = b.id 
+           WHERE b.activity_id = ? 
+           AND MONTH(t.createdAt) = ? 
+           AND YEAR(t.createdAt) = ?`, 
+          [a.id, monthIndex, requestedYear]
+        );
+        const rVal = rRow && rRow[0] && rRow[0].realisation ? Number(rRow[0].realisation) : 0;
+        monthly[label].realisation = rVal;
       }
 
       activities.push({ activity: a.name || null, monthly });
@@ -371,10 +319,22 @@ export class ApexInputService {
         updatedAt: a.updatedAt,
       }));
 
+      // compute realisation totals from transactions for this tache or cost center
+      let totalRealisationUsd = 0;
+      const transRows = await this.transactionRepo.query(
+        `SELECT COALESCE(SUM(t.depense),0) AS realisation
+         FROM transaction t
+         INNER JOIN budget b ON t.centreId = b.id
+         WHERE b.tache_id = ? OR b.cost_center = ?`,
+        [resolvedTacheId, responseCostCenter],
+      );
+      if (transRows && transRows[0]) totalRealisationUsd = Number(transRows[0].realisation || 0);
+
       return {
         costCenter: responseCostCenter,
         totalUnits,
         totalBudgetUsd,
+        totalRealisationUsd,
         tache_name: tacheName,
         apexInputData,
         // budgets: budgets || [],
