@@ -1,49 +1,79 @@
--- Insert Categories
--- First, insert the categories if they don't exist
-INSERT INTO category (name)
-VALUES ('Operation')
+-- =====================================================
+-- MYSQL SCRIPT : Insert Categories & Update Departments
+-- =====================================================
+
+-- 1. Ensure UNIQUE constraint on category name (run once)
+ALTER TABLE category
+ADD UNIQUE KEY uniq_category_name (name);
+
+-- =====================================================
+-- 2. Insert Categories (idempotent)
+-- =====================================================
+INSERT INTO category (name) VALUES ('Operation')
 ON DUPLICATE KEY UPDATE name = name;
 
-INSERT INTO category (name)
-VALUES ('Fonctionnement')
+INSERT INTO category (name) VALUES ('Fonctionnement')
 ON DUPLICATE KEY UPDATE name = name;
 
-INSERT INTO category (name)
-VALUES ('COMMUNICATION')
+INSERT INTO category (name) VALUES ('COMMUNICATION')
 ON DUPLICATE KEY UPDATE name = name;
 
-INSERT INTO category (name)
-VALUES ('Capex')
+INSERT INTO category (name) VALUES ('Capex')
 ON DUPLICATE KEY UPDATE name = name;
 
+-- =====================================================
+-- 3. Update Departments with Category IDs
+-- =====================================================
 
--- Update Departments with Category IDs
--- Operation Category
-UPDATE department 
-SET "categoryId" = (SELECT id FROM category WHERE name = 'Operation')
-WHERE name IN ('ETUDES', 'MEDIATION', 'ACCES A LA JUSTICE', 'REPARATION', 'SECURITE', 'GENOCOST', 'PLAIDOYER INTERNATIONAL');
+-- Operation
+UPDATE department d
+JOIN category c ON c.name = 'Operation'
+SET d.categoryId = c.id
+WHERE d.name IN (
+    'ETUDES',
+    'MEDIATION',
+    'ACCES A LA JUSTICE',
+    'REPARATION',
+    'SECURITE',
+    'GENOCOST',
+    'PLAIDOYER INTERNATIONAL'
+);
 
--- Fonctionnement Category
-UPDATE department 
-SET "categoryId" = (SELECT id FROM category WHERE name = 'Fonctionnement')
-WHERE name IN ('DIRECTION GENERALE', 'CONSEIL D''ADMINISTRATION', 'DIRECTION FINANCIERE', 'AUDIT INTERNE', 'RESSOURCES HUMAINES', 'JURIDIQUE', 'SERVICES GENERAUX & ADM', 'PASSATION DE MARCHE');
+-- Fonctionnement
+UPDATE department d
+JOIN category c ON c.name = 'Fonctionnement'
+SET d.categoryId = c.id
+WHERE d.name IN (
+    'DIRECTION GENERALE',
+    'CONSEIL D''ADMINISTRATION',
+    'DIRECTION FINANCIERE',
+    'AUDIT INTERNE',
+    'RESSOURCES HUMAINES',
+    'JURIDIQUE',
+    'SERVICES GENERAUX & ADM',
+    'PASSATION DE MARCHE'
+);
 
--- COMMUNICATION Category
-UPDATE department 
-SET "categoryId" = (SELECT id FROM category WHERE name = 'COMMUNICATION')
-WHERE name = 'COMMUNICATION';
+-- COMMUNICATION
+UPDATE department d
+JOIN category c ON c.name = 'COMMUNICATION'
+SET d.categoryId = c.id
+WHERE d.name = 'COMMUNICATION';
 
--- Capex Category
-UPDATE department 
-SET "categoryId" = (SELECT id FROM category WHERE name = 'Capex')
-WHERE name = 'Capex';
+-- Capex
+UPDATE department d
+JOIN category c ON c.name = 'Capex'
+SET d.categoryId = c.id
+WHERE d.name = 'Capex';
 
--- Verify the updates
+-- =====================================================
+-- 4. Verification
+-- =====================================================
 SELECT 
     d.id,
-    d.name as department_name,
-    d."categoryId",
-    c.name as category_name
+    d.name AS department_name,
+    d.categoryId,
+    c.name AS category_name
 FROM department d
-LEFT JOIN category c ON d."categoryId" = c.id
+LEFT JOIN category c ON d.categoryId = c.id
 ORDER BY c.name, d.name;
