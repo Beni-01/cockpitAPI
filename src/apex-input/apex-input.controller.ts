@@ -53,6 +53,19 @@ export class ApexInputController {
     return this.service.departmentMonthly(code, { year: y, period, start, end });
   }
 
+  @Get('category-budget')
+  @ApiQuery({ name: 'period', required: false, type: String, description: 'Options: current, last_month, last_quarter' })
+  @ApiQuery({ name: 'year', required: false, type: Number, description: 'Year for filtering (default: current year)' })
+  @ApiQuery({ name: 'category_id', required: false, type: Number, description: 'Filter by specific category ID' })
+  async categoryBudget(
+    @Query('period') period: string,
+    @Query('year') year: string,
+    @Query('category_id') categoryId: string,
+  ) {
+    const y = year ? Number(year) : new Date().getFullYear();
+    const catId = categoryId ? Number(categoryId) : undefined;
+    return this.service.getCategoryBudget({ period, year: y, categoryId: catId });
+  }
 
 }
 

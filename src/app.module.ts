@@ -34,6 +34,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { DepartmentModule } from './department/department.module';
 import { BudgetModule } from './budget/budget.module';
 import ApexInputModule from './apex-input/apex-input.module';
+import { CategoryModule } from './category/category.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -100,6 +101,7 @@ import ApexInputModule from './apex-input/apex-input.module';
     DepartmentModule,
     BudgetModule,
     ApexInputModule,
+    CategoryModule,
 
   ],
   controllers: [AppController],

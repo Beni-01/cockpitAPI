@@ -7,9 +7,10 @@ import { Budget } from '../budget/entities/budget.entity';
 import { Department } from '../department/entities/department.entity';
 import { BudgetActivity } from '../budget/entities/budget-activity.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { Category } from '../category/entities/category.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ApexInput, Budget, Department, BudgetActivity, Transaction])],
+  imports: [TypeOrmModule.forFeature([ApexInput, Budget, Department, BudgetActivity, Transaction, Category])],
   controllers: [ApexInputController],
   providers: [ApexInputService],
   exports: [ApexInputService],

@@ -6,6 +6,7 @@ import { Budget } from '../budget/entities/budget.entity';
 import { Department } from '../department/entities/department.entity';
 import { BudgetActivity } from '../budget/entities/budget-activity.entity';
 import { Transaction } from '../transactions/entities/transaction.entity';
+import { Category } from '../category/entities/category.entity';
 import QueryApexInputDto from './dto/query-apex-input.dto';
 
 @Injectable()
@@ -16,6 +17,7 @@ export class ApexInputService {
     @InjectRepository(Department) private deptRepo: Repository<Department>,
     @InjectRepository(BudgetActivity) private activityRepo: Repository<BudgetActivity>,
     @InjectRepository(Transaction) private transactionRepo: Repository<Transaction>,
+    @InjectRepository(Category) private categoryRepo: Repository<Category>,
   ) { }
 
   // Annual summary aggregated by department (paginated)
@@ -377,6 +379,163 @@ export class ApexInputService {
     }));
 
     return { data: mapped, total, page, limit };
+  }
+
+  // Get category-wise budget with RH budget breakdown
+  async getCategoryBudget(options: { period?: string; year?: number; categoryId?: number }) {
+    const { period, year = new Date().getFullYear(), categoryId } = options;
+    const now = new Date();
+    
+    // Determine date filter based on period
+    let monthFilter = '';
+    const params: any[] = [];
+    
+    if (period === 'current') {
+      const currentMonth = now.getMonth() + 1;
+      monthFilter = 'AND MONTH(b.createdAt) = ? AND YEAR(b.createdAt) = ?';
+      params.push(currentMonth, year);
+    } else if (period === 'last_month') {
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lmMonth = lastMonth.getMonth() + 1;
+      const lmYear = lastMonth.getFullYear();
+      monthFilter = 'AND MONTH(b.createdAt) = ? AND YEAR(b.createdAt) = ?';
+      params.push(lmMonth, lmYear);
+    } else if (period === 'last_quarter') {
+      const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
+      const quarterStart = new Date(now.getFullYear(), quarterStartMonth, 1);
+      const qsMonth = quarterStart.getMonth() + 1;
+      const qeMonth = qsMonth + 2;
+      monthFilter = 'AND MONTH(b.createdAt) BETWEEN ? AND ? AND YEAR(b.createdAt) = ?';
+      params.push(qsMonth, qeMonth, year);
+    }
+
+    // Get all categories or specific category
+    const categories = categoryId 
+      ? await this.categoryRepo.find({ where: { id: categoryId }, relations: ['departments'] })
+      : await this.categoryRepo.find({ relations: ['departments'] });
+    
+    const categoryData: any[] = [];
+    
+    for (const category of categories) {
+      const departmentIds = category.departments.map(d => d.id);
+      
+      if (departmentIds.length === 0) {
+        categoryData.push({
+          categoryId: category.id,
+          categoryName: category.name,
+          totalBudget: 0,
+          rhBudget: 0,
+          otherBudget: 0,
+          realisation: 0,
+          percentage: 0,
+        });
+        continue;
+      }
+      
+      const deptIdPlaceholders = departmentIds.map(() => '?').join(',');
+      
+      // Get total budget for all departments in this category using assigned_department_id
+      const totalBudgetQuery = `
+        SELECT COALESCE(SUM(b.total_budget_usd), 0) AS totalBudget 
+        FROM budget b 
+        WHERE b.department_id IN (${deptIdPlaceholders}) ${monthFilter}
+      `;
+      const totalBudgetResult = await this.budgetRepo.query(totalBudgetQuery, [...departmentIds, ...params]);
+      const totalBudget = Number(totalBudgetResult?.[0]?.totalBudget || 0);
+      
+      // Get RH (Resources Humaines) budget - cost_center starts with 'RH'
+      const rhBudgetQuery = `
+        SELECT COALESCE(SUM(b.total_budget_usd), 0) AS rhBudget 
+        FROM budget b 
+        WHERE b.assigned_department_id IN (${deptIdPlaceholders}) 
+        AND UPPER(b.cost_center) LIKE 'RH%' ${monthFilter}
+      `;
+      const rhBudgetResult = await this.budgetRepo.query(rhBudgetQuery, [...departmentIds, ...params]);
+      const rhBudget = Number(rhBudgetResult?.[0]?.rhBudget || 0);
+      
+      // Get realisation from transactions
+      const realisationQuery = `
+        SELECT COALESCE(SUM(t.depense), 0) AS realisation 
+        FROM transaction t 
+        INNER JOIN budget b ON t.centreId = b.id 
+        WHERE b.department_id IN (${deptIdPlaceholders}) ${monthFilter.replace('b.createdAt', 't.createdAt')}
+      `;
+      const realisationResult = await this.transactionRepo.query(realisationQuery, [...departmentIds, ...params]);
+      const realisation = Number(realisationResult?.[0]?.realisation || 0);
+      
+      // Calculate percentage
+      const percentage = totalBudget > 0 ? Number(((realisation / totalBudget) * 100).toFixed(2)) : 0;
+      
+      // Get department details with their individual budgets
+      const departmentDetails = [];
+      for (const dept of category.departments) {
+        const deptBudgetQuery = `
+          SELECT COALESCE(SUM(b.total_budget_usd), 0) AS deptBudget 
+          FROM budget b 
+          WHERE b.department_id = ? ${monthFilter}
+        `;
+        const deptBudgetResult = await this.budgetRepo.query(deptBudgetQuery, [dept.id, ...params]);
+        const deptBudget = Number(deptBudgetResult?.[0]?.deptBudget || 0);
+        
+        const deptRhBudgetQuery = `
+          SELECT COALESCE(SUM(b.total_budget_usd), 0) AS deptRhBudget 
+          FROM budget b 
+          WHERE b.assigned_department_id = ? 
+          AND UPPER(b.cost_center) LIKE 'RH%' ${monthFilter}
+        `;
+        const deptRhBudgetResult = await this.budgetRepo.query(deptRhBudgetQuery, [dept.id, ...params]);
+        const deptRhBudget = Number(deptRhBudgetResult?.[0]?.deptRhBudget || 0);
+        
+        const deptRealisationQuery = `
+          SELECT COALESCE(SUM(t.depense), 0) AS deptRealisation 
+          FROM transaction t 
+          INNER JOIN budget b ON t.centreId = b.id 
+          WHERE b.department_id = ? ${monthFilter.replace('b.createdAt', 't.createdAt')}
+        `;
+        const deptRealisationResult = await this.transactionRepo.query(deptRealisationQuery, [dept.id, ...params]);
+        const deptRealisation = Number(deptRealisationResult?.[0]?.deptRealisation || 0);
+        
+        departmentDetails.push({
+          departmentId: dept.id,
+          departmentCode: dept.code,
+          departmentName: dept.name,
+          categoryId: category.id,
+          categoryName: category.name,
+          budget: deptBudget,
+          rhBudget: deptRhBudget,
+          realisation: deptRealisation,
+          percentage: deptBudget > 0 ? Number(((deptRealisation / deptBudget) * 100).toFixed(2)) : 0,
+        });
+      }
+      
+      categoryData.push({
+        categoryId: category.id,
+        categoryName: category.name,
+        totalBudget,
+        rhBudget,
+        realisation,
+        percentage,
+        departments: departmentDetails,
+      });
+    }
+    
+    // Calculate grand totals
+    const grandTotal = categoryData.reduce((sum, cat) => sum + cat.totalBudget, 0);
+    const grandTotalRH = categoryData.reduce((sum, cat) => sum + cat.rhBudget, 0);
+    const grandRealisation = categoryData.reduce((sum, cat) => sum + cat.realisation, 0);
+    const grandPercentage = grandTotal > 0 ? Number(((grandRealisation / grandTotal) * 100).toFixed(2)) : 0;
+    
+    return {
+      period: period || 'all',
+      year,
+      categories: categoryData,
+      summary: {
+        totalBudget: grandTotal,
+        totalRhBudget: grandTotalRH,
+        totalRealisation: grandRealisation,
+        overallPercentage: grandPercentage,
+      },
+    };
   }
 }
 
