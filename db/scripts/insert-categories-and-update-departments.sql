@@ -1,9 +1,21 @@
 -- Insert Categories
 -- First, insert the categories if they don't exist
-INSERT INTO category (name) VALUES ('Operation') ON CONFLICT DO NOTHING;
-INSERT INTO category (name) VALUES ('Fonctionnement') ON CONFLICT DO NOTHING;
-INSERT INTO category (name) VALUES ('COMMUNICATION') ON CONFLICT DO NOTHING;
-INSERT INTO category (name) VALUES ('Capex') ON CONFLICT DO NOTHING;
+INSERT INTO category (name)
+VALUES ('Operation')
+ON DUPLICATE KEY UPDATE name = name;
+
+INSERT INTO category (name)
+VALUES ('Fonctionnement')
+ON DUPLICATE KEY UPDATE name = name;
+
+INSERT INTO category (name)
+VALUES ('COMMUNICATION')
+ON DUPLICATE KEY UPDATE name = name;
+
+INSERT INTO category (name)
+VALUES ('Capex')
+ON DUPLICATE KEY UPDATE name = name;
+
 
 -- Update Departments with Category IDs
 -- Operation Category
