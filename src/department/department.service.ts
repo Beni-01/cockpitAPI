@@ -89,37 +89,91 @@ export class DepartmentService {
         return []
     }
 
-    async getSousActivities(departmentCode: string, activityId?: number) {
-        const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
-        if (department) {
-            const sous = await this.sousRepo.find({ where: { department: { id: department.id } }, relations: ['activity', 'department'] });
-            return sous.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
+    async getSousActivities(departmentCode?: string, activityId?: number) {
+        // If departmentCode provided, try to resolve the department first
+        if (departmentCode) {
+            const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
+            if (department) {
+                // If both department and activity filters provided, apply both
+                if (activityId) {
+                    const sous = await this.sousRepo.find({ where: { department: { id: department.id }, activity: { id: activityId } }, relations: ['activity', 'department'] });
+                    return sous.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
+                }
+
+                // Only department filter
+                const sous = await this.sousRepo.find({ where: { department: { id: department.id } }, relations: ['activity', 'department'] });
+                return sous.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
+            }
+
+            // departmentCode provided but not found: fall back to activity filter if present
+            if (activityId) {
+                const sous = await this.sousRepo.find({ where: { activity: { id: activityId } }, relations: ['activity', 'department'] });
+                return sous.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
+            }
+
+            // departmentCode provided but not found and no activity filter
+            return [];
         }
+
+        // No departmentCode: if activityId provided, filter by activity
         if (activityId) {
             const sous = await this.sousRepo.find({ where: { activity: { id: activityId } }, relations: ['activity', 'department'] });
             return sous.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
         }
+
+        // Neither filter provided: return all
         const all = await this.sousRepo.find({ relations: ['activity', 'taches', 'department'] });
         return all.map(s => ({ id: s.id, name: s.name, activityId: s.activity ? s.activity.id : null, departmentId: s.department ? s.department.id : null }));
     }
 
     async getTaches(sousId?: number, activityId?: number, departmentCode?: string) {
+        // If sousId provided, fetch taches for that sous and apply optional activity/department filters in-memory
         if (sousId) {
-            const rows = await this.tacheRepo.find({ where: { sousActivity: { id: sousId } }, relations: ['sousActivity', 'activity', 'department', 'sousActivity.activity', 'sousActivity.department'] });
+            const rows = await this.tacheRepo.find({ where: { sousActivity: { id: sousId } }, relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
+
+            let filtered = rows;
+
+            if (activityId) {
+                filtered = filtered.filter(t => (t.activityId ?? t.sousActivity?.activity?.id) === activityId);
+            }
+
+            if (departmentCode) {
+                const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
+                if (!department) return [];
+                filtered = filtered.filter(t => (t.departmentId ?? t.sousActivity?.department?.id) === department.id);
+            }
+
+            return filtered.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
+        }
+
+        // If departmentCode provided, try to resolve and prefer querying by department + optional activity
+        if (departmentCode) {
+            const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
+            if (!department) {
+                // department not found -> fall back to activity-only filter if provided
+                if (activityId) {
+                    const rows = await this.tacheRepo.find({ where: { sousActivity: { activity: { id: activityId } } }, relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
+                    return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
+                }
+                return [];
+            }
+
+            if (activityId) {
+                const rows = await this.tacheRepo.find({ where: { sousActivity: { department: { id: department.id }, activity: { id: activityId } } }, relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
+                return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
+            }
+
+            const rows = await this.tacheRepo.find({ where: { sousActivity: { department: { id: department.id } } }, relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
             return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
         }
+
+        // No departmentCode: if activityId provided, return by activity
         if (activityId) {
             const rows = await this.tacheRepo.find({ where: { sousActivity: { activity: { id: activityId } } }, relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
             return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
         }
-        if (departmentCode) {
-            const department = await this.departmentRepo.findOne({ where: { code: departmentCode } });
-            if (!department) {
-                return [];
-            }
-            const rows = await this.tacheRepo.find({ where: { sousActivity: { department: { id: department.id } } }, relations: ['sousActivity', 'sousActivity.department', 'activity', 'department'] });
-            return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
-        }
+
+        // Neither filter: return all
         const rows = await this.tacheRepo.find({ relations: ['sousActivity', 'sousActivity.activity', 'sousActivity.department', 'activity', 'department'] });
         return rows.map(t => ({ id: t.id, name: t.name || null, code: t.code || null, costCode: t.costCode || null, activityId: t.activityId ?? (t.sousActivity?.activity?.id ?? null), departmentId: t.departmentId ?? (t.sousActivity?.department?.id ?? null) }));
     }
