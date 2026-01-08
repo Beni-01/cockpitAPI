@@ -55,19 +55,19 @@ export class TransactionsController {
     return this.transactionsService.getTotalDepense(+year);
   }
 
-  @Get('total/consomme/departement/annuel/:year')
-  findTotalConsommeAnnueldepartement(@Param('year') year:string) {
-    return this.transactionsService.getDepensePardepartementAvecAnnee(+year);
+  @Get('total/consomme/department/annuel/:year')
+  findTotalConsommeAnnueldepartment(@Param('year') year:string) {
+    return this.transactionsService.getDepensePardepartmentAvecAnnee(+year);
   }
 
-  @Get('total/details/consomme/departement/annuel')
-  getDepensesPardepartementByActualYear(){
-    return this.transactionsService.getDepensesPardepartementByActualYear()
+  @Get('total/details/consomme/department/annuel')
+  getDepensesPardepartmentByActualYear(){
+    return this.transactionsService.getDepensesPardepartmentByActualYear()
   }
 
-  @Get('total/details/consomme/departement/annuel/:year')
-  getDepensesPardepartementByYearPrecision(@Param('year') year:string){
-    return this.transactionsService.getDepensesPardepartementByYearPrecision(+year)
+  @Get('total/details/consomme/department/annuel/:year')
+  getDepensesPardepartmentByYearPrecision(@Param('year') year:string){
+    return this.transactionsService.getDepensesPardepartmentByYearPrecision(+year)
   }
 
 

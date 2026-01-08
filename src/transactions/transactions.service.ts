@@ -172,26 +172,26 @@ async getTotalDepense(year: number) {
   return { total_consomme: totalDepense }; // Retourne un nombre décimal
 }
 
-// Total consommé par departement
-async getDepensePardepartementAvecAnnee(year: number) {
+// Total consommé par department
+async getDepensePardepartmentAvecAnnee(year: number) {
   const result = await this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.centre', 'centre') // Joindre CentreCout
-      .select('centre.departement', 'departement') // Sélectionner le nom de la departement
+      .select('centre.department', 'department') // Sélectionner le nom de la department
       .addSelect('SUM(transaction.depense)', 'totalDepense') // Calculer la somme des dépenses
       .where('YEAR(transaction.createdAt) = :year', { year }) // Filtrer par année
-      .groupBy('departement.id') // Grouper par departement
+      .groupBy('department.id') // Grouper par department
       .getRawMany();
 
   // Formater le résultat
   return result.map((row) => ({
-      departement: row.departement,
+      department: row.department,
       totalDepense: parseFloat(row.totalDepense).toFixed(2), // Convertir en nombre décimal avec 2 décimales
   }));
 }
 
-// total consommé par departement année actuelle
-async getDepensesPardepartementByActualYear() {
+// total consommé par department année actuelle
+async getDepensesPardepartmentByActualYear() {
   const today = new Date(); // Date du jour
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Début du mois
   const startOfYear = new Date(today.getFullYear(), 0, 1); // Début de l'année
@@ -199,16 +199,16 @@ async getDepensesPardepartementByActualYear() {
   const result = await this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.centre', 'centre')
-      .select('centre.departement', 'departement')
+      .select('centre.department', 'department')
       .addSelect('SUM(CASE WHEN DATE(transaction.createdAt) = DATE(:today) THEN transaction.depense ELSE 0 END)', 'depense_jour')
       .addSelect('SUM(CASE WHEN transaction.createdAt >= :startOfMonth THEN transaction.depense ELSE 0 END)', 'depense_mois')
       .addSelect('SUM(CASE WHEN transaction.createdAt >= :startOfYear THEN transaction.depense ELSE 0 END)', 'depense_annuelle')
       .setParameters({ today, startOfMonth, startOfYear })
-      .groupBy('departement.id')
+      .groupBy('department.id')
       .getRawMany();
 
   return result.map((row) => ({
-      departement: row.departement,
+      department: row.department,
       depense_jour: parseFloat(row.depense_jour).toFixed(2),
       depense_mois: parseFloat(row.depense_mois).toFixed(2),
       depense_annuelle: parseFloat(row.depense_annuelle).toFixed(2),
@@ -216,8 +216,8 @@ async getDepensesPardepartementByActualYear() {
 }
 
 
-// total consommé par departement precision année principale
-async getDepensesPardepartementByYearPrecision(year: number) {
+// total consommé par department precision année principale
+async getDepensesPardepartmentByYearPrecision(year: number) {
   try {
     if (!year || isNaN(year)) {
       throw new Error('Année invalide fournie');
@@ -232,7 +232,7 @@ async getDepensesPardepartementByYearPrecision(year: number) {
     const result = await this.transactionRepository
       .createQueryBuilder('t')
       .leftJoin('t.centre', 'c')
-      .select('c.departement', 'departement')
+      .select('c.department', 'department')
 
       // Dépense du jour
       .addSelect(
@@ -278,7 +278,7 @@ async getDepensesPardepartementByYearPrecision(year: number) {
         'depense_annuelle',
       )
 
-      // Budget total par departement (depuis les centres)
+      // Budget total par department (depuis les centres)
       .addSelect(
         `
         COALESCE(SUM(c.montant), 0)
@@ -293,11 +293,11 @@ async getDepensesPardepartementByYearPrecision(year: number) {
         endOfYear,
       })
 
-      .groupBy('c.departement')
+      .groupBy('c.department')
       .getRawMany();
 
     return result.map(row => ({
-      departement: row.departement,
+      department: row.department,
       depense_jour: Number(row.depense_jour).toFixed(2),
       depense_mois: Number(row.depense_mois).toFixed(2),
       depense_annuelle: Number(row.depense_annuelle).toFixed(2),
@@ -306,7 +306,7 @@ async getDepensesPardepartementByYearPrecision(year: number) {
 
   } catch (error) {
     console.error(
-      'Erreur lors de la récupération des dépenses par departement:',
+      'Erreur lors de la récupération des dépenses par department:',
       error,
     );
     throw new Error(
