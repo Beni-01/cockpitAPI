@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { DisbursementService } from './disbursement.service';
-import { CreateDisbursementDto, DisbursementFilterDto } from './dto/create-disbursement.dto';
+import { CreateDisbursementDto, DisbursementFilterDto, DisbursementPeriodFilterDto, PaginatedResponseDto } from './dto/create-disbursement.dto';
 import { UpdateDisbursementDto } from './dto/update-disbursement.dto';
 import { Disbursement } from './entities/disbursement.entity';
 
@@ -68,6 +68,28 @@ createBulk(
     @Param('reference') reference: string,
   ): Promise<Disbursement> {
     return this.disbursementService.findByReference(reference);
+  }
+
+   @Get('grouped/by-period')
+  async getGroupedByPeriod(
+    @Query() filterDto: DisbursementPeriodFilterDto,
+  ): Promise<PaginatedResponseDto<any>> {
+    return this.disbursementService.getDisbursementsGroupedByPeriod(
+      filterDto,
+    );
+  }
+
+    /**
+   * Retourne les décaissements regroupés par période
+   * Format: [{ period, count, totals..., data }]
+   */
+  @Get('grouped/by-period-groups')
+  async getByPeriodGroups(
+    @Query() filterDto: DisbursementPeriodFilterDto,
+  ): Promise<any[]> {
+    return this.disbursementService.getDisbursementsByPeriodGroups(
+      filterDto,
+    );
   }
 
   /**

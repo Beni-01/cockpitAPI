@@ -10,6 +10,9 @@ export class Disbursement extends Timestamp {
   @Column({ type: 'date' })
   documentDate: Date;
 
+  @Column({ type: 'date' })
+  datePayment: Date;
+
   @Column({ type: 'varchar', length: 100 })
   direction: string;
 
