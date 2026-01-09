@@ -35,7 +35,7 @@ export class CreateDisbursementDto {
   @ApiProperty({ example: '2025-11-18T00:00:00.000Z' })
   @IsOptional()
   @IsString()
-  datePayment: string;
+  datePayment?: string;
 
   @ApiPropertyOptional({ example: null })
   @IsOptional()
