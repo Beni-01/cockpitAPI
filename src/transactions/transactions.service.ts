@@ -32,6 +32,7 @@ export class TransactionsService {
     
    }
    catch(error){
+    console.error('ERREUR SERVICE =>', error);
      throw new BadRequestException()
    }
  
