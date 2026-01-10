@@ -465,6 +465,7 @@ export class ApexInputService {
       
       // Calculate percentage
       const percentage = totalBudget > 0 ? Number(((realisation / totalBudget) * 100).toFixed(2)) : 0;
+      // HR (rh) and Other budgets
       
       // Get department details with their individual budgets
       const departmentDetails = [];
@@ -494,6 +495,7 @@ export class ApexInputService {
         `;
         const deptRealisationResult = await this.transactionRepo.query(deptRealisationQuery, [dept.id, ...params]);
         const deptRealisation = Number(deptRealisationResult?.[0]?.deptRealisation || 0);
+        const deptOtherBudget = Math.max(0, deptBudget - deptRhBudget);
         
         departmentDetails.push({
           departmentId: dept.id,
@@ -502,7 +504,8 @@ export class ApexInputService {
           categoryId: category.id,
           categoryName: category.name,
           budget: deptBudget,
-          rhBudget: deptRhBudget,
+          hr: deptRhBudget,
+          otherBudget: deptOtherBudget,
           realisation: deptRealisation,
           percentage: deptBudget > 0 ? Number(((deptRealisation / deptBudget) * 100).toFixed(2)) : 0,
         });
@@ -512,7 +515,7 @@ export class ApexInputService {
         categoryId: category.id,
         categoryName: category.name,
         totalBudget,
-        rhBudget,
+        hr: rhBudget,
         realisation,
         percentage,
         departments: departmentDetails,
