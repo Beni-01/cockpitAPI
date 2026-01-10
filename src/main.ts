@@ -34,6 +34,17 @@ async function bootstrap() {
 
   app.enableCors();
 
+  app.useGlobalPipes(
+  new ValidationPipe({
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+    whitelist: true,
+  }),
+);
+
+
   // // CORS: Configuration des origines autorisées et des en-têtes exposés pour CSRF
   // app.enableCors({
   //   origin: ['http://10.140.0.106:4204', 'http://localhost:4204', 'http://localhost:3000'], // Liste des origines autorisées
