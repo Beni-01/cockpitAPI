@@ -67,6 +67,22 @@ export class ApexInputController {
     return this.service.getCategoryBudget({ period, year: y, categoryId: catId });
   }
 
+  @Get('hr-salaries')
+  @ApiQuery({ name: 'period', required: false, type: String, description: 'Options: current, last_month, last_quarter, all' })
+  @ApiQuery({ name: 'year', required: false, type: Number, description: 'Year for filtering (default: current year)' })
+  @ApiQuery({ name: 'department_id', required: false, type: Number })
+  @ApiQuery({ name: 'department_code', required: false, type: String })
+  async hrSalaries(
+    @Query('period') period: string,
+    @Query('year') year: string,
+    @Query('department_id') departmentId: string,
+    @Query('department_code') departmentCode: string,
+  ) {
+    const y = year ? Number(year) : undefined;
+    const deptId = departmentId ? Number(departmentId) : undefined;
+    return this.service.getHrSalaryData({ period, year: y, departmentId: deptId, departmentCode });
+  }
+
 }
 
 export default ApexInputController;
