@@ -10,7 +10,7 @@ export class CategoryService {
   constructor(
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
-  ) {}
+  ) { }
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     const category = this.categoryRepo.create(createCategoryDto);
@@ -18,7 +18,9 @@ export class CategoryService {
   }
 
   async findAll(): Promise<Category[]> {
-    return await this.categoryRepo.find({ relations: ['departments'] });
+    const list = await this.categoryRepo.find({ relations: ['departments'] });
+    return list?.filter(x => x.name !== "COMMUNICATION");
+
   }
 
   async findOne(id: number): Promise<Category> {
