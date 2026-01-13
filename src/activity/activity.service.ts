@@ -1146,21 +1146,12 @@ async getDirectionGlobalProgressPlafone(
           passedSub: 0,
           pendingSub: 0,
           retardSub: 0,
-
-          // KPI 2
           closedSubOnTime: 0,
-
-          // KPI 3
           livrableQualitySum: 0,
           validLivrableCount: 0,
-
-          // KPI 4
           totalRessources: 0,
-
-          // KPI 5
           totalBudget: 0,
           totalBudgetConsomme: 0,
-
           directionEffective: directionEffectives[direction] || 1
         };
       }
@@ -1180,11 +1171,7 @@ async getDirectionGlobalProgressPlafone(
 
         if (status === 'cloturé') {
           stats.closedSub++;
-
-          if (sub.deadlineRate === 1) {
-            stats.closedSubOnTime++;
-          }
-
+          if (sub.deadlineRate === 1) stats.closedSubOnTime++;
           stats.totalRessources += sub.nbre_ressource ?? 0;
         }
 
@@ -1205,7 +1192,7 @@ async getDirectionGlobalProgressPlafone(
     return Object.keys(directionStats).map(direction => {
       const s = directionStats[direction];
 
-      // 🔹 KPI 5 – Respect du budget (plafonné à 110 %)
+      // 🔹 KPI 5 – Respect du budget (LOGIQUE INCHANGÉE)
       const bonus =
         s.totalBudget > 0
           ? ((s.totalBudget - s.totalBudgetConsomme) / s.totalBudget) * 100
@@ -1218,7 +1205,6 @@ async getDirectionGlobalProgressPlafone(
               ? (s.totalBudget / s.totalBudgetConsomme) * 100
               : 100 + bonus;
 
-      // 🔒 Plafonnement
       rateBudget = Math.min(rateBudget, 110);
 
       return {
@@ -1230,25 +1216,21 @@ async getDirectionGlobalProgressPlafone(
         passedSub: s.passedSub,
         retardSub: s.retardSub,
 
-        // KPI 1
         progression:
           s.totalSub > 0
             ? Number((((s.closedSub + s.retardSub) / s.totalSub) * 100).toFixed(2))
             : 0,
 
-        // KPI 2
         kpi2_percent:
           s.closedSub > 0
             ? Number(((s.closedSubOnTime / s.closedSub) * 100).toFixed(2))
             : 0,
 
-        // KPI 3
         kpi3_percent:
           s.validLivrableCount > 0
             ? Number(((s.livrableQualitySum / s.validLivrableCount) * 100).toFixed(2))
             : 0,
 
-        // KPI 4
         kpi4_percent:
           s.totalSub > 0 && s.totalRessources > 0
             ? Number(
@@ -1259,11 +1241,13 @@ async getDirectionGlobalProgressPlafone(
               )
             : 0,
 
-        totalRessources: s.totalRessources,
+        // 🔍 Variables de vérification demandées
         totalBudget: s.totalBudget,
         totalBudgetConsomme: s.totalBudgetConsomme,
+        totalBudgetPrevu: s.totalBudget,
+        totalBudgetConsommeVerifie: s.totalBudgetConsomme,
 
-        // KPI 5 plafonné
+        // KPI 5 existant
         kpi5_percent: Number(rateBudget.toFixed(2))
       };
     });
@@ -1274,6 +1258,7 @@ async getDirectionGlobalProgressPlafone(
     );
   }
 }
+
 
 
     async getDirectionStats(): Promise<any[]> {

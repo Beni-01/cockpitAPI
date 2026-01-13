@@ -34,13 +34,17 @@ async function bootstrap() {
 
   app.enableCors();
 
-  // // CORS: Configuration des origines autorisées et des en-têtes exposés pour CSRF
-  // app.enableCors({
-  //   origin: ['http://10.140.0.106:4204', 'http://localhost:4204', 'http://localhost:3000'], // Liste des origines autorisées
-  //   // allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'], // En-têtes autorisés dans les requêtes
-  //   // exposedHeaders: ['x-csrf-token'], // En-têtes à exposer au client (incluant le token CSRF)
-  //   // credentials: true, // Autorise l'envoi de cookies (nécessaire pour CSRF)
-  // });
+  app.useGlobalPipes(
+  new ValidationPipe({
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+    whitelist: true,
+  }),
+);
+
+
 
   // Middleware pour l'analyse des cookies
   app.use(cookieParser());

@@ -31,6 +31,12 @@ export class CreateDisbursementDto {
   @IsString()
   beneficiary: string;
 
+
+  @ApiProperty({ example: '2025-11-18T00:00:00.000Z' })
+  @IsOptional()
+  @IsString()
+  datePayment?: string;
+
   @ApiPropertyOptional({ example: null })
   @IsOptional()
   @IsNumber()
@@ -162,4 +168,11 @@ export class PaginatedResponseDto<T> {
 
   @ApiProperty({ example: false, description: 'Page précédente disponible' })
   hasPreviousPage: boolean;
+}
+
+
+export class DisbursementPeriodFilterDto {
+  page?: number = 1;
+  limit?: number = 10;
+  period?: string;
 }

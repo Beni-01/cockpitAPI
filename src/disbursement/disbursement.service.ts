@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Logger, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, Like, In, DataSource, QueryRunner, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
-import { CreateDisbursementDto, DisbursementFilterDto, PaginatedResponseDto } from './dto/create-disbursement.dto';
+import { CreateDisbursementDto, DisbursementFilterDto, DisbursementPeriodFilterDto, PaginatedResponseDto } from './dto/create-disbursement.dto';
 import { UpdateDisbursementDto } from './dto/update-disbursement.dto';
 
 import { Response } from 'express';
@@ -20,22 +20,27 @@ export class DisbursementService {
     "EN ATTENTE"
   ];
 
-  // Directions disponibles basés sur votre fichier Excel
-  private readonly DIRECTION_VALUES = [
-    "REPARATION",
-    "DIRECTION GENERALE",
-    "ADMINISTRATION",
-    "FINANCE",
-    "COMMUNICATION",
-    "COORDINATION KOLWEZI",
-    "PASSATION DE MARCHE",
-    "ACCES A LA JUSTICE",
-    "ETUDE",
-    "AUDIT",
-    "RH",
-    "SECURITE",
-    "PPM"
-  ];
+  
+ // Directions disponibles basés sur votre fichier Excel
+private readonly DIRECTION_VALUES = [
+  "FINANCE",
+  "AUDIT INTERNE",
+  "ETUDES, ENQUÊTES ET EVALUATIONS",
+  "REPARATIONS",
+  "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT",
+  "ADMINISTRATION ET SERVICES GENERAUX",
+  "COMMUNICATION",
+  "CELLULE DE PASSATION DES MARCHES",
+  "RH ET JURIDIQUE",
+  "CELLULE DE MEDIATION",
+  "CONSEIL D'ADMINISTRATION",
+  "DIRECTION GENERALE",
+  "SECRETARIAT DIRECTION GENERALE",
+  "ASSISTANT DGA",
+  "CELLULE DE SECURITE",
+  "CELLULE SUIVI ET EVALUATION DE PERFORMANCE",
+  "COORDINATION PROVINCIALE"
+];
 
   // Sources de paiement disponibles
   private readonly PAYMENT_SOURCES = [
@@ -128,7 +133,7 @@ export class DisbursementService {
   }
 
 
-  async createBulk(
+async createBulk(
   createDisbursementDtos: CreateDisbursementDto[],
 ): Promise<Disbursement[]> {
   if (!Array.isArray(createDisbursementDtos) || createDisbursementDtos.length === 0) {
@@ -143,35 +148,7 @@ export class DisbursementService {
     this.logger.log(`Bulk creating ${createDisbursementDtos.length} disbursements`);
 
     /* =========================
-       1. Vérifier doublons internes
-       ========================= */
-    const references = createDisbursementDtos.map(d => d.reference);
-    const duplicatedRefs = references.filter(
-      (ref, index) => references.indexOf(ref) !== index,
-    );
-
-    if (duplicatedRefs.length > 0) {
-      throw new BadRequestException(
-        `Références dupliquées dans le payload: ${[...new Set(duplicatedRefs)].join(', ')}`,
-      );
-    }
-
-    /* =========================
-       2. Vérifier références existantes en DB
-       ========================= */
-    const existing = await queryRunner.manager.find(Disbursement, {
-      where: { reference: In(references) },
-      select: ['reference'],
-    });
-
-    if (existing.length > 0) {
-      throw new BadRequestException(
-        `Références déjà existantes: ${existing.map(e => e.reference).join(', ')}`,
-      );
-    }
-
-    /* =========================
-       3. Validation métier + mapping
+       Validation métier + mapping
        ========================= */
     const disbursements: Disbursement[] = createDisbursementDtos.map(dto => {
       // Direction
@@ -181,7 +158,7 @@ export class DisbursementService {
         );
       }
 
-      // Source paiement
+      // Source de paiement
       if (!this.PAYMENT_SOURCES.includes(dto.paymentSource.toUpperCase())) {
         throw new BadRequestException(
           `Source de paiement invalide (${dto.reference}). Valeurs acceptées: ${this.PAYMENT_SOURCES.join(', ')}`,
@@ -209,13 +186,15 @@ export class DisbursementService {
     });
 
     /* =========================
-       4. Sauvegarde en masse
+       Sauvegarde en masse
        ========================= */
     const savedDisbursements = await queryRunner.manager.save(disbursements);
 
     await queryRunner.commitTransaction();
 
-    this.logger.log(`Bulk disbursement created successfully (${savedDisbursements.length})`);
+    this.logger.log(
+      `Bulk disbursement created successfully (${savedDisbursements.length})`,
+    );
 
     return savedDisbursements;
 
@@ -234,6 +213,7 @@ export class DisbursementService {
     await queryRunner.release();
   }
 }
+
 
   /**
    * Récupérer tous les décaissements avec filtres
@@ -1157,4 +1137,137 @@ export class DisbursementService {
       await queryRunner.release();
     }
   }
+
+  async getDisbursementsGroupedByPeriod(
+  filterDto: DisbursementPeriodFilterDto,
+): Promise<PaginatedResponseDto<any>> {
+
+  const { page = 1, limit = 10, period } = filterDto;
+
+  try {
+    const queryBuilder = this.disbursementRepository
+      .createQueryBuilder('d')
+      .orderBy('d.documentDate', 'DESC');
+
+    // 🔎 Filtre par période si fourni
+    if (period) {
+      queryBuilder.andWhere('d.period = :period', { period });
+    }
+
+    // 🔢 Pagination sur les lignes
+    const [rows, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    // 📦 Groupement en mémoire par period
+    const grouped = rows.reduce((acc, item) => {
+      if (!acc[item.period]) {
+        acc[item.period] = {
+          period: item.period,
+          data: [],
+        };
+      }
+      acc[item.period].data.push(item);
+      return acc;
+    }, {} as Record<string, { period: string; data: any[] }>);
+
+    return {
+      data: Object.values(grouped),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page < Math.ceil(total / limit),
+      hasPreviousPage: page > 1,
+    };
+
+  } catch (error) {
+    this.logger.error(
+      `Failed to group disbursements by period: ${error.message}`,
+      error.stack,
+    );
+    throw new InternalServerErrorException(
+      'Erreur lors du regroupement des décaissements par période',
+    );
+  }
+}
+
+async getDisbursementsByPeriodGroups(
+  filterDto: DisbursementPeriodFilterDto,
+): Promise<any[]> {
+
+  const { period } = filterDto;
+
+  try {
+    const queryBuilder = this.disbursementRepository
+      .createQueryBuilder('d')
+      .orderBy('d.documentDate', 'DESC');
+
+    // 🔎 Filtre par période (optionnel)
+    if (period) {
+      queryBuilder.andWhere('d.period = :period', { period });
+    }
+
+    const disbursements = await queryBuilder.getMany();
+
+    const groupedMap = new Map<string, any>();
+
+    for (const d of disbursements) {
+
+      if (!groupedMap.has(d.period)) {
+        groupedMap.set(d.period, {
+          period: d.period,
+          count: 0,
+
+          totalUsd: 0,
+          totalEur: 0,
+          totalCdf: 0,
+
+          executedUsd: 0,
+
+          pendingUsd: 0,
+          pendingEur: 0,
+          pendingCdf: 0,
+
+          data: [],
+        });
+      }
+
+      const group = groupedMap.get(d.period);
+
+      const usd = Number(d.usdAmount || 0);
+      const eur = Number(d.eurAmount || 0);
+      const cdf = Number(d.cdfAmount || 0);
+
+      group.totalUsd += usd;
+      group.totalEur += eur;
+      group.totalCdf += cdf;
+
+      if (d.status === 'EXECUTE') {
+        group.executedUsd += usd;
+      } else {
+        group.pendingUsd += usd;
+        group.pendingEur += eur;
+        group.pendingCdf += cdf;
+      }
+
+      group.count++;
+      group.data.push(d);
+    }
+
+    return Array.from(groupedMap.values());
+
+  } catch (error) {
+    this.logger.error(
+      `Failed to group disbursements by period: ${error.message}`,
+      error.stack,
+    );
+    throw new InternalServerErrorException(
+      'Erreur lors du regroupement des décaissements par période',
+    );
+  }
+}
+
+
 }
