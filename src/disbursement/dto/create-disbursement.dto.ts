@@ -167,12 +167,24 @@ export class PaginatedResponseDto<T> {
   hasNextPage: boolean;
 
   @ApiProperty({ example: false, description: 'Page précédente disponible' })
+  
   hasPreviousPage: boolean;
 }
 
 
 export class DisbursementPeriodFilterDto {
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
   page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
   limit?: number = 10;
+
+  @IsOptional()
+  @IsString()
   period?: string;
 }
