@@ -1058,14 +1058,13 @@ async getDirectionGlobalProgressPlafone(
   annee?: number
 ): Promise<any[]> {
   try {
-
     const currentYear = annee || new Date().getFullYear();
 
     const queryBuilder = this.activityRepository
       .createQueryBuilder('activity')
       .leftJoinAndSelect('activity.subactivities', 'subactivities')
       .leftJoinAndSelect('subactivities.livrable', 'livrable')
-       .where('YEAR(activity.createdAt) = :year', { year: currentYear });
+      .where('YEAR(activity.createdAt) = :year', { year: currentYear });
 
     if (dateDebut && dateFin) {
       const nextDay = new Date(dateFin);
@@ -1117,7 +1116,7 @@ async getDirectionGlobalProgressPlafone(
 
     const activities = await queryBuilder.getMany();
 
-    const directionEffectives = {
+    const directionEffectives: Record<string, number> = {
       "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
       "ADMINISTRATION ET MOYENS GENERAUX": 66,
       "AUDIT INTERNE": 8,
@@ -1127,36 +1126,37 @@ async getDirectionGlobalProgressPlafone(
       "COMMUNICATION": 17,
       "DIRECTION GENERALE": 9,
       "ETUDES": 60,
-      "FINANCE": 37,
       "MEDIATION": 1,
       "REPARATIONS": 54,
-      "RH ET JURIDIQUE": 12
+      "RH ET JURIDIQUE": 12,
+      "ETUDES, ENQUETES ET EVALUATIONS": 15 // exemple si tu veux inclure celle qui n'a rien
     };
 
-    const directionStats: any = {};
+    // 🔹 Pré-remplissage de toutes les directions
+    const directionStats: Record<string, any> = {};
+    Object.keys(directionEffectives).forEach(direction => {
+      directionStats[direction] = {
+        totalActivity: 0,
+        closedActivity: 0,
+        totalSub: 0,
+        closedSub: 0,
+        passedSub: 0,
+        pendingSub: 0,
+        retardSub: 0,
+        closedSubOnTime: 0,
+        livrableQualitySum: 0,
+        validLivrableCount: 0,
+        totalRessources: 0,
+        totalBudget: 0,
+        totalBudgetConsomme: 0,
+        directionEffective: directionEffectives[direction] || 1
+      };
+    });
 
+    // 🔹 Parcours des activités pour compléter les stats
     activities.forEach(activity => {
       const direction = activity.direction;
-      if (!direction) return;
-
-      if (!directionStats[direction]) {
-        directionStats[direction] = {
-          totalActivity: 0,
-          closedActivity: 0,
-          totalSub: 0,
-          closedSub: 0,
-          passedSub: 0,
-          pendingSub: 0,
-          retardSub: 0,
-          closedSubOnTime: 0,
-          livrableQualitySum: 0,
-          validLivrableCount: 0,
-          totalRessources: 0,
-          totalBudget: 0,
-          totalBudgetConsomme: 0,
-          directionEffective: directionEffectives[direction] || 1
-        };
-      }
+      if (!direction || !directionStats[direction]) return;
 
       const stats = directionStats[direction];
       stats.totalActivity++;
@@ -1194,7 +1194,6 @@ async getDirectionGlobalProgressPlafone(
     return Object.keys(directionStats).map(direction => {
       const s = directionStats[direction];
 
-      // 🔹 KPI 5 – Respect du budget (LOGIQUE INCHANGÉE)
       const bonus =
         s.totalBudget > 0
           ? ((s.totalBudget - s.totalBudgetConsomme) / s.totalBudget) * 100
@@ -1217,39 +1216,16 @@ async getDirectionGlobalProgressPlafone(
         closedSub: s.closedSub,
         passedSub: s.passedSub,
         retardSub: s.retardSub,
-
-        progression:
-          s.totalSub > 0
-            ? Number((((s.closedSub + s.retardSub) / s.totalSub) * 100).toFixed(2))
-            : 0,
-
-        kpi2_percent:
-          s.closedSub > 0
-            ? Number(((s.closedSubOnTime / s.closedSub) * 100).toFixed(2))
-            : 0,
-
-        kpi3_percent:
-          s.validLivrableCount > 0
-            ? Number(((s.livrableQualitySum / s.validLivrableCount) * 100).toFixed(2))
-            : 0,
-
-        kpi4_percent:
-          s.totalSub > 0 && s.totalRessources > 0
-            ? Number(
-                ((((s.closedSub / s.totalSub) /
-                  (s.totalRessources / s.directionEffective)) *
-                  (s.livrableQualitySum / 100)) *
-                  100).toFixed(2)
-              )
-            : 0,
-
-        // 🔍 Variables de vérification demandées
+        progression: s.totalSub > 0 ? Number((((s.closedSub + s.retardSub) / s.totalSub) * 100).toFixed(2)) : 0,
+        kpi2_percent: s.closedSub > 0 ? Number(((s.closedSubOnTime / s.closedSub) * 100).toFixed(2)) : 0,
+        kpi3_percent: s.validLivrableCount > 0 ? Number(((s.livrableQualitySum / s.validLivrableCount) * 100).toFixed(2)) : 0,
+        kpi4_percent: s.totalSub > 0 && s.totalRessources > 0
+          ? Number(((((s.closedSub / s.totalSub) / (s.totalRessources / s.directionEffective)) * (s.livrableQualitySum / 100)) * 100).toFixed(2))
+          : 0,
         totalBudget: s.totalBudget,
         totalBudgetConsomme: s.totalBudgetConsomme,
         totalBudgetPrevu: s.totalBudget,
         totalBudgetConsommeVerifie: s.totalBudgetConsomme,
-
-        // KPI 5 existant
         kpi5_percent: Number(rateBudget.toFixed(2))
       };
     });
@@ -1260,6 +1236,7 @@ async getDirectionGlobalProgressPlafone(
     );
   }
 }
+
 
 
 
