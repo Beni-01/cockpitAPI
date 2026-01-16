@@ -102,7 +102,8 @@ export class ActivityController {
     @Query('province') province?: string,
     @Query('titre') titre?: string,
     @Query('page') page: string = '1', // Page actuelle (par défaut 1)
-    @Query('limit') limit: string = '7' // Nombre d'éléments par page (par défaut 7)
+    @Query('limit') limit: string = '10',
+      @Query('annee') annee?: string  // Nombre d'éléments par page (par défaut 7)
   ): Promise<{
     activites: Record<string, Activity[]>;
     totalCount: number;
@@ -112,7 +113,7 @@ export class ActivityController {
 }>  {
     try {
   
-      const groupedActivities = await this.activityService.findAllGroupedByDirection(etat, status, direction, province, titre, dateDebut, dateFin, page, +limit);
+      const groupedActivities = await this.activityService.findAllGroupedByDirection(etat, status, direction, province, titre, dateDebut, dateFin, page, +limit, +annee);
       return groupedActivities;
     } catch (error) {
       throw new BadRequestException(error.message);

@@ -251,7 +251,8 @@ export class ActivityService {
         dateDebut?: string,
         dateFin?: string,
         page: string = '1',
-        limit: number = 7
+        limit: number = 10,
+        annee?: number
     ): Promise<{
         activites: Record<string, Activity[]>;
         totalCount: number;
@@ -260,6 +261,10 @@ export class ActivityService {
         hasPrevPage: boolean;
     }> {
         try {
+
+
+             const currentYear = annee || new Date().getFullYear();
+
             const queryBuilder = this.activityRepository.createQueryBuilder('activity')
                 .leftJoinAndSelect('activity.subactivities', 'subactivities')
                 .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
@@ -267,7 +272,8 @@ export class ActivityService {
                 .leftJoinAndSelect('subactivityLivrable.agentValidateur', 'subactivityLivrableAgentValidateur')
                 .leftJoinAndSelect('subactivityLivrableAgentValidateur.user', 'subactivityLivrableAgentValidateurUser') // Ajouté
                 .leftJoinAndSelect('activity.annotations', 'annotations')
-                .leftJoinAndSelect('activity.demandes', 'demandes'); 
+                .leftJoinAndSelect('activity.demandes', 'demandes')
+                .where('YEAR(activity.createdAt) = :year', { year: currentYear });
 
             // Application des filtres
             if (etat) queryBuilder.andWhere('activity.etat = :etat', { etat });
