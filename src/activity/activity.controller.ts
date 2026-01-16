@@ -25,8 +25,10 @@ export class ActivityController {
   @Get()
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-  findAll() {
-    return this.activityService.findAll();
+  findAll(
+     @Query('annee') annee?: string,
+  ) {
+    return this.activityService.findAll(+annee);
   }
 
 

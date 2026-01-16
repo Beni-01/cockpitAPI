@@ -94,15 +94,24 @@ export class ActivityService {
   }
 
     // Récupérer toutes les activités
-    async findAll(): Promise<Activity[]> {
-        try {
-            // Trouver toutes les activités dans la base de données
-            return await this.activityRepository.find();
-        } catch (error) {
-            // Gérer les erreurs lors de la récupération et les envoyer à l'appelant
-            throw new BadRequestException('Échec de la récupération des activités', error.message);
-        }
+async findAll(annee?: number): Promise<Activity[]> {
+    try {
+        const currentYear = annee || new Date().getFullYear();
+
+        const startOfYear = new Date(currentYear, 0, 1); // 1er janvier
+        const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999); // 31 décembre à 23:59:59
+
+        // Trouver toutes les activités de l'année
+        return await this.activityRepository.find({
+            where: {
+                createdAt: Between(startOfYear, endOfYear),
+            },
+        });
+    } catch (error) {
+        throw new BadRequestException('Échec de la récupération des activités', error.message);
     }
+}
+
 
     async findAllGroupedByDirectionAndResponsible(
         etat?: string,
