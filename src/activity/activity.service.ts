@@ -613,26 +613,21 @@ async getDirectionGlobalProgress(
 
     const activities = await queryBuilder.getMany();
 
-const directionEffectives: Record<string, number> = {
-  "FINANCE": 15,
-  "AUDIT INTERNE": 8,
-  "ETUDES, ENQUÊTES ET EVALUATIONS": 60,
-  "REPARATIONS": 54,
-  "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
-  "ADMINISTRATION ET SERVICES GENERAUX": 66,
-  "COMMUNICATION": 17,
-  "CELLULE DE PASSATION DES MARCHES": 4,
-  "RH ET JURIDIQUE": 12,
-  "CELLULE DE MEDIATION": 1,
-  "CONSEIL D'ADMINISTRATION": 1,
-  "DIRECTION GENERALE": 9,
-  "SECRETARIAT DIRECTION GENERALE": 1,
-  "ASSISTANT DGA": 1,
-  "CELLULE DE SECURITE": 2,
-  "CELLULE SUIVI ET EVALUATION DE PERFORMANCE": 1,
-  "COORDINATION PROVINCIALE": 1
-};
-
+    const directionEffectives = {
+      "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
+      "ADMINISTRATION ET MOYENS GENERAUX": 66,
+      "AUDIT INTERNE": 8,
+      "BUREAU DU PCA": 3,
+      "CELLULE DE PASSATION DES MARCHES": 4,
+      "CELLULE DE SECURITE": 2,
+      "COMMUNICATION": 17,
+      "DIRECTION GENERALE": 9,
+      "ETUDES": 60,
+      "FINANCE": 37,
+      "MEDIATION": 1,
+      "REPARATIONS": 54,
+      "RH ET JURIDIQUE": 12
+    };
 
     const directionStats: any = {};
 
@@ -765,7 +760,7 @@ const directionEffectives: Record<string, number> = {
   }
 }
 
-async getDirectionGlobalProgressPlafone2025(
+async getDirectionGlobalProgressPlafone2(
   dateDebut?: string,
   dateFin?: string,
   periode?: string,
@@ -830,26 +825,21 @@ async getDirectionGlobalProgressPlafone2025(
 
     const activities = await queryBuilder.getMany();
 
-const directionEffectives: Record<string, number> = {
-  "FINANCE": 15,
-  "AUDIT INTERNE": 8,
-  "ETUDES, ENQUÊTES ET EVALUATIONS": 60,
-  "REPARATIONS": 54,
-  "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
-  "ADMINISTRATION ET SERVICES GENERAUX": 66,
-  "COMMUNICATION": 17,
-  "CELLULE DE PASSATION DES MARCHES": 4,
-  "RH ET JURIDIQUE": 12,
-  "CELLULE DE MEDIATION": 1,
-  "CONSEIL D'ADMINISTRATION": 1,
-  "DIRECTION GENERALE": 9,
-  "SECRETARIAT DIRECTION GENERALE": 1,
-  "ASSISTANT DGA": 1,
-  "CELLULE DE SECURITE": 2,
-  "CELLULE SUIVI ET EVALUATION DE PERFORMANCE": 1,
-  "COORDINATION PROVINCIALE": 1
-};
-
+    const directionEffectives: Record<string, number> = {
+      "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
+      "ADMINISTRATION ET MOYENS GENERAUX": 66,
+      "AUDIT INTERNE": 8,
+      "BUREAU DU PCA": 3,
+      "CELLULE DE PASSATION DES MARCHES": 4,
+      "CELLULE DE SECURITE": 2,
+      "COMMUNICATION": 17,
+      "DIRECTION GENERALE": 9,
+      "ETUDES": 60,
+      "MEDIATION": 1,
+      "REPARATIONS": 54,
+      "RH ET JURIDIQUE": 12,
+      "ETUDES, ENQUETES ET EVALUATIONS": 15 // exemple si tu veux inclure celle qui n'a rien
+    };
 
     // 🔹 Pré-remplissage de toutes les directions
     const directionStats: Record<string, any> = {};
@@ -1022,26 +1012,20 @@ async getDirectionGlobalProgressPlafone(
     const activities = await queryBuilder.getMany();
 
     const directionEffectives: Record<string, number> = {
-    "FINANCE": 15,
-    "AUDIT INTERNE": 8,
-    "ETUDES, ENQUÊTES ET EVALUATIONS": 60,
-    "ETUDES": 60,
-    "REPARATIONS": 54,
-    "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
-    "ADMINISTRATION ET SERVICES GENERAUX": 66,
-    "COMMUNICATION": 17,
-    "CELLULE DE PASSATION DES MARCHES": 4,
-    "RH ET JURIDIQUE": 12,
-    "CELLULE DE MEDIATION": 1,
-    "CONSEIL D'ADMINISTRATION": 1,
-    "DIRECTION GENERALE": 9,
-    "SECRETARIAT DIRECTION GENERALE": 1,
-    "ASSISTANT DGA": 1,
-    "CELLULE DE SECURITE": 2,
-    "CELLULE SUIVI ET EVALUATION DE PERFORMANCE": 1,
-    "COORDINATION PROVINCIALE": 1
+      "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
+      "ADMINISTRATION ET MOYENS GENERAUX": 66,
+      "AUDIT INTERNE": 8,
+      "BUREAU DU PCA": 3,
+      "CELLULE DE PASSATION DES MARCHES": 4,
+      "CELLULE DE SECURITE": 2,
+      "COMMUNICATION": 17,
+      "DIRECTION GENERALE": 9,
+      "ETUDES": 60,
+      "MEDIATION": 1,
+      "REPARATIONS": 54,
+      "RH ET JURIDIQUE": 12,
+      "ETUDES, ENQUETES ET EVALUATIONS": 15 // exemple si tu veux inclure celle qui n'a rien
     };
-
 
     // 🔹 Pré-remplissage de toutes les directions
     const directionStats: Record<string, any> = {};
