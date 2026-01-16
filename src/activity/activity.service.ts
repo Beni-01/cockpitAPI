@@ -1142,7 +1142,9 @@ async getDirectionGlobalProgressPlafone(
     async getDirectionStats(annee:number): Promise<any[]> {
         try {
 
-        const currentYear = annee || new Date().getFullYear();
+        //const currentYear = annee || new Date().getFullYear();
+
+         const currentYear = 2025;
 
             // Définir le début et la fin de l'année
             const startOfYear = new Date(currentYear, 0, 1); // 1er janvier
