@@ -1059,20 +1059,13 @@ async getDirectionGlobalProgressPlafone(
 ): Promise<any[]> {
   try {
 
-const currentYear = annee ?? new Date().getFullYear();
+    const currentYear = annee || new Date().getFullYear();
 
-const yearStart = new Date(currentYear, 0, 1);
-const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59, 999);
-
-const queryBuilder = this.activityRepository
-  .createQueryBuilder('activity')
-  .leftJoinAndSelect('activity.subactivities', 'subactivities')
-  .leftJoinAndSelect('subactivities.livrable', 'livrable')
-  .where('activity.createdAt BETWEEN :yearStart AND :yearEnd', {
-    yearStart: yearStart.toISOString(),
-    yearEnd: yearEnd.toISOString()
-  });
-
+    const queryBuilder = this.activityRepository
+      .createQueryBuilder('activity')
+      .leftJoinAndSelect('activity.subactivities', 'subactivities')
+      .leftJoinAndSelect('subactivities.livrable', 'livrable')
+       .where('YEAR(activity.createdAt) = :year', { year: currentYear });
 
     if (dateDebut && dateFin) {
       const nextDay = new Date(dateFin);
