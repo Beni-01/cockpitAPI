@@ -1139,71 +1139,7 @@ async getDirectionGlobalProgressPlafone(
 
 
 
-    async getDirectionStats2025(annee:number): Promise<any[]> {
-        try {
 
-        //const currentYear = annee || new Date().getFullYear();
-
-         const currentYear = 2025;
-
-            // Définir le début et la fin de l'année
-            const startOfYear = new Date(currentYear, 0, 1); // 1er janvier
-            const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999); // 31 décembre à 23:59:59
-
-            const activities = await this.activityRepository.find({
-            relations: ['subactivities'],
-            where: {
-                createdAt: Between(startOfYear, endOfYear),
-            },
-            });
-
-            
-            const directionStats: { [key: string]: { [status: string]: number } } = {};
-    
-            // Parcourir les activités et compter les statuts des sous-activités
-            activities.forEach((activity) => {
-                const directionName = activity.direction;
-                if (!directionName) return;
-    
-                // Initialiser la direction si elle n'existe pas
-                if (!directionStats[directionName]) {
-                    directionStats[directionName] = {};
-                }
-    
-                // Compter les statuts des sous-activités
-                activity.subactivities?.forEach((subActivity) => {
-                    const status = subActivity.status.toLowerCase(); // Normaliser le statut
-                    if (status) {
-                        directionStats[directionName][status] = (directionStats[directionName][status] || 0) + 1;
-                    }
-                });
-            });
-    
-            // Convertir en format de résultat demandé
-            let result = Object.entries(directionStats).map(([direction, stats]) => ({
-                direction,
-                Stats: Object.entries(stats).map(([status, nombre]) => ({ status, nombre }))
-            }));
-    
-            // Ajouter les directions sans sous-activités
-            const allDirections = await this.activityRepository
-                .createQueryBuilder('activity')
-                .select('activity.direction')
-                .distinct(true)
-                .getRawMany();
-    
-            allDirections.forEach((dir) => {
-                const directionName = dir.direction;
-                if (directionName && !result.some(r => r.direction === directionName)) {
-                    result.push({ direction: directionName, Stats: [] });
-                }
-            });
-    
-            return result.filter(r => r.direction);
-        } catch (error) {
-            throw new BadRequestException('Erreur lors du calcul des statistiques', error.message);
-        }
-    }
     
 async getDirectionStats(annee: number): Promise<any[]> {
     try {
