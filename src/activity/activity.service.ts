@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryBuilder, Repository } from 'typeorm';
+import { Between, QueryBuilder, Repository } from 'typeorm';
 import { Activity } from './entities/activity.entity';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
@@ -546,298 +546,7 @@ export class ActivityService {
 
 
 
-async getDirectionGlobalProgressAncien(
-    dateDebut?: string,
-    dateFin?: string,
-    periode?: string, // 'janvier', 'février', etc. OU 'T1', 'T2', 'T3', 'T4' OU 'S1', 'S2'
-    annee?: number
-): Promise<any[]> {
-    try {
-        // Création du queryBuilder avec les relations nécessaires
-        const queryBuilder = this.activityRepository
-            .createQueryBuilder('activity')
-            .leftJoinAndSelect('activity.subactivities', 'subactivities')
-            .leftJoinAndSelect('subactivities.livrable', 'livrable');
 
-        // Déterminer l'année à utiliser (courante par défaut)
-        const currentYear = annee || new Date().getFullYear();
-
-        // Application des filtres de date
-        if (dateDebut && dateFin) {
-            // Priorité aux dates exactes si elles sont fournies
-            const nextDay = new Date(dateFin);
-            nextDay.setDate(nextDay.getDate() + 1);
-            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', {
-                dateDebut,
-                dateFin: nextDay.toISOString()
-            });
-        } else if (dateDebut) {
-            queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
-        } else if (dateFin) {
-            const nextDay = new Date(dateFin);
-            nextDay.setDate(nextDay.getDate() + 1);
-            queryBuilder.andWhere('activity.dateFin <= :nextDay', {
-                nextDay: nextDay.toISOString()
-            });
-        } else if (periode) {
-            // Filtrage par période (mois, trimestre ou semestre)
-            const periodeLower = periode.toLowerCase();
-            let dateStart: Date, dateEnd: Date;
-
-            // Mapping des mois
-            const moisMap: { [key: string]: number } = {
-                'janvier': 0, 'février': 1, 'mars': 2, 'avril': 3,
-                'mai': 4, 'juin': 5, 'juillet': 6, 'août': 7,
-                'septembre': 8, 'octobre': 9, 'novembre': 10, 'décembre': 11
-            };
-
-            if (moisMap.hasOwnProperty(periodeLower)) {
-                // Filtrage par mois
-                const moisIndex = moisMap[periodeLower];
-                dateStart = new Date(currentYear, moisIndex, 1);
-                dateEnd = new Date(currentYear, moisIndex + 1, 0);
-            } else {
-                // Filtrage par trimestre ou semestre
-                switch (periode.toUpperCase()) {
-                    // Trimestres
-                    case 'T1':
-                        dateStart = new Date(currentYear, 0, 1);
-                        dateEnd = new Date(currentYear, 2, 31);
-                        break;
-                    case 'T2':
-                        dateStart = new Date(currentYear, 3, 1);
-                        dateEnd = new Date(currentYear, 5, 30);
-                        break;
-                    case 'T3':
-                        dateStart = new Date(currentYear, 6, 1);
-                        dateEnd = new Date(currentYear, 8, 30);
-                        break;
-                    case 'T4':
-                        dateStart = new Date(currentYear, 9, 1);
-                        dateEnd = new Date(currentYear, 11, 31);
-                        break;
-                    // Semestres
-                    case 'S1':
-                        dateStart = new Date(currentYear, 0, 1);
-                        dateEnd = new Date(currentYear, 5, 30);
-                        break;
-                    case 'S2':
-                        dateStart = new Date(currentYear, 6, 1);
-                        dateEnd = new Date(currentYear, 11, 31);
-                        break;
-                    default:
-                        throw new BadRequestException('Période non valide. Utilisez un mois (janvier, février...), un trimestre (T1-T4) ou un semestre (S1-S2)');
-                }
-            }
-
-            // Ajout du filtre
-            queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateStart AND :dateEnd)', {
-                dateStart: dateStart.toISOString(),
-                dateEnd: dateEnd.toISOString()
-            });
-        }
-
-        // Exécution de la requête
-        const activities = await queryBuilder.getMany();
-
-        // Effectifs par direction (données statiques)
-        const directionEffectives = {
-            "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
-            "ADMINISTRATION ET MOYENS GENERAUX": 66,
-            "AUDIT INTERNE": 8,
-            "BUREAU DU PCA": 3,
-            "CELLULE DE PASSATION DES MARCHES": 4,
-            "CELLULE DE SECURITE": 2,
-            "COMMUNICATION": 17,
-            "DIRECTION GENERALE": 9,
-            "ETUDES": 60,
-            "FINANCE": 37,
-            "MEDIATION": 1,
-            "REPARATIONS": 54,
-            "RH ET JURIDIQUE": 12
-        };
-
-        const directionStats = {};
-
-        activities.forEach(activity => {
-            const direction = activity.direction;
-            if (!direction) return;
-
-            if (!directionStats[direction]) {
-                directionStats[direction] = {
-                    // Métriques de base
-                    totalActivity: 0,
-                    closedActivity: 0,
-                    totalSub: 0,
-                    closedSub: 0,
-                    passedSub: 0,
-                    pendingSub: 0,
-                    retardSub: 0,
-                    totalRessources: 0, // Nouveau: Somme des ressources des sous-activités clôturées
-                    
-                    // KPI2 (deadlineRate)
-                    deadlineRateSum: 0,
-                    totalDeadlineRates: 0,
-                    
-                    // KPI3 (livrableQuality)
-                    livrableQualitySum: 0,
-                    validLivrableCount: 0,
-                    
-                    // KPI5 (budget)
-                    totalBudget: 0,
-                    totalBudgetConsomme: 0,
-
-                    // KPI4: Effectif de la direction
-                    directionEffective: directionEffectives[direction] || 1 // Fallback à 1 pour éviter division par 0
-                };
-            }
-            // Compter les activités
-            directionStats[direction].totalActivity += 1;
-            if (activity.status.toLowerCase() === 'cloturé' || activity.status.toLowerCase() === 'terminé') {
-                directionStats[direction].closedActivity += 1;
-            }
-
-            // Traitement des sous-activités
-            const subactivities = activity.subactivities || [];
-            directionStats[direction].totalSub += subactivities.length;
-
-            directionStats[direction].closedSub += subactivities.filter(sub => 
-                sub.status?.toLowerCase() === 'cloturé'
-            ).length;
-
-
-            directionStats[direction].retardSub += subactivities.filter(sub => 
-                sub.status?.toLowerCase() === 'en retard'
-            ).length;
-
-            directionStats[direction].pendingSub += subactivities.filter(sub => 
-                sub.status?.toLowerCase() === 'en cours'
-            ).length;
-
-            directionStats[direction].passedSub += subactivities.filter(sub => 
-                sub.status?.toLowerCase() === 'dépassé'
-            ).length;
-
-
-
-            // Calcul des KPIs
-            subactivities.forEach(sub => {
-                // KPI2 - Taux d'échéance
-                directionStats[direction].deadlineRateSum += sub.deadlineRate ?? 0;
-                directionStats[direction].totalDeadlineRates += 1;
-
-                // KPI3 - Qualité livrable
-                if (sub.livrable?.livrableQuality !== null) {
-                    directionStats[direction].livrableQualitySum += sub.livrable?.livrableQuality ?? 0;
-                    directionStats[direction].validLivrableCount += 1;
-                }
-
-                // KPI4 - Ressources utilisées (uniquement pour les sous-activités clôturées)
-                if (sub.status?.toLowerCase() === 'cloturé') {
-                    directionStats[direction].totalRessources += sub.nbre_ressource ?? 0;
-                }
-                // KPI5 - Budget
-                directionStats[direction].totalBudget += sub.budget ?? 0;
-                directionStats[direction].totalBudgetConsomme += sub.budgetConsomme ?? 0;
-            });
-        });
-
-        // Construction du résultat final
-        const result = Object.keys(directionStats).map(direction => {
-            const stats = directionStats[direction];
-
-            const bonus=Number((((stats.totalBudget-stats.totalBudgetConsomme)/stats.totalBudget)*100).toFixed(2))
-
-            // Calcul KPI5 (taux de budget restant)
-            const rateBudget = stats.totalBudget > 0 && stats.totalBudget<=stats.totalBudgetConsomme
-                ? Number((((stats.totalBudget / stats.totalBudgetConsomme) * 100)).toFixed(2))
-                : 100+bonus;
-
-            return {
-                direction,
-                // Métriques de base
-                totalActivity: stats.totalActivity,
-                closedActivity: stats.closedActivity,
-                totalSub: stats.totalSub,
-                closedSub: stats.closedSub,
-                passedSub: stats.passedSub,
-                retardSub: stats.retardSub,
-
-                // KPI1 - Progression globale des sous-activités # Nombre sous-activités clôturées + En retard / Nombre total de sous-activités (Parfait)
-                progression: stats.totalSub > 0 
-                    ? Number((((stats.closedSub + stats.retardSub) / stats.totalSub) * 100).toFixed(2))
-                    : 0,
-                
-                // KPI2 - Taux d'échéance. # Nombre total de sous-activite cloture dans le delais / 
-                kpi2: stats.deadlineRateSum,
-                kpi2_percent: stats.totalSub > 0
-                    ? Number(((stats.deadlineRateSum / (stats.closedSub + stats.passedSub + stats.pendingSub + stats.retardSub)) * 100).toFixed(2))
-                    : 0,
-                
-                // KPI3 - Qualité livrable # NOMBRE DE LIVRABLES CONFORMES / NOMBRE TOTAL DE LIVRABLES TRAITES (Parfait)
-                kpi3: stats.livrableQualitySum,
-                kpi3_percent: stats.validLivrableCount > 0
-                    ? Number(((stats.livrableQualitySum / stats.validLivrableCount) * 100).toFixed(2))
-                    : 0,
-                
-                // KPI4 - Efficacité des ressources
-                // kpi4_percent: stats.totalSub > 0 && stats.directionEffective > 0 && stats.totalRessources > 0
-                //     ? Number((
-                //         (((stats.closedSub * stats.directionEffective) / 
-                //         (stats.totalSub * stats.totalRessources)) * 100)
-                //       ).toFixed(2))
-                //     : 0,
-
-                kpi4_percent :  stats.totalSub > 0 && stats.totalRessources > 0
-                  ? Number(
-                      ((((stats.closedSub / stats.totalSub) / (stats.totalRessources / stats.directionEffective)) 
-                        * (stats.kpi3 / 100)) * 100).toFixed(2)
-                    )
-                  : 0,
-
-                totalRessources:stats.totalRessources,
-                // KPI5 - Budget
-                totalBudget:stats.totalBudget, 
-                totalBudgetConsomme:stats.totalBudgetConsomme,
-                kpi5_percent:  stats.totalBudgetConsomme==0 ? 0 : Number(rateBudget.toFixed(2))
-            };
-        });
-
-        // Ajout des directions manquantes (avec toutes les métriques à 0)
-        const allDirections = await this.activityRepository
-            .createQueryBuilder('activity')
-            .select('DISTINCT activity.direction', 'direction')
-            .getRawMany();
-
-        allDirections.forEach(({ direction }) => {
-            if (direction && !result.find(r => r.direction === direction)) {
-                result.push({
-                    direction,
-                    totalActivity: 0,
-                    closedActivity: 0,
-                    totalSub: 0,
-                    closedSub: 0,
-                    passedSub: 0,
-                    retardSub: 0,   
-                    progression: 0,
-                    kpi2: 0,
-                    kpi2_percent: 0,
-                    kpi3: 0,
-                    kpi3_percent: 0,
-                    kpi4_percent: 0,
-                    totalBudget:0,
-                    totalRessources:0,
-                    totalBudgetConsomme:0,
-                    kpi5_percent: 0
-                });
-            }
-        });
-
-        return result.filter(r => r.direction);
-    } catch (error) {
-        throw new BadRequestException('Erreur lors du calcul des indicateurs', error.message);
-    }
-}
 
 
 async getDirectionGlobalProgress(
@@ -1051,6 +760,192 @@ async getDirectionGlobalProgress(
   }
 }
 
+async getDirectionGlobalProgressPlafone2(
+  dateDebut?: string,
+  dateFin?: string,
+  periode?: string,
+  annee?: number
+): Promise<any[]> {
+  try {
+    const currentYear = annee || new Date().getFullYear();
+
+    const queryBuilder = this.activityRepository
+      .createQueryBuilder('activity')
+      .leftJoinAndSelect('activity.subactivities', 'subactivities')
+      .leftJoinAndSelect('subactivities.livrable', 'livrable')
+      .where('YEAR(activity.createdAt) = :year', { year: currentYear });
+
+    if (dateDebut && dateFin) {
+      const nextDay = new Date(dateFin);
+      nextDay.setDate(nextDay.getDate() + 1);
+      queryBuilder.andWhere(
+        '(activity.dateDebut BETWEEN :dateDebut AND :dateFin)',
+        { dateDebut, dateFin: nextDay.toISOString() }
+      );
+    } else if (dateDebut) {
+      queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
+    } else if (dateFin) {
+      const nextDay = new Date(dateFin);
+      nextDay.setDate(nextDay.getDate() + 1);
+      queryBuilder.andWhere('activity.dateFin <= :nextDay', {
+        nextDay: nextDay.toISOString()
+      });
+    } else if (periode) {
+      const periodeLower = periode.toLowerCase();
+      let dateStart: Date, dateEnd: Date;
+
+      const moisMap: Record<string, number> = {
+        janvier: 0, février: 1, mars: 2, avril: 3,
+        mai: 4, juin: 5, juillet: 6, août: 7,
+        septembre: 8, octobre: 9, novembre: 10, décembre: 11
+      };
+
+      if (moisMap[periodeLower] !== undefined) {
+        const m = moisMap[periodeLower];
+        dateStart = new Date(currentYear, m, 1);
+        dateEnd = new Date(currentYear, m + 1, 0);
+      } else {
+        switch (periode.toUpperCase()) {
+          case 'T1': dateStart = new Date(currentYear, 0, 1); dateEnd = new Date(currentYear, 2, 31); break;
+          case 'T2': dateStart = new Date(currentYear, 3, 1); dateEnd = new Date(currentYear, 5, 30); break;
+          case 'T3': dateStart = new Date(currentYear, 6, 1); dateEnd = new Date(currentYear, 8, 30); break;
+          case 'T4': dateStart = new Date(currentYear, 9, 1); dateEnd = new Date(currentYear, 11, 31); break;
+          case 'S1': dateStart = new Date(currentYear, 0, 1); dateEnd = new Date(currentYear, 5, 30); break;
+          case 'S2': dateStart = new Date(currentYear, 6, 1); dateEnd = new Date(currentYear, 11, 31); break;
+          default:
+            throw new BadRequestException('Période non valide');
+        }
+      }
+
+      queryBuilder.andWhere(
+        '(activity.dateDebut BETWEEN :dateStart AND :dateEnd)',
+        { dateStart: dateStart.toISOString(), dateEnd: dateEnd.toISOString() }
+      );
+    }
+
+    const activities = await queryBuilder.getMany();
+
+    const directionEffectives: Record<string, number> = {
+      "AIDE D'ACCÈS À LA JUSTICE ET RECOUVREMENT": 20,
+      "ADMINISTRATION ET MOYENS GENERAUX": 66,
+      "AUDIT INTERNE": 8,
+      "BUREAU DU PCA": 3,
+      "CELLULE DE PASSATION DES MARCHES": 4,
+      "CELLULE DE SECURITE": 2,
+      "COMMUNICATION": 17,
+      "DIRECTION GENERALE": 9,
+      "ETUDES": 60,
+      "MEDIATION": 1,
+      "REPARATIONS": 54,
+      "RH ET JURIDIQUE": 12,
+      "ETUDES, ENQUETES ET EVALUATIONS": 15 // exemple si tu veux inclure celle qui n'a rien
+    };
+
+    // 🔹 Pré-remplissage de toutes les directions
+    const directionStats: Record<string, any> = {};
+    Object.keys(directionEffectives).forEach(direction => {
+      directionStats[direction] = {
+        totalActivity: 0,
+        closedActivity: 0,
+        totalSub: 0,
+        closedSub: 0,
+        passedSub: 0,
+        pendingSub: 0,
+        retardSub: 0,
+        closedSubOnTime: 0,
+        livrableQualitySum: 0,
+        validLivrableCount: 0,
+        totalRessources: 0,
+        totalBudget: 0,
+        totalBudgetConsomme: 0,
+        directionEffective: directionEffectives[direction] || 1
+      };
+    });
+
+    // 🔹 Parcours des activités pour compléter les stats
+    activities.forEach(activity => {
+      const direction = activity.direction;
+      if (!direction || !directionStats[direction]) return;
+
+      const stats = directionStats[direction];
+      stats.totalActivity++;
+
+      if (['cloturé', 'terminé'].includes(activity.status?.toLowerCase())) {
+        stats.closedActivity++;
+      }
+
+      const subs = activity.subactivities || [];
+      stats.totalSub += subs.length;
+
+      subs.forEach(sub => {
+        const status = sub.status?.toLowerCase();
+
+        if (status === 'cloturé') {
+          stats.closedSub++;
+          if (sub.deadlineRate === 1) stats.closedSubOnTime++;
+          stats.totalRessources += sub.nbre_ressource ?? 0;
+        }
+
+        if (status === 'en retard') stats.retardSub++;
+        if (status === 'en cours') stats.pendingSub++;
+        if (status === 'dépassé') stats.passedSub++;
+
+        if (sub.livrable?.livrableQuality != null) {
+          stats.livrableQualitySum += sub.livrable.livrableQuality;
+          stats.validLivrableCount++;
+        }
+
+        stats.totalBudget += sub.budget ?? 0;
+        stats.totalBudgetConsomme += sub.budgetConsomme ?? 0;
+      });
+    });
+
+    return Object.keys(directionStats).map(direction => {
+      const s = directionStats[direction];
+
+      const bonus =
+        s.totalBudget > 0
+          ? ((s.totalBudget - s.totalBudgetConsomme) / s.totalBudget) * 100
+          : 0;
+
+      let rateBudget =
+        s.totalBudgetConsomme === 0
+          ? 0
+          : s.totalBudget <= s.totalBudgetConsomme
+              ? (s.totalBudget / s.totalBudgetConsomme) * 100
+              : 100 + bonus;
+
+      rateBudget = Math.min(rateBudget, 110);
+
+      return {
+        direction,
+        totalActivity: s.totalActivity,
+        closedActivity: s.closedActivity,
+        totalSub: s.totalSub,
+        closedSub: s.closedSub,
+        passedSub: s.passedSub,
+        retardSub: s.retardSub,
+        progression: s.totalSub > 0 ? Number((((s.closedSub + s.retardSub) / s.totalSub) * 100).toFixed(2)) : 0,
+        kpi2_percent: s.closedSub > 0 ? Number(((s.closedSubOnTime / s.closedSub) * 100).toFixed(2)) : 0,
+        kpi3_percent: s.validLivrableCount > 0 ? Number(((s.livrableQualitySum / s.validLivrableCount) * 100).toFixed(2)) : 0,
+        kpi4_percent: s.totalSub > 0 && s.totalRessources > 0
+          ? Number(((((s.closedSub / s.totalSub) / (s.totalRessources / s.directionEffective)) * (s.livrableQualitySum / 100)) * 100).toFixed(2))
+          : 0,
+        totalBudget: s.totalBudget,
+        totalBudgetConsomme: s.totalBudgetConsomme,
+        totalBudgetPrevu: s.totalBudget,
+        totalBudgetConsommeVerifie: s.totalBudgetConsomme,
+        kpi5_percent: Number(rateBudget.toFixed(2))
+      };
+    });
+  } catch (error) {
+    throw new BadRequestException(
+      'Erreur lors du calcul des indicateurs',
+      error.message
+    );
+  }
+}
+
 async getDirectionGlobalProgressPlafone(
   dateDebut?: string,
   dateFin?: string,
@@ -1239,10 +1134,23 @@ async getDirectionGlobalProgressPlafone(
 
 
 
-
-    async getDirectionStats(): Promise<any[]> {
+    async getDirectionStats(annee:number): Promise<any[]> {
         try {
-            const activities = await this.activityRepository.find({ relations: ['subactivities'] });
+
+        const currentYear = annee || new Date().getFullYear();
+
+            // Définir le début et la fin de l'année
+            const startOfYear = new Date(currentYear, 0, 1); // 1er janvier
+            const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999); // 31 décembre à 23:59:59
+
+            const activities = await this.activityRepository.find({
+            relations: ['subactivities'],
+            where: {
+                createdAt: Between(startOfYear, endOfYear),
+            },
+            });
+
+            
             const directionStats: { [key: string]: { [status: string]: number } } = {};
     
             // Parcourir les activités et compter les statuts des sous-activités

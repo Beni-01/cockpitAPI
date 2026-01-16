@@ -38,17 +38,19 @@ export class ActivityController {
   @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
   @Query('dateFin') dateFin?: string, 
   @Query('periode') periode?: string,
-  @Query('annee') annee?: number,
+  @Query('annee') annee?: string,
   ) {
-    return this.activityService.getDirectionGlobalProgressPlafone(dateDebut,dateFin,periode,annee);
+    return this.activityService.getDirectionGlobalProgressPlafone(dateDebut,dateFin,periode,+annee);
   }
 
 
   @Get('statut/dashboard')
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-  getDirectionStats() {
-    return this.activityService.getDirectionStats();
+  getDirectionStats(
+     @Query('annee') annee?: string,
+  ) {
+    return this.activityService.getDirectionStats(+annee);
   }
 
 
