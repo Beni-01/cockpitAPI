@@ -1139,7 +1139,7 @@ async getDirectionGlobalProgressPlafone(
 
 
 
-    async getDirectionStats2025(annee:number): Promise<any[]> {
+    async getDirectionStats(annee:number): Promise<any[]> {
         try {
 
         const currentYear = annee || new Date().getFullYear();
@@ -1203,7 +1203,7 @@ async getDirectionGlobalProgressPlafone(
         }
     }
     
-    async getDirectionStats(annee: number): Promise<any[]> {
+    async getDirectionStats2026(annee: number): Promise<any[]> {
     try {
         const currentYear = annee || new Date().getFullYear();
 
