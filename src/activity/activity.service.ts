@@ -1217,68 +1217,88 @@ async getDirectionStats(annee: number): Promise<any[]> {
 
 
 
-    async updateAllActivities() {
-        const activities = await this.activityRepository.find({ relations: ['subactivities'] });
-    
-        for (const activity of activities) {
-            await this.updateActivityFromSubactivities(activity);
-        }
+async updateAllActivities() {
+    const currentYear = new Date().getFullYear();
 
-        return {message:"L'actualisation s'est effectuée avec succèss", code:200};
+    // Récupérer toutes les activités de l'année en cours avec sous-activités
+    const activities = await this.activityRepository.find({
+        relations: ['subactivities'],
+        where: {
+            createdAt: Between(
+                new Date(currentYear, 0, 1),
+                new Date(currentYear, 11, 31, 23, 59, 59, 999)
+            ),
+        },
+    });
+
+    for (const activity of activities) {
+        await this.updateActivityFromSubactivities(activity);
     }
 
-    async updateActivityFromSubactivitiesById(activityId: number)  {
-        try {
-            // Récupérer l'activité avec ses sous-activités
-            const activity = await this.activityRepository.findOne({
-                where: { id: activityId },
-                relations: ['subactivities'],
-            });
-    
-            if (!activity) {
-                throw new NotFoundException(`Activité avec l'ID ${activityId} non trouvée.`);
-            }
-    
-            if (activity.subactivities.length === 0) {
-                throw new BadRequestException(`L'activité ${activityId} n'a pas de sous-activités.`);
-            }
-    
-            // Calculer les nouvelles dates et le budget total
-            const result = activity.subactivities.reduce(
-                (acc, subactivity) => {
-                    acc.minDebut = acc.minDebut
-                        ? new Date(subactivity.debut) < new Date(acc.minDebut)
-                            ? subactivity.debut
-                            : acc.minDebut
-                        : subactivity.debut;
-    
-                    acc.maxFin = acc.maxFin
-                        ? new Date(subactivity.fin) > new Date(acc.maxFin)
-                            ? subactivity.fin
-                            : acc.maxFin
-                        : subactivity.fin;
-    
-                    acc.totalBudget += subactivity.budget || 0;
-                    return acc;
-                },
-                { minDebut: null, maxFin: null, totalBudget: 0 }
-            );
-    
-            // Mise à jour de l'activité
-            await this.activityRepository.update(activityId, {
-                dateDebut: result.minDebut,
-                dateFin: result.maxFin,
-                budget: result.totalBudget,
-            });
+    return { message: "L'actualisation s'est effectuée avec succès", code: 200 };
+}
 
-            return {message:"L'actualisation s'est effectuée avec succèss", code:200};
-    
-        } catch (error) {
-            throw new BadRequestException(
-                `Erreur lors de la mise à jour de l'activité ${activityId} : ${error.message}`
-            );
+// Version par ID (pour une activité spécifique) avec année actuelle
+async updateActivityFromSubactivitiesById(activityId: number) {
+    try {
+        const currentYear = new Date().getFullYear();
+
+        // Récupérer l'activité avec ses sous-activités
+        const activity = await this.activityRepository.findOne({
+            where: {
+                id: activityId,
+                createdAt: Between(
+                    new Date(currentYear, 0, 1),
+                    new Date(currentYear, 11, 31, 23, 59, 59, 999)
+                ),
+            },
+            relations: ['subactivities'],
+        });
+
+        if (!activity) {
+            throw new NotFoundException(`Activité avec l'ID ${activityId} non trouvée cette année.`);
         }
+
+        if (activity.subactivities.length === 0) {
+            throw new BadRequestException(`L'activité ${activityId} n'a pas de sous-activités.`);
+        }
+
+        // Calculer les nouvelles dates et le budget total
+        const result = activity.subactivities.reduce(
+            (acc, subactivity) => {
+                acc.minDebut = acc.minDebut
+                    ? new Date(subactivity.debut) < new Date(acc.minDebut)
+                        ? subactivity.debut
+                        : acc.minDebut
+                    : subactivity.debut;
+
+                acc.maxFin = acc.maxFin
+                    ? new Date(subactivity.fin) > new Date(acc.maxFin)
+                        ? subactivity.fin
+                        : acc.maxFin
+                    : subactivity.fin;
+
+                acc.totalBudget += subactivity.budget || 0;
+                return acc;
+            },
+            { minDebut: null, maxFin: null, totalBudget: 0 }
+        );
+
+        // Mise à jour de l'activité
+        await this.activityRepository.update(activityId, {
+            dateDebut: result.minDebut,
+            dateFin: result.maxFin,
+            budget: result.totalBudget,
+        });
+
+        return { message: "L'actualisation s'est effectuée avec succès", code: 200 };
+    } catch (error) {
+        throw new BadRequestException(
+            `Erreur lors de la mise à jour de l'activité ${activityId} : ${error.message}`
+        );
     }
+}
+
     
     
 }
