@@ -1139,7 +1139,7 @@ async getDirectionGlobalProgressPlafone(
 
 
 
-    async getDirectionStats(annee:number): Promise<any[]> {
+    async getDirectionStats2025(annee:number): Promise<any[]> {
         try {
 
         const currentYear = annee || new Date().getFullYear();
@@ -1203,6 +1203,78 @@ async getDirectionGlobalProgressPlafone(
         }
     }
     
+    async getDirectionStats(annee: number): Promise<any[]> {
+    try {
+        const currentYear = annee || new Date().getFullYear();
+
+        const startOfYear = new Date(currentYear, 0, 1);
+        const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+        // Récupérer les activités avec sous-activités
+        const activities = await this.activityRepository.find({
+            relations: ['subactivities'],
+            where: {
+                createdAt: Between(startOfYear, endOfYear),
+            },
+        });
+
+        const directionStats: { [key: string]: { [status: string]: number } } = {};
+        const allStatusesSet = new Set<string>();
+
+        // Parcourir les activités et compter les statuts
+        activities.forEach((activity) => {
+            const directionName = activity.direction;
+            if (!directionName) return;
+
+            if (!directionStats[directionName]) {
+                directionStats[directionName] = {};
+            }
+
+            activity.subactivities?.forEach((subActivity) => {
+                const status = subActivity.status?.toLowerCase();
+                if (status) {
+                    allStatusesSet.add(status);
+                    directionStats[directionName][status] = (directionStats[directionName][status] || 0) + 1;
+                }
+            });
+        });
+
+        const allStatuses = Array.from(allStatusesSet);
+
+        // Récupérer toutes les directions distinctes
+        const allDirections = await this.activityRepository
+            .createQueryBuilder('activity')
+            .select('DISTINCT activity.direction', 'direction')
+            .getRawMany();
+
+        // Compléter toutes les directions avec tous les statuts à 0 si absent
+        allDirections.forEach((dir) => {
+            const directionName = dir.direction;
+            if (!directionName) return;
+
+            if (!directionStats[directionName]) {
+                directionStats[directionName] = {};
+            }
+
+            allStatuses.forEach(status => {
+                if (!directionStats[directionName][status]) {
+                    directionStats[directionName][status] = 0;
+                }
+            });
+        });
+
+        // Convertir en format final
+        const result = Object.entries(directionStats).map(([direction, stats]) => ({
+            direction,
+            Stats: Object.entries(stats).map(([status, nombre]) => ({ status, nombre }))
+        }));
+
+        return result;
+    } catch (error) {
+        throw new BadRequestException('Erreur lors du calcul des statistiques', error.message);
+    }
+}
+
 
     async updateAllActivities() {
         const activities = await this.activityRepository.find({ relations: ['subactivities'] });
