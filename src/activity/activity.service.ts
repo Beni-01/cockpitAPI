@@ -1139,7 +1139,7 @@ async getDirectionGlobalProgressPlafone(
 
 
 
-    async getDirectionStats(annee:number): Promise<any[]> {
+    async getDirectionStats2025(annee:number): Promise<any[]> {
         try {
 
         //const currentYear = annee || new Date().getFullYear();
@@ -1205,14 +1205,33 @@ async getDirectionGlobalProgressPlafone(
         }
     }
     
-    async getDirectionStats2026(annee: number): Promise<any[]> {
+async getDirectionStats(annee: number): Promise<any[]> {
     try {
         const currentYear = annee || new Date().getFullYear();
 
         const startOfYear = new Date(currentYear, 0, 1);
         const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59, 999);
 
-        // Récupérer les activités avec sous-activités
+        // Liste de tous les statuts fixes comme tu les veux
+        const allStatuses = ["cloturé", "dépassé", "en retard", "à faire", "en cours"];
+
+        // Récupérer toutes les directions distinctes
+        const allDirectionsRaw = await this.activityRepository
+            .createQueryBuilder('activity')
+            .select('DISTINCT activity.direction', 'direction')
+            .getRawMany();
+
+        // Initialiser les stats de toutes les directions avec tous les statuts à 0
+        const directionStats: { [key: string]: { [status: string]: number } } = {};
+        allDirectionsRaw.forEach(dir => {
+            const name = dir.direction;
+            if (name) {
+                directionStats[name] = {};
+                allStatuses.forEach(status => directionStats[name][status] = 0);
+            }
+        });
+
+        // Récupérer toutes les activités avec sous-activités pour l'année
         const activities = await this.activityRepository.find({
             relations: ['subactivities'],
             where: {
@@ -1220,47 +1239,15 @@ async getDirectionGlobalProgressPlafone(
             },
         });
 
-        const directionStats: { [key: string]: { [status: string]: number } } = {};
-        const allStatusesSet = new Set<string>();
-
-        // Parcourir les activités et compter les statuts
-        activities.forEach((activity) => {
+        // Compter les statuts pour chaque direction
+        activities.forEach(activity => {
             const directionName = activity.direction;
             if (!directionName) return;
 
-            if (!directionStats[directionName]) {
-                directionStats[directionName] = {};
-            }
-
-            activity.subactivities?.forEach((subActivity) => {
+            activity.subactivities?.forEach(subActivity => {
                 const status = subActivity.status?.toLowerCase();
-                if (status) {
-                    allStatusesSet.add(status);
-                    directionStats[directionName][status] = (directionStats[directionName][status] || 0) + 1;
-                }
-            });
-        });
-
-        const allStatuses = Array.from(allStatusesSet);
-
-        // Récupérer toutes les directions distinctes
-        const allDirections = await this.activityRepository
-            .createQueryBuilder('activity')
-            .select('DISTINCT activity.direction', 'direction')
-            .getRawMany();
-
-        // Compléter toutes les directions avec tous les statuts à 0 si absent
-        allDirections.forEach((dir) => {
-            const directionName = dir.direction;
-            if (!directionName) return;
-
-            if (!directionStats[directionName]) {
-                directionStats[directionName] = {};
-            }
-
-            allStatuses.forEach(status => {
-                if (!directionStats[directionName][status]) {
-                    directionStats[directionName][status] = 0;
+                if (status && directionStats[directionName]?.hasOwnProperty(status)) {
+                    directionStats[directionName][status] += 1;
                 }
             });
         });
@@ -1268,7 +1255,7 @@ async getDirectionGlobalProgressPlafone(
         // Convertir en format final
         const result = Object.entries(directionStats).map(([direction, stats]) => ({
             direction,
-            Stats: Object.entries(stats).map(([status, nombre]) => ({ status, nombre }))
+            Stats: allStatuses.map(status => ({ status, nombre: stats[status] || 0 }))
         }));
 
         return result;
@@ -1276,6 +1263,7 @@ async getDirectionGlobalProgressPlafone(
         throw new BadRequestException('Erreur lors du calcul des statistiques', error.message);
     }
 }
+
 
 
     async updateAllActivities() {
