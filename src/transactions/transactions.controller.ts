@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -39,6 +39,17 @@ async createTransactionMultiple(
   @Get()
   findAll() {
     return this.transactionsService.findAll();
+  }
+
+  @Get('by-department/:departmentCode')
+  findByDepartment(
+    @Param('departmentCode') departmentCode: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const p = page ? parseInt(page, 10) : 1;
+    const l = limit ? parseInt(limit, 10) : 20;
+    return this.transactionsService.findByDepartmentCode(departmentCode, p, l);
   }
 
   @Get(':id')

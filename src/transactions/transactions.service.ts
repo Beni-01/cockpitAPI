@@ -52,6 +52,104 @@ export class TransactionsService {
     }
   }
 
+ async findByDepartmentCode(departmentCodeOrId: string, page = 1, limit = 20) {
+  try {
+    const take = Math.min(limit, 100);
+    const skip = (Math.max(page, 1) - 1) * take;
+
+    // Determine if numeric id
+    const deptIdNum = Number(departmentCodeOrId);
+    const isId = Number.isInteger(deptIdNum) && deptIdNum > 0;
+
+    // Resolve department id if code provided
+    let deptId: number | null = null;
+    if (isId) {
+      deptId = deptIdNum;
+    } else {
+      const deptRow: any[] = await this.transactionRepository.query(
+        'SELECT id FROM department WHERE code = ? LIMIT 1',
+        [departmentCodeOrId],
+      );
+      console.log("deptRow",deptRow)
+      if (deptRow.length === 0) {
+        return { data: [], meta: { total: 0, page: Math.max(page, 1), limit: take, pages: 0 } };
+      }
+      deptId = deptRow[0].id;
+    }
+
+    // Get all budget_tache ids for this department
+    const tacheRows: any[] = await this.transactionRepository.query(
+      'SELECT id FROM budget_tache WHERE department_id = ?',
+      [deptId],
+    );
+    const tacheIds = tacheRows.map(r => r.id);
+console.log("tacheIds",tacheIds)
+    // Find budgets that belong to those taches or the department
+    let budgetRows: any[] = [];
+    if (tacheIds.length > 0) {
+      budgetRows = await this.transactionRepository.query(
+        'SELECT id FROM budget WHERE tache_id IN (?) OR department_id = ?',
+        [tacheIds, deptId],
+      );
+    } else {
+      budgetRows = await this.transactionRepository.query(
+        'SELECT id FROM budget WHERE department_id = ?',
+        [deptId],
+      );
+    }
+    const budgetIds = budgetRows.map(r => r.id);
+
+    // Build query: transactions where centreId IN (budgetIds) OR centre.department_id = deptId
+    const qb = this.transactionRepository
+      .createQueryBuilder('transaction')
+      .leftJoinAndSelect('transaction.centre', 'centre')
+      .orderBy('transaction.createdAt', 'DESC')
+      .skip(skip)
+      .take(take);
+
+    if (budgetIds.length > 0) {
+      qb.where('(transaction.centreId IN (:...budgetIds) OR centre.department_id = :deptId)', {
+        budgetIds,
+        deptId,
+      });
+    } else {
+      qb.where('centre.department_id = :deptId', { deptId });
+    }
+
+      const [items, total] = await qb.getManyAndCount();
+
+      // Whitelist minimal response fields for each transaction and its centre
+      const sanitized = items.map((it: any) => ({
+        createdAt: it.createdAt,
+        id: it.id,
+        depense: it.depense,
+        devise: it.devise,
+        centreId: it.centreId,
+        centre: it.centre
+        ? {
+          id: it.centre.id,
+          costCenter: it.centre.costCenter,
+          descriptionCc: it.centre.descriptionCc,
+          }
+        : null,
+      }));
+
+      const formatted = this.httpDataFormater.format(sanitized, HttpStatus.OK);
+
+    return {
+      data: formatted,
+      meta: {
+        total,
+        page: Math.max(page, 1),
+        limit: take,
+        pages: Math.ceil(total / take) || 0,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching transactions by department (tache IN):', error);
+    throw new NotFoundException();
+  }
+}
   async findOne(id: number) {
     try{
       const transaction=await this.transactionRepository.find({
