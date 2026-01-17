@@ -56,8 +56,8 @@ export class DataTransformerService {
         const budgetData: Partial<BudgetData> = {};
 
         // Log the raw row data for debugging
-        this.logger.debug(`Raw row data: ${JSON.stringify(row)}`);
-        this.logger.debug(`Column mapping: ${JSON.stringify(columnMapping)}`);
+        // this.logger.debug(`Raw row data: ${JSON.stringify(row)}`);
+        // this.logger.debug(`Column mapping: ${JSON.stringify(columnMapping)}`);
 
         // If no column mapping, use default field names
         if (!columnMapping || Object.keys(columnMapping).length === 0) {
@@ -102,7 +102,7 @@ export class DataTransformerService {
             budgetData.status = 'active';
         }
 
-        this.logger.debug(`Transformed budget data: ${JSON.stringify(budgetData)}`);
+        // this.logger.debug(`Transformed budget data: ${JSON.stringify(budgetData)}`);
 
         return budgetData;
     }

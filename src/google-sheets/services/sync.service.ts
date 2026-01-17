@@ -50,9 +50,8 @@ export class SyncService {
         this.logger.log('Starting scheduled sync...');
 
         const activeConfigs = await this.sheetConfigRepository.find({
-            where: { isActive: true },
+            where: { is_active: true },
         });
-
         for (const config of activeConfigs) {
             try {
                 await this.syncSheet(config.id);
@@ -92,7 +91,7 @@ export class SyncService {
                 throw new Error(`Configuration ${configId} not found`);
             }
 
-            if (!config.isActive) {
+            if (!config.is_active) {
                 throw new Error(`Configuration ${configId} is not active`);
             }
 
@@ -116,6 +115,7 @@ export class SyncService {
                 config.spreadsheetId,
                 range,
             );
+            console.log("sheetData", sheetData[10])
 
             if (!sheetData || sheetData.length === 0) {
                 this.logger.warn(`No data found in sheet for config ${configId}`);
@@ -154,7 +154,6 @@ export class SyncService {
 
                 return syncResult;
             }
-
             // Transform and sync data
             const result = await this.transformAndSyncData(config, sheetData, syncLog);
 

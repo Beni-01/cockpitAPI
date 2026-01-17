@@ -37,7 +37,7 @@ export class SheetReaderService {
     ): Promise<SheetData | null> {
         try {
             const sheets = await this.googleAuthService.getSheetsAPI();
-
+            // console.log("sheets",sheets)
             const response = await sheets.spreadsheets.values.get({
                 spreadsheetId,
                 range,
