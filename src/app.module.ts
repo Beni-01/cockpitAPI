@@ -107,10 +107,10 @@ import { CategoryModule } from './category/category.module';
   providers: [
     AppService,
 
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: JwtAuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
 
     {
       provide: APP_INTERCEPTOR,
