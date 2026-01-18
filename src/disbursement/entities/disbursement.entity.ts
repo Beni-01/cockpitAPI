@@ -52,6 +52,9 @@ export class Disbursement extends Timestamp {
   @Column({ type: 'varchar', length: 100, nullable: true })
   month: string;
 
+  @Column({ type: 'date', nullable: true })
+  periodDate: Date; 
+
   @Column({ type: 'varchar', length: 100, nullable: true })
   period: string;
 

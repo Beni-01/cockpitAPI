@@ -82,6 +82,10 @@ export class CreateDisbursementDto {
   @IsString()
   period?: string;
 
+  @IsOptional()
+  @IsString()
+  periodDate?: string; 
+
   @ApiPropertyOptional({ example: 'Notes additionnelles' })
   @IsOptional()
   @IsString()
