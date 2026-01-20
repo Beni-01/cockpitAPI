@@ -22,7 +22,8 @@ export class GoogleAuthService {
             const keyFilePath = path.join(
                 process.cwd(),
                 'config',
-                'google-service-account.json',
+                'service.json'
+                // 'google-service-account.json',
             );
 
             // Check if key file exists

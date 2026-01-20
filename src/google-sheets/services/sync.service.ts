@@ -47,6 +47,14 @@ export class SyncService {
      */
     @Cron(CronExpression.EVERY_10_MINUTES)
     async scheduledSync() {
+        // Allow runtime disabling of scheduled syncs via environment variable.
+        // Set GOOGLE_SHEETS_SCHEDULE_ENABLED=false to prevent scheduled runs.
+        const flag = process.env.GOOGLE_SHEETS_SCHEDULE_ENABLED;
+        if (flag && String(flag).toLowerCase() === 'false') {
+            this.logger.log('Scheduled sync disabled via GOOGLE_SHEETS_SCHEDULE_ENABLED=false');
+            return;
+        }
+
         this.logger.log('Starting scheduled sync...');
 
         const activeConfigs = await this.sheetConfigRepository.find({
@@ -434,6 +442,8 @@ export class SyncService {
 
         // Fields to track for changes
         const fieldsToTrack = [
+            'department_name',
+            'external_id',
             'project_name',
             'budget_category',
             'allocated_amount',
@@ -446,6 +456,8 @@ export class SyncService {
             'fiscal_year',
             'quarter',
             'month',
+            'start_date',
+            'end_date',
             'status',
             'approval_status',
             'notes',
