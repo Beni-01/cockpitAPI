@@ -62,75 +62,57 @@ private readonly DIRECTION_VALUES = [
 
   // ==================== CRUD OPERATIONS ====================
 
-/**
- * Créer un nouveau décaissement
- */
-async create(createDisbursementDto: CreateDisbursementDto): Promise<Disbursement> {
-  const queryRunner = this.dataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction();
+  /**
+   * Créer un nouveau décaissement
+   */
+  async create(createDisbursementDto: CreateDisbursementDto): Promise<Disbursement> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-  try {
-    this.logger.log(
-      `Creating disbursement with reference: ${createDisbursementDto.reference}`,
-    );
+    try {
+      this.logger.log(`Creating disbursement with reference: ${createDisbursementDto.reference}`);
 
-    // Valider le statut uniquement
-    if (
-      createDisbursementDto.status &&
-      !this.STATUS_VALUES.includes(
-        createDisbursementDto.status.toUpperCase(),
-      )
-    ) {
-      throw new BadRequestException(
-        `Statut invalide. Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`,
-      );
+      // Valider le statut
+      if (createDisbursementDto.status && !this.STATUS_VALUES.includes(createDisbursementDto.status.toUpperCase())) {
+        throw new BadRequestException(`Statut invalide. Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`);
+      }
+
+      // Extraire le mois et la période
+      const documentDate = new Date(createDisbursementDto.documentDate);
+      const month = createDisbursementDto.month || this.getMonthName(documentDate);
+      const period = createDisbursementDto.period || this.generatePeriod(documentDate);
+
+      // Créer le décaissement
+      const disbursement = queryRunner.manager.create(Disbursement, {
+        ...createDisbursementDto,
+        documentDate,
+        month,
+        period,
+        status: createDisbursementDto.status || "EN ATTENTE",
+      });
+
+      const savedDisbursement = await queryRunner.manager.save(disbursement);
+      
+      await queryRunner.commitTransaction();
+      this.logger.log(`Disbursement created successfully with ID: ${savedDisbursement.id}`);
+      
+      return savedDisbursement;
+
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      
+      this.logger.error(`Failed to create disbursement: ${error.message}`, error.stack);
+      
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      
+      throw new InternalServerErrorException('Erreur lors de la création du décaissement');
+    } finally {
+      await queryRunner.release();
     }
-
-    // Extraire le mois et la période
-    const documentDate = new Date(createDisbursementDto.documentDate);
-    const month =
-      createDisbursementDto.month || this.getMonthName(documentDate);
-    const period =
-      createDisbursementDto.period || this.generatePeriod(documentDate);
-
-    // Créer le décaissement
-    const disbursement = queryRunner.manager.create(Disbursement, {
-      ...createDisbursementDto,
-      documentDate,
-      month,
-      period,
-      status: createDisbursementDto.status || 'EN ATTENTE',
-    });
-
-    const savedDisbursement = await queryRunner.manager.save(disbursement);
-
-    await queryRunner.commitTransaction();
-    this.logger.log(
-      `Disbursement created successfully with ID: ${savedDisbursement.id}`,
-    );
-
-    return savedDisbursement;
-  } catch (error) {
-    await queryRunner.rollbackTransaction();
-
-    this.logger.error(
-      `Failed to create disbursement: ${error.message}`,
-      error.stack,
-    );
-
-    if (error instanceof BadRequestException) {
-      throw error;
-    }
-
-    throw new InternalServerErrorException(
-      'Erreur lors de la création du décaissement',
-    );
-  } finally {
-    await queryRunner.release();
   }
-}
-
 
 
 async createBulk(
@@ -140,89 +122,48 @@ async createBulk(
   this.logger.debug('createBulk() called');
 
   if (!Array.isArray(createDisbursementDtos) || createDisbursementDtos.length === 0) {
-    this.logger.warn('Payload is empty or not an array');
     throw new BadRequestException('Le payload doit être un tableau non vide');
   }
-
-  this.logger.debug(
-    `Payload received (${createDisbursementDtos.length} items): ${JSON.stringify(createDisbursementDtos)}`,
-  );
 
   const queryRunner = this.dataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
   try {
-    const disbursements: Disbursement[] = createDisbursementDtos.map((dto, index) => {
-
-      this.logger.debug(`Processing DTO [${index}] : ${JSON.stringify(dto)}`);
-
-      /* ===== Direction ===== */
-      const direction = dto.direction?.toUpperCase();
-      if (!this.DIRECTION_VALUES.includes(direction)) {
-        this.logger.error(`Invalid direction [${index}]`, direction);
-        throw new BadRequestException(
-          `Direction invalide (${dto.reference})`,
-        );
-      }
-
-      /* ===== Source de paiement ===== */
-      const paymentSource = dto.paymentSource?.toUpperCase();
-      if (!this.PAYMENT_SOURCES.includes(paymentSource)) {
-        this.logger.error(`Invalid paymentSource [${index}]`, paymentSource);
-        throw new BadRequestException(
-          `Source de paiement invalide (${dto.reference})`,
-        );
-      }
-
-      /* ===== Statut ===== */
-      const status = dto.status?.toUpperCase();
-      if (status && !this.STATUS_VALUES.includes(status)) {
-        this.logger.error(`Invalid status [${index}]`, status);
-        throw new BadRequestException(
-          `Statut invalide (${dto.reference})`,
-        );
-      }
+    const disbursements = createDisbursementDtos.map((dto, index) => {
 
       /* ===== Dates ===== */
       const documentDate = new Date(dto.documentDate);
       if (isNaN(documentDate.getTime())) {
-        this.logger.error(`Invalid documentDate [${index}]`, dto.documentDate);
         throw new BadRequestException(
           `documentDate invalide (${dto.reference})`,
+        );
+      }
+
+      const periodDate = dto.periodDate
+        ? new Date(dto.periodDate)
+        : null;
+
+      if (periodDate && isNaN(periodDate.getTime())) {
+        throw new BadRequestException(
+          `periodDate invalide (${dto.reference})`,
         );
       }
 
       const month = dto.month || this.getMonthName(documentDate);
       const period = dto.period || this.generatePeriod(documentDate);
 
-      /* ===== Entity final ===== */
-      const entity = queryRunner.manager.create(Disbursement, {
+      return queryRunner.manager.create(Disbursement, {
         ...dto,
-        direction,
-        paymentSource,
-        status: status || 'EN ATTENTE',
         documentDate,
+        periodDate,
         month,
         period,
+        status: dto.status || 'EN ATTENTE',
       });
-
-      this.logger.debug(
-        `Entity prepared [${index}]: ${JSON.stringify(entity)}`,
-      );
-
-      return entity;
     });
 
-    this.logger.debug(
-      `Saving ${disbursements.length} disbursements to database`,
-    );
-
     const saved = await queryRunner.manager.save(disbursements);
-
-    this.logger.debug(
-      `Saved entities: ${JSON.stringify(saved)}`,
-    );
 
     await queryRunner.commitTransaction();
     this.logger.log(`Bulk create successful (${saved.length})`);
@@ -233,20 +174,7 @@ async createBulk(
     await queryRunner.rollbackTransaction();
 
     this.logger.error('Bulk create failed');
-    this.logger.error(`Message: ${error.message}`);
-    this.logger.error(`Stack: ${error.stack}`);
-
-    // ⚠️ Log SQL brut si TypeORM
-    if (error?.driverError) {
-      this.logger.error(
-        `Driver error: ${JSON.stringify(error.driverError)}`,
-      );
-    }
-
-    if (error?.query) {
-      this.logger.error(`SQL Query: ${error.query}`);
-      this.logger.error(`SQL Parameters: ${JSON.stringify(error.parameters)}`);
-    }
+    this.logger.error(error.message);
 
     if (error instanceof BadRequestException) {
       throw error;
@@ -259,6 +187,7 @@ async createBulk(
     await queryRunner.release();
   }
 }
+
 
 
   /**
