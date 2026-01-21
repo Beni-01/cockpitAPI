@@ -136,71 +136,117 @@ private readonly DIRECTION_VALUES = [
 async createBulk(
   createDisbursementDtos: CreateDisbursementDto[],
 ): Promise<Disbursement[]> {
+
+  this.logger.debug('createBulk() called');
+
   if (!Array.isArray(createDisbursementDtos) || createDisbursementDtos.length === 0) {
+    this.logger.warn('Payload is empty or not an array');
     throw new BadRequestException('Le payload doit être un tableau non vide');
   }
+
+  this.logger.debug(
+    `Payload received (${createDisbursementDtos.length} items): ${JSON.stringify(createDisbursementDtos)}`,
+  );
 
   const queryRunner = this.dataSource.createQueryRunner();
   await queryRunner.connect();
   await queryRunner.startTransaction();
 
   try {
-    this.logger.log(`Bulk creating ${createDisbursementDtos.length} disbursements`);
+    const disbursements: Disbursement[] = createDisbursementDtos.map((dto, index) => {
 
-    /* =========================
-       Validation métier + mapping
-       ========================= */
-    const disbursements: Disbursement[] = createDisbursementDtos.map(dto => {
-      // Direction
-      if (!this.DIRECTION_VALUES.includes(dto.direction.toUpperCase())) {
+      this.logger.debug(`Processing DTO [${index}] : ${JSON.stringify(dto)}`);
+
+      /* ===== Direction ===== */
+      const direction = dto.direction?.toUpperCase();
+      if (!this.DIRECTION_VALUES.includes(direction)) {
+        this.logger.error(`Invalid direction [${index}]`, direction);
         throw new BadRequestException(
-          `Direction invalide (${dto.reference}). Valeurs acceptées: ${this.DIRECTION_VALUES.join(', ')}`,
+          `Direction invalide (${dto.reference})`,
         );
       }
 
-      // Source de paiement
-      if (!this.PAYMENT_SOURCES.includes(dto.paymentSource.toUpperCase())) {
+      /* ===== Source de paiement ===== */
+      const paymentSource = dto.paymentSource?.toUpperCase();
+      if (!this.PAYMENT_SOURCES.includes(paymentSource)) {
+        this.logger.error(`Invalid paymentSource [${index}]`, paymentSource);
         throw new BadRequestException(
-          `Source de paiement invalide (${dto.reference}). Valeurs acceptées: ${this.PAYMENT_SOURCES.join(', ')}`,
+          `Source de paiement invalide (${dto.reference})`,
         );
       }
 
-      // Statut
-      if (dto.status && !this.STATUS_VALUES.includes(dto.status.toUpperCase())) {
+      /* ===== Statut ===== */
+      const status = dto.status?.toUpperCase();
+      if (status && !this.STATUS_VALUES.includes(status)) {
+        this.logger.error(`Invalid status [${index}]`, status);
         throw new BadRequestException(
-          `Statut invalide (${dto.reference}). Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`,
+          `Statut invalide (${dto.reference})`,
         );
       }
 
+      /* ===== Dates ===== */
       const documentDate = new Date(dto.documentDate);
+      if (isNaN(documentDate.getTime())) {
+        this.logger.error(`Invalid documentDate [${index}]`, dto.documentDate);
+        throw new BadRequestException(
+          `documentDate invalide (${dto.reference})`,
+        );
+      }
+
       const month = dto.month || this.getMonthName(documentDate);
       const period = dto.period || this.generatePeriod(documentDate);
 
-      return queryRunner.manager.create(Disbursement, {
+      /* ===== Entity final ===== */
+      const entity = queryRunner.manager.create(Disbursement, {
         ...dto,
+        direction,
+        paymentSource,
+        status: status || 'EN ATTENTE',
         documentDate,
         month,
         period,
-        status: dto.status || 'EN ATTENTE',
       });
+
+      this.logger.debug(
+        `Entity prepared [${index}]: ${JSON.stringify(entity)}`,
+      );
+
+      return entity;
     });
 
-    /* =========================
-       Sauvegarde en masse
-       ========================= */
-    const savedDisbursements = await queryRunner.manager.save(disbursements);
-
-    await queryRunner.commitTransaction();
-
-    this.logger.log(
-      `Bulk disbursement created successfully (${savedDisbursements.length})`,
+    this.logger.debug(
+      `Saving ${disbursements.length} disbursements to database`,
     );
 
-    return savedDisbursements;
+    const saved = await queryRunner.manager.save(disbursements);
+
+    this.logger.debug(
+      `Saved entities: ${JSON.stringify(saved)}`,
+    );
+
+    await queryRunner.commitTransaction();
+    this.logger.log(`Bulk create successful (${saved.length})`);
+
+    return saved;
 
   } catch (error) {
     await queryRunner.rollbackTransaction();
-    this.logger.error(`Bulk create failed: ${error.message}`, error.stack);
+
+    this.logger.error('Bulk create failed');
+    this.logger.error(`Message: ${error.message}`);
+    this.logger.error(`Stack: ${error.stack}`);
+
+    // ⚠️ Log SQL brut si TypeORM
+    if (error?.driverError) {
+      this.logger.error(
+        `Driver error: ${JSON.stringify(error.driverError)}`,
+      );
+    }
+
+    if (error?.query) {
+      this.logger.error(`SQL Query: ${error.query}`);
+      this.logger.error(`SQL Parameters: ${JSON.stringify(error.parameters)}`);
+    }
 
     if (error instanceof BadRequestException) {
       throw error;
@@ -213,6 +259,7 @@ async createBulk(
     await queryRunner.release();
   }
 }
+
 
   /**
    * Récupérer tous les décaissements avec filtres

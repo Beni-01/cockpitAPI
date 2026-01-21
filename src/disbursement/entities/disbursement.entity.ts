@@ -40,7 +40,7 @@ export class Disbursement extends Timestamp {
   @Column({ type: 'varchar', length: 100 })
   paymentSource: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable:true })
   supportingDocumentation: string;
 
   @Column({ 
