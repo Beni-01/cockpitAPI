@@ -17,7 +17,8 @@ export class DisbursementService {
     "NON EXECUTE", 
     "ENCOURS D EXECUTION",
     "COORDONEES BANCAIRES MANQUANTES",
-    "EN ATTENTE"
+    "EN ATTENTE",
+    "PAYE"
   ];
 
   
@@ -61,76 +62,75 @@ private readonly DIRECTION_VALUES = [
 
   // ==================== CRUD OPERATIONS ====================
 
-  /**
-   * Créer un nouveau décaissement
-   */
-  async create(createDisbursementDto: CreateDisbursementDto): Promise<Disbursement> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+/**
+ * Créer un nouveau décaissement
+ */
+async create(createDisbursementDto: CreateDisbursementDto): Promise<Disbursement> {
+  const queryRunner = this.dataSource.createQueryRunner();
+  await queryRunner.connect();
+  await queryRunner.startTransaction();
 
-    try {
-      this.logger.log(`Creating disbursement with reference: ${createDisbursementDto.reference}`);
+  try {
+    this.logger.log(
+      `Creating disbursement with reference: ${createDisbursementDto.reference}`,
+    );
 
-      // Vérifier la référence unique
-      const existing = await queryRunner.manager.findOne(Disbursement, {
-        where: { reference: createDisbursementDto.reference }
-      });
-
-      if (existing) {
-        throw new BadRequestException(`La référence ${createDisbursementDto.reference} existe déjà`);
-      }
-
-      // Valider la direction
-      if (!this.DIRECTION_VALUES.includes(createDisbursementDto.direction.toUpperCase())) {
-        throw new BadRequestException(`Direction invalide. Valeurs acceptées: ${this.DIRECTION_VALUES.join(', ')}`);
-      }
-
-      // Valider la source de paiement
-      if (!this.PAYMENT_SOURCES.includes(createDisbursementDto.paymentSource.toUpperCase())) {
-        throw new BadRequestException(`Source de paiement invalide. Valeurs acceptées: ${this.PAYMENT_SOURCES.join(', ')}`);
-      }
-
-      // Valider le statut
-      if (createDisbursementDto.status && !this.STATUS_VALUES.includes(createDisbursementDto.status.toUpperCase())) {
-        throw new BadRequestException(`Statut invalide. Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`);
-      }
-
-      // Extraire le mois et la période
-      const documentDate = new Date(createDisbursementDto.documentDate);
-      const month = createDisbursementDto.month || this.getMonthName(documentDate);
-      const period = createDisbursementDto.period || this.generatePeriod(documentDate);
-
-      // Créer le décaissement
-      const disbursement = queryRunner.manager.create(Disbursement, {
-        ...createDisbursementDto,
-        documentDate,
-        month,
-        period,
-        status: createDisbursementDto.status || "EN ATTENTE",
-      });
-
-      const savedDisbursement = await queryRunner.manager.save(disbursement);
-      
-      await queryRunner.commitTransaction();
-      this.logger.log(`Disbursement created successfully with ID: ${savedDisbursement.id}`);
-      
-      return savedDisbursement;
-
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      
-      this.logger.error(`Failed to create disbursement: ${error.message}`, error.stack);
-      
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      
-      throw new InternalServerErrorException('Erreur lors de la création du décaissement');
-    } finally {
-      await queryRunner.release();
+    // Valider le statut uniquement
+    if (
+      createDisbursementDto.status &&
+      !this.STATUS_VALUES.includes(
+        createDisbursementDto.status.toUpperCase(),
+      )
+    ) {
+      throw new BadRequestException(
+        `Statut invalide. Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`,
+      );
     }
+
+    // Extraire le mois et la période
+    const documentDate = new Date(createDisbursementDto.documentDate);
+    const month =
+      createDisbursementDto.month || this.getMonthName(documentDate);
+    const period =
+      createDisbursementDto.period || this.generatePeriod(documentDate);
+
+    // Créer le décaissement
+    const disbursement = queryRunner.manager.create(Disbursement, {
+      ...createDisbursementDto,
+      documentDate,
+      month,
+      period,
+      status: createDisbursementDto.status || 'EN ATTENTE',
+    });
+
+    const savedDisbursement = await queryRunner.manager.save(disbursement);
+
+    await queryRunner.commitTransaction();
+    this.logger.log(
+      `Disbursement created successfully with ID: ${savedDisbursement.id}`,
+    );
+
+    return savedDisbursement;
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+
+    this.logger.error(
+      `Failed to create disbursement: ${error.message}`,
+      error.stack,
+    );
+
+    if (error instanceof BadRequestException) {
+      throw error;
+    }
+
+    throw new InternalServerErrorException(
+      'Erreur lors de la création du décaissement',
+    );
+  } finally {
+    await queryRunner.release();
   }
+}
+
 
 
 async createBulk(
