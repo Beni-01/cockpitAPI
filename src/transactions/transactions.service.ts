@@ -151,7 +151,10 @@ export class TransactionsService {
   }
 }
 
-async removeMultiple(transactions: DeleteTransactionObjectDto[]): Promise<void> {
+async removeMultiple(
+  transactions: DeleteTransactionObjectDto[],
+): Promise<void> {
+
   if (!transactions || transactions.length === 0) {
     throw new BadRequestException('Le tableau des transactions est vide');
   }
@@ -159,25 +162,69 @@ async removeMultiple(transactions: DeleteTransactionObjectDto[]): Promise<void> 
   let totalDeleted = 0;
 
   for (const tx of transactions) {
-    const query = this.transactionRepository.createQueryBuilder()
-      .softDelete();
 
-    // Ajouter dynamiquement les critères pour chaque objet
-    if (tx.ref) query.andWhere('ref = :ref', { ref: tx.ref });
-    if (tx.description) query.andWhere('description = :description', { description: tx.description });
-    if (tx.code) query.andWhere('code = :code', { code: tx.code });
-    if (tx.devise) query.andWhere('devise = :devise', { devise: tx.devise });
-    if (tx.devise_convert) query.andWhere('devise_convert = :devise_convert', { devise_convert: tx.devise_convert });
-    if (tx.depense !== undefined) query.andWhere('depense = :depense', { depense: tx.depense });
+    const hasCriteria =
+      tx.ref ||
+      tx.description ||
+      tx.devise ||
+      tx.devise_convert ||
+      tx.depense !== undefined;
+
+    if (!hasCriteria) {
+      throw new BadRequestException(
+        'Chaque objet doit contenir au moins un critère',
+      );
+    }
+
+    const query = this.transactionRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        centreId: null,
+        deletedAt: () => 'CURRENT_TIMESTAMP',
+      });
+
+    // critères dynamiques
+    if (tx.ref) {
+      query.andWhere('ref = :ref', { ref: tx.ref });
+    }
+
+    if (tx.description) {
+      query.andWhere('description = :description', {
+        description: tx.description,
+      });
+    }
+
+    if (tx.devise) {
+      query.andWhere('devise = :devise', { devise: tx.devise });
+    }
+
+    if (tx.devise_convert) {
+      query.andWhere('devise_convert = :devise_convert', {
+        devise_convert: tx.devise_convert,
+      });
+    }
+
+    if (tx.depense !== undefined) {
+      query.andWhere('depense = :depense', {
+        depense: tx.depense,
+      });
+    }
+
+    // éviter de retraiter des lignes déjà supprimées
+    query.andWhere('deletedAt IS NULL');
 
     const result = await query.execute();
-    totalDeleted += result.affected || 0;
+    totalDeleted += result.affected ?? 0;
   }
 
   if (totalDeleted === 0) {
-    throw new NotFoundException('Aucune transaction correspondante trouvée dans le tableau fourni.');
+    throw new NotFoundException(
+      'Aucune transaction correspondante trouvée dans le tableau fourni.',
+    );
   }
 }
+
 
 
 

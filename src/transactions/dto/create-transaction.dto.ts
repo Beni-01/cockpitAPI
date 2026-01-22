@@ -64,10 +64,6 @@ export class DeleteTransactionObjectDto {
 
   @IsString()
   @IsOptional()
-  code?: string;
-
-  @IsString()
-  @IsOptional()
   devise?: string;
 
   @IsString()
