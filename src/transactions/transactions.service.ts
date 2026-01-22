@@ -1,5 +1,5 @@
 import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { CreateTransactionDto, DeleteTransactionObjectDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -94,30 +94,6 @@ export class TransactionsService {
 
         return !!transaction; // Retourne true si trouvé, false sinon
 
-        // Alternative avec .query() sécurisée si vraiment nécessaire
-        /*
-        const query = `
-            SELECT * FROM transaction 
-            WHERE centreId = ? 
-            AND depense = ? 
-            AND devise = ? 
-            AND description = ? 
-            AND ref = ? 
-            AND agentId = ?
-            LIMIT 1;
-        `;
-        
-        const results = await this.transactionRepository.query(query, [
-            centreId, 
-            depense, 
-            devise, 
-            description, 
-            ref, 
-            agentId
-        ]);
-        
-        return results.length > 0;
-        */
     } catch (error) {
         console.error('Error checking transaction existence:', error);
         throw new InternalServerErrorException(
@@ -157,6 +133,100 @@ export class TransactionsService {
       throw new NotFoundException(`TDR avec l'id ${id} introuvable`); // Lève une exception si aucun TDR n'est supprimé
     }
   }
+
+  // Méthode pour supprimer des transactions à partir d'une liste d'IDs
+ async removeByIds(ids: number[]): Promise<void> {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw new BadRequestException(
+      'La liste des identifiants ne doit pas être vide',
+    );
+  }
+
+  const result = await this.transactionRepository.softDelete(ids);
+
+  if (!result.affected || result.affected === 0) {
+    throw new NotFoundException(
+      `Aucune transaction trouvée pour les identifiants fournis`,
+    );
+  }
+}
+
+async removeMultiple(
+  transactions: DeleteTransactionObjectDto[],
+): Promise<void> {
+
+  if (!transactions || transactions.length === 0) {
+    throw new BadRequestException('Le tableau des transactions est vide');
+  }
+
+  let totalDeleted = 0;
+
+  for (const tx of transactions) {
+
+    const hasCriteria =
+      tx.ref ||
+      tx.description ||
+      tx.devise ||
+      tx.devise_convert ||
+      tx.depense !== undefined;
+
+    if (!hasCriteria) {
+      throw new BadRequestException(
+        'Chaque objet doit contenir au moins un critère',
+      );
+    }
+
+    const query = this.transactionRepository
+      .createQueryBuilder()
+      .update()
+      .set({
+        centreId: null,
+        deletedAt: () => 'CURRENT_TIMESTAMP',
+      });
+
+    // critères dynamiques
+    if (tx.ref) {
+      query.andWhere('ref = :ref', { ref: tx.ref });
+    }
+
+    if (tx.description) {
+      query.andWhere('description = :description', {
+        description: tx.description,
+      });
+    }
+
+    if (tx.devise) {
+      query.andWhere('devise = :devise', { devise: tx.devise });
+    }
+
+    if (tx.devise_convert) {
+      query.andWhere('devise_convert = :devise_convert', {
+        devise_convert: tx.devise_convert,
+      });
+    }
+
+    if (tx.depense !== undefined) {
+      query.andWhere('depense = :depense', {
+        depense: tx.depense,
+      });
+    }
+
+    // éviter de retraiter des lignes déjà supprimées
+    query.andWhere('deletedAt IS NULL');
+
+    const result = await query.execute();
+    totalDeleted += result.affected ?? 0;
+  }
+
+  if (totalDeleted === 0) {
+    throw new NotFoundException(
+      'Aucune transaction correspondante trouvée dans le tableau fourni.',
+    );
+  }
+}
+
+
+
 
 
 // Total consommé

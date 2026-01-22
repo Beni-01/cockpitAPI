@@ -17,7 +17,8 @@ export class DisbursementService {
     "NON EXECUTE", 
     "ENCOURS D EXECUTION",
     "COORDONEES BANCAIRES MANQUANTES",
-    "EN ATTENTE"
+    "EN ATTENTE",
+    "PAYE"
   ];
 
   
@@ -72,25 +73,6 @@ private readonly DIRECTION_VALUES = [
     try {
       this.logger.log(`Creating disbursement with reference: ${createDisbursementDto.reference}`);
 
-      // Vérifier la référence unique
-      const existing = await queryRunner.manager.findOne(Disbursement, {
-        where: { reference: createDisbursementDto.reference }
-      });
-
-      if (existing) {
-        throw new BadRequestException(`La référence ${createDisbursementDto.reference} existe déjà`);
-      }
-
-      // Valider la direction
-      if (!this.DIRECTION_VALUES.includes(createDisbursementDto.direction.toUpperCase())) {
-        throw new BadRequestException(`Direction invalide. Valeurs acceptées: ${this.DIRECTION_VALUES.join(', ')}`);
-      }
-
-      // Valider la source de paiement
-      if (!this.PAYMENT_SOURCES.includes(createDisbursementDto.paymentSource.toUpperCase())) {
-        throw new BadRequestException(`Source de paiement invalide. Valeurs acceptées: ${this.PAYMENT_SOURCES.join(', ')}`);
-      }
-
       // Valider le statut
       if (createDisbursementDto.status && !this.STATUS_VALUES.includes(createDisbursementDto.status.toUpperCase())) {
         throw new BadRequestException(`Statut invalide. Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`);
@@ -136,6 +118,9 @@ private readonly DIRECTION_VALUES = [
 async createBulk(
   createDisbursementDtos: CreateDisbursementDto[],
 ): Promise<Disbursement[]> {
+
+  this.logger.debug('createBulk() called');
+
   if (!Array.isArray(createDisbursementDtos) || createDisbursementDtos.length === 0) {
     throw new BadRequestException('Le payload doit être un tableau non vide');
   }
@@ -145,62 +130,51 @@ async createBulk(
   await queryRunner.startTransaction();
 
   try {
-    this.logger.log(`Bulk creating ${createDisbursementDtos.length} disbursements`);
+    const disbursements = createDisbursementDtos.map((dto, index) => {
 
-    /* =========================
-       Validation métier + mapping
-       ========================= */
-    const disbursements: Disbursement[] = createDisbursementDtos.map(dto => {
-      // Direction
-      if (!this.DIRECTION_VALUES.includes(dto.direction.toUpperCase())) {
-        throw new BadRequestException(
-          `Direction invalide (${dto.reference}). Valeurs acceptées: ${this.DIRECTION_VALUES.join(', ')}`,
-        );
-      }
-
-      // Source de paiement
-      if (!this.PAYMENT_SOURCES.includes(dto.paymentSource.toUpperCase())) {
-        throw new BadRequestException(
-          `Source de paiement invalide (${dto.reference}). Valeurs acceptées: ${this.PAYMENT_SOURCES.join(', ')}`,
-        );
-      }
-
-      // Statut
-      if (dto.status && !this.STATUS_VALUES.includes(dto.status.toUpperCase())) {
-        throw new BadRequestException(
-          `Statut invalide (${dto.reference}). Valeurs acceptées: ${this.STATUS_VALUES.join(', ')}`,
-        );
-      }
-
+      /* ===== Dates ===== */
       const documentDate = new Date(dto.documentDate);
+      if (isNaN(documentDate.getTime())) {
+        throw new BadRequestException(
+          `documentDate invalide (${dto.reference})`,
+        );
+      }
+
+      const periodDate = dto.periodDate
+        ? new Date(dto.periodDate)
+        : null;
+
+      if (periodDate && isNaN(periodDate.getTime())) {
+        throw new BadRequestException(
+          `periodDate invalide (${dto.reference})`,
+        );
+      }
+
       const month = dto.month || this.getMonthName(documentDate);
       const period = dto.period || this.generatePeriod(documentDate);
 
       return queryRunner.manager.create(Disbursement, {
         ...dto,
         documentDate,
+        periodDate,
         month,
         period,
         status: dto.status || 'EN ATTENTE',
       });
     });
 
-    /* =========================
-       Sauvegarde en masse
-       ========================= */
-    const savedDisbursements = await queryRunner.manager.save(disbursements);
+    const saved = await queryRunner.manager.save(disbursements);
 
     await queryRunner.commitTransaction();
+    this.logger.log(`Bulk create successful (${saved.length})`);
 
-    this.logger.log(
-      `Bulk disbursement created successfully (${savedDisbursements.length})`,
-    );
-
-    return savedDisbursements;
+    return saved;
 
   } catch (error) {
     await queryRunner.rollbackTransaction();
-    this.logger.error(`Bulk create failed: ${error.message}`, error.stack);
+
+    this.logger.error('Bulk create failed');
+    this.logger.error(error.message);
 
     if (error instanceof BadRequestException) {
       throw error;
@@ -213,6 +187,8 @@ async createBulk(
     await queryRunner.release();
   }
 }
+
+
 
   /**
    * Récupérer tous les décaissements avec filtres

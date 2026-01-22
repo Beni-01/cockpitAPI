@@ -1,5 +1,6 @@
 
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { ArrayNotEmpty, IsArray, IsInt, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class CreateTransactionDto {
 
@@ -43,4 +44,41 @@ export class CreateTransactionDto {
     @IsOptional()
     createdAt:string
     
+}
+
+export class DeleteTransactionsDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  ids: number[];
+}
+
+
+export class DeleteTransactionObjectDto {
+  @IsString()
+  @IsOptional()
+  ref?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  devise?: string;
+
+  @IsString()
+  @IsOptional()
+  devise_convert?: string;
+
+  @IsNumber()
+  @IsOptional()
+  depense?: number;
+}
+
+export class DeleteTransactionsArrayDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => DeleteTransactionObjectDto)
+  transactions: DeleteTransactionObjectDto[];
 }
