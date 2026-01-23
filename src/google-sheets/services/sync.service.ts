@@ -75,9 +75,20 @@ export class SyncService {
         let syncLog: SyncLog | null = null;
 
         // Check if sync is already in progress
-        if (this.syncInProgress.get(configId)) {
-            this.logger.warn(`Sync already in progress for config ${configId}`);
-            throw new Error('Sync already in progress');
+        // if (this.syncInProgress.get(configId)) {
+        //     this.logger.warn(`Sync already in progress for config ${configId}`);
+        //     throw new Error('Sync already in progress');
+        // }
+
+        // this.syncInProgress.set(configId, true);
+        console.log("sync")
+
+        const config = await this.sheetConfigRepository.findOne({
+            where: { id: configId },
+        });
+
+        if (!config) {
+            throw new Error(`Configuration ${configId} not found`);
         }
 
         this.syncInProgress.set(configId, true);
@@ -219,6 +230,154 @@ export class SyncService {
         } finally {
             this.syncInProgress.set(configId, false);
         }
+
+        // Read data from sheet
+        const range = config.range || config.worksheet_name;
+        const sheetData = await this.sheetReaderService.readSheetWithHeaders(
+            config.spreadsheetId,
+            range,
+        );
+
+        console.log("sheetData",sheetData)
+
+        return
+        // try {
+        //     // Get configuration
+        //     const config = await this.sheetConfigRepository.findOne({
+        //         where: { id: configId },
+        //     });
+
+        //     if (!config) {
+        //         throw new Error(`Configuration ${configId} not found`);
+        //     }
+
+        //     if (!config.is_active) {
+        //         throw new Error(`Configuration ${configId} is not active`);
+        //     }
+
+        //     this.logger.log(`Starting sync for: ${config.name}`);
+
+        //     // Create sync log entry
+        //     syncLog = this.syncLogRepository.create({
+        //         config_id: configId,
+        //         trigger_source: 'polling',
+        //         status: 'in_progress',
+        //         started_at: startTime,
+        //     });
+        //     await this.syncLogRepository.save(syncLog);
+
+        //     // Emit sync started event
+        //     this.eventEmitter.emit('sheet.sync.started', { configId, config });
+
+        //     // Read data from sheet
+        //     const range = config.range || config.worksheet_name;
+        //     const sheetData = await this.sheetReaderService.readSheetWithHeaders(
+        //         config.spreadsheetId,
+        //         range,
+        //     );
+        //     console.log("sheetData", sheetData[10])
+
+        //     if (!sheetData || sheetData.length === 0) {
+        //         this.logger.warn(`No data found in sheet for config ${configId}`);
+
+        //         // Update sync log before returning
+        //         if (syncLog) {
+        //             syncLog.status = 'success';
+        //             syncLog.records_fetched = 0;
+        //             syncLog.records_inserted = 0;
+        //             syncLog.records_updated = 0;
+        //             syncLog.records_skipped = 0;
+        //             syncLog.error_message = 'No data found in sheet';
+        //             syncLog.completed_at = new Date();
+        //             await this.syncLogRepository.save(syncLog);
+        //         }
+
+        //         // Update config
+        //         config.lastSyncAt = new Date();
+        //         config.lastSyncStatus = 'success';
+        //         config.lastSyncMessage = 'No data found in sheet';
+        //         await this.sheetConfigRepository.save(config);
+
+        //         const endTime = new Date();
+        //         const syncResult = this.createSyncResult(configId, startTime, {
+        //             success: true,
+        //             recordsProcessed: 0,
+        //             recordsCreated: 0,
+        //             recordsUpdated: 0,
+        //             recordsSkipped: 0,
+        //             errors: ['No data found in sheet'],
+        //             endTime,
+        //         });
+
+        //         // Emit sync completed event
+        //         this.eventEmitter.emit('sheet.sync.completed', syncResult);
+
+        //         return syncResult;
+        //     }
+        //     // Transform and sync data
+        //     const result = await this.transformAndSyncData(config, sheetData, syncLog);
+
+        //     // Update sync log with results
+        //     if (syncLog) {
+        //         syncLog.status = result.success ? 'success' : 'failed';
+        //         syncLog.records_fetched = result.recordsProcessed;
+        //         syncLog.records_inserted = result.recordsCreated;
+        //         syncLog.records_updated = result.recordsUpdated;
+        //         syncLog.records_skipped = result.recordsSkipped;
+        //         syncLog.error_message = result.errors.join('; ') || null;
+        //         syncLog.completed_at = new Date();
+        //         await this.syncLogRepository.save(syncLog);
+        //     }
+
+        //     // Update last sync time
+        //     config.lastSyncAt = new Date();
+        //     config.lastSyncStatus = result.success ? 'success' : 'error';
+        //     config.lastSyncMessage = result.errors.join('; ') || 'Sync completed successfully';
+        //     await this.sheetConfigRepository.save(config);
+
+        //     const endTime = new Date();
+        //     const syncResult = this.createSyncResult(configId, startTime, {
+        //         ...result,
+        //         endTime,
+        //     });
+
+        //     // Emit sync completed event
+        //     this.eventEmitter.emit('sheet.sync.completed', syncResult);
+
+        //     this.logger.log(
+        //         `Sync completed for config ${configId}: ${result.recordsCreated} created, ${result.recordsUpdated} updated`,
+        //     );
+
+        //     return syncResult;
+        // } catch (error) {
+        //     this.logger.error(`Sync failed for config ${configId}`, error);
+
+        //     // Update sync log with error
+        //     if (syncLog) {
+        //         syncLog.status = 'failed';
+        //         syncLog.error_message = error.message;
+        //         syncLog.completed_at = new Date();
+        //         await this.syncLogRepository.save(syncLog);
+        //     }
+
+        //     const endTime = new Date();
+        //     const syncResult = this.createSyncResult(configId, startTime, {
+        //         success: false,
+        //         recordsProcessed: 0,
+        //         recordsCreated: 0,
+        //         recordsUpdated: 0,
+        //         recordsSkipped: 0,
+        //         errors: [error.message],
+        //         endTime,
+        //     });
+
+        //     // Emit sync failed event
+        //     this.eventEmitter.emit('sheet.sync.failed', syncResult);
+
+        //     throw error;
+        // } finally {
+        //     this.syncInProgress.set(configId, false);
+        // }
     }
 
     /**
