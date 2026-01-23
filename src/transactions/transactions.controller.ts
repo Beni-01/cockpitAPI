@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+=======
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+>>>>>>> test-dashboard
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto, DeleteTransactionsArrayDto, DeleteTransactionsDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -41,6 +45,17 @@ async createTransactionMultiple(
     return this.transactionsService.findAll();
   }
 
+  @Get('by-department/:departmentCode')
+  findByDepartment(
+    @Param('departmentCode') departmentCode: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const p = page ? parseInt(page, 10) : 1;
+    const l = limit ? parseInt(limit, 10) : 20;
+    return this.transactionsService.findByDepartmentCode(departmentCode, p, l);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.transactionsService.findOne(+id);
@@ -70,6 +85,15 @@ async createTransactionMultiple(
   @Get('total/details/consomme/department/annuel/:year')
   getDepensesPardepartmentByYearPrecision(@Param('year') year:string){
     return this.transactionsService.getDepensesPardepartmentByYearPrecision(+year)
+  }
+
+  @Get('by-department/:code')
+  getByDepartment(
+    @Param('code') code: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.transactionsService.findByDepartmentCode(code, Number(page), Number(limit));
   }
 
 

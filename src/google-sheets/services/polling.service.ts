@@ -8,13 +8,26 @@ import { GoogleSheetsService } from '../google-sheets.service';
 @Injectable()
 export class PollingService {
     private readonly logger = new Logger(PollingService.name);
-    private isPollingEnabled = true;
+    private isPollingEnabled: boolean;
 
     constructor(
         @InjectRepository(GoogleSheetConfig)
         private configRepository: Repository<GoogleSheetConfig>,
         private googleSheetsService: GoogleSheetsService,
     ) { }
+
+    // Initialize polling enabled flag based on environment variable.
+    // Default: disabled for now. Set GOOGLE_SHEETS_SCHEDULE_ENABLED=true to enable.
+    onModuleInit() {
+        const flag = process.env.GOOGLE_SHEETS_SCHEDULE_ENABLED;
+        if (flag !== undefined) {
+            this.isPollingEnabled = String(flag).toLowerCase() === 'true';
+            this.logger.log(`Polling ${this.isPollingEnabled ? 'enabled' : 'disabled'} via GOOGLE_SHEETS_SCHEDULE_ENABLED=${flag}`);
+        } else {
+            this.isPollingEnabled = false;
+            this.logger.log('Polling disabled by default; set GOOGLE_SHEETS_SCHEDULE_ENABLED=true to enable');
+        }
+    }
 
     @Cron(CronExpression.EVERY_5_MINUTES)
     async checkForUpdates() {
