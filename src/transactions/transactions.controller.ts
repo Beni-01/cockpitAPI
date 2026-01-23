@@ -83,6 +83,15 @@ async createTransactionMultiple(
     return this.transactionsService.getDepensesPardepartmentByYearPrecision(+year)
   }
 
+  @Get('by-department/:code')
+  getByDepartment(
+    @Param('code') code: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.transactionsService.findByDepartmentCode(code, Number(page), Number(limit));
+  }
+
 
   @Delete('removeItem/:id')
   remove(@Param('id') id: string) {
