@@ -25,8 +25,10 @@ export class ActivityController {
   @Get()
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-  findAll() {
-    return this.activityService.findAll();
+  findAll(
+     @Query('annee') annee?: string,
+  ) {
+    return this.activityService.findAll(+annee);
   }
 
 
@@ -35,20 +37,22 @@ export class ActivityController {
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   getDirectionProgress(
-    @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
-    @Query('dateFin') dateFin?: string, 
-    @Query('periode') periode?: string,
-     @Query('annee') annee?: number,
+  @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
+  @Query('dateFin') dateFin?: string, 
+  @Query('periode') periode?: string,
+  @Query('annee') annee?: string,
   ) {
-    return this.activityService.getDirectionGlobalProgressPlafone(dateDebut,dateFin,periode,annee);
+    return this.activityService.getDirectionGlobalProgressPlafone(dateDebut,dateFin,periode,+annee);
   }
 
 
   @Get('statut/dashboard')
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-  getDirectionStats() {
-    return this.activityService.getDirectionStats();
+  getDirectionStats(
+     @Query('annee') annee?: string,
+  ) {
+    return this.activityService.getDirectionStats(+annee);
   }
 
 
@@ -100,7 +104,8 @@ export class ActivityController {
     @Query('province') province?: string,
     @Query('titre') titre?: string,
     @Query('page') page: string = '1', // Page actuelle (par défaut 1)
-    @Query('limit') limit: string = '7' // Nombre d'éléments par page (par défaut 7)
+    @Query('limit') limit: string = '10',
+      @Query('annee') annee?: string  // Nombre d'éléments par page (par défaut 7)
   ): Promise<{
     activites: Record<string, Activity[]>;
     totalCount: number;
@@ -110,7 +115,7 @@ export class ActivityController {
 }>  {
     try {
   
-      const groupedActivities = await this.activityService.findAllGroupedByDirection(etat, status, direction, province, titre, dateDebut, dateFin, page, +limit);
+      const groupedActivities = await this.activityService.findAllGroupedByDirection(etat, status, direction, province, titre, dateDebut, dateFin, page, +limit, +annee);
       return groupedActivities;
     } catch (error) {
       throw new BadRequestException(error.message);

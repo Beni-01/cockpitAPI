@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { CreateTransactionDto, DeleteTransactionsArrayDto, DeleteTransactionsDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { ApiTags } from '@nestjs/swagger';
 @ApiTags('transactions')
@@ -98,6 +98,21 @@ async createTransactionMultiple(
     const item=this.transactionsService.removeId(+id);
  //   this.eventsGateway.broadcastEvent('LOAD_TDR');
     return item;
+  }
+
+  @Post('delete-many')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMany(
+    @Body() dto: DeleteTransactionsDto,
+  ): Promise<void> {
+    await this.transactionsService.removeByIds(dto.ids);
+  }
+
+
+  @Post('delete-multiple')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMultiple(@Body() dto: DeleteTransactionsArrayDto): Promise<void> {
+    await this.transactionsService.removeMultiple(dto.transactions);
   }
 
 }
