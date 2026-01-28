@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const DIR = path.join(__dirname, '..', 'data', 'budget_summary');
+const DIR = path.join(__dirname, '..', 'data', 'fin');
 const FORCE = process.argv.includes('--force');
 
 function normalizeHeader(h: any) {

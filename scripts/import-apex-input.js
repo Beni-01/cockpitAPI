@@ -4,7 +4,7 @@ const { parse } = require('csv-parse/sync');
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const DIR = path.join(__dirname, '..', 'data', 'input');
+const DIR = path.join(__dirname, '..', 'data', 'capex-input');
 
 function normalizeHeader(h) {
   return (h || '').toString().normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
