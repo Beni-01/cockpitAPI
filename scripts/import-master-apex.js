@@ -74,6 +74,9 @@ async function insertDepartments(conn, rows) {
     const name = (r[nIdx] || '').toString().trim();
     if (!code && !name) continue;
     if (code) {
+      if (code === "CX") {
+        name = "Capex"
+      }
       const [ex] = await conn.query('SELECT id, name FROM `department` WHERE `code` = ? LIMIT 1', [code]);
       if (ex && ex.length > 0) {
         if (name && name !== ex[0].name) {
@@ -357,9 +360,9 @@ async function main() {
     }
 
     console.log('Running imports using', CSV_PATH);
-    // await insertDepartments(conn, dataRows);
-    // await addBudgetActivities(conn, dataRows);
-    // await addBudgetSousActivities(conn, dataRows);
+    await insertDepartments(conn, dataRows);
+    await addBudgetActivities(conn, dataRows);
+    await addBudgetSousActivities(conn, dataRows);
     await addBudgetTaches(conn, dataRows, idxs, hasCostCenterColumn);
 
   } catch (err) {
