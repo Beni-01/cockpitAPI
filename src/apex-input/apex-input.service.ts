@@ -57,7 +57,7 @@ export class ApexInputService {
     const departmentData: any[] = [];
     for (const d of deptRows) {
       console.log("department", d)
-      const bRow = d.departmentCode === "RH" ? await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ? AND assigned_department_id = ?`, [d.id, d.id]) : await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ?`, [d.id]);
+      const bRow = d.departmentCode === "RH" ? await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ? AND assigned_department_id IS ?`, [d.id, null]) : await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ?`, [d.id]);
       const rRow = await this.transactionRepo.query(
         `SELECT COALESCE(SUM(t.depense),0) AS realisation 
          FROM transaction t 
