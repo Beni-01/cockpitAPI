@@ -71,7 +71,7 @@ async function insertDepartments(conn, rows) {
   let inserted = 0, updated = 0;
   for (const r of rows) {
     const code = (r[cIdx] || '').toString().trim();
-    const name = (r[nIdx] || '').toString().trim();
+    let name = (r[nIdx] || '').toString().trim();
     if (!code && !name) continue;
     if (code) {
       if (code === "CX") {
