@@ -8,6 +8,11 @@ dotenv.config();
 
 const DIR = path.join(__dirname, '..', 'data', 'fin');
 const FORCE = process.argv.includes('--force');
+const DEPT_CODE = (() => {
+  const arg = process.argv.find(a => a.startsWith('--dept-code='));
+  if (arg) return arg.split('=')[1];
+  return process.env.DEPARTMENT_CODE || null;
+})();
 
 function normalizeHeader(h: any) {
   return (h || '').toString()
@@ -120,11 +125,43 @@ async function processFile(conn: any, filePath: string) {
   const map = detectColumns(header);
   const dataRows = headerIndex >= 0 ? rows.slice(headerIndex + 1) : rows.slice(1);
 
+  // If a global department code was provided, resolve/create it once and use for all rows
+  let overrideDepartmentId: any = null;
+  if (DEPT_CODE) {
+    try {
+      const [drows] = await conn.query('SELECT id FROM `department` WHERE LOWER(`code`) = LOWER(?) LIMIT 1', [DEPT_CODE]);
+      if (drows && drows.length) overrideDepartmentId = drows[0].id;
+      else {
+        const [ins] = await conn.query('INSERT INTO `department` (`code`, `name`) VALUES (?, ?)', [DEPT_CODE, DEPT_CODE]);
+        overrideDepartmentId = ins.insertId;
+      }
+    } catch (e) {
+      console.error('Failed to resolve/create override department:', e && e.message ? e.message : e);
+      overrideDepartmentId = null;
+    }
+  }
+
   let processed = 0; let inserted = 0;
 
   // preload budget columns
   const [budgetColsRaw] = await conn.query('SHOW COLUMNS FROM `budget`');
   const budgetCols = (budgetColsRaw || []).map((c: any) => c.Field);
+
+  async function findExistingBudget(costCenter: any, description: any, departmentId: any) {
+    if (!description) return null;
+    const where: string[] = [];
+    const params: any[] = [];
+    if (costCenter) { where.push('cost_center = ?'); params.push(costCenter); }
+    if (description) { where.push('description_cc = ?'); params.push(description); }
+    if (departmentId) { where.push('department_id = ?'); params.push(departmentId); }
+    if (where.length === 0) return null;
+    const sql = 'SELECT id FROM `budget` WHERE ' + where.join(' AND ') + ' LIMIT 1';
+    try {
+      const [rows] = await conn.query(sql, params);
+      if (rows && rows.length) return rows[0].id;
+    } catch (e) {}
+    return null;
+  }
 
   function isNumericString(s: any) {
     if (s == null) return false;
@@ -153,30 +190,32 @@ async function processFile(conn: any, filePath: string) {
     const tacheName = map.tache != null ? (r[map.tache] || '').toString().trim() : null;
     const costCode = map.costCode != null ? (r[map.costCode] || '').toString().trim() : null;
 
-    // department id -- try by name or code; require code to create
+    // department id -- use override if provided, otherwise try by name or code; require code to create
     const deptCode = map.codeDepartment != null ? (r[map.codeDepartment] || '').toString().trim() : null;
-    let departmentId = null;
-    if (deptName) {
-      const [drows] = await conn.query('SELECT id FROM `department` WHERE `name` = ? LIMIT 1', [deptName]);
-      if (drows && drows.length) departmentId = drows[0].id;
-    }
-    if (!departmentId && deptCode) {
-      const [drows2] = await conn.query('SELECT id FROM `department` WHERE `code` = ? LIMIT 1', [deptCode]);
-      if (drows2 && drows2.length) departmentId = drows2[0].id;
-      else {
-        const nameToInsert = deptName && deptName.length ? deptName : deptCode;
-        const [ins] = await conn.query('INSERT INTO `department` (`code`, `name`) VALUES (?, ?)', [deptCode, nameToInsert]);
-        departmentId = ins.insertId;
+    let departmentId = overrideDepartmentId || null;
+    if (!departmentId) {
+      if (deptName) {
+        const [drows] = await conn.query('SELECT id FROM `department` WHERE `name` = ? LIMIT 1', [deptName]);
+        if (drows && drows.length) departmentId = drows[0].id;
       }
-    } else if (!departmentId && deptName && FORCE) {
-      // when forcing, create a department even if code is missing by generating a slug code
-      function slug(s: string) { return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0,50); }
-      const genCode = slug(deptName) || ('dept_' + Math.floor(Math.random()*100000));
-      const [drows3] = await conn.query('SELECT id FROM `department` WHERE `code` = ? LIMIT 1', [genCode]);
-      if (drows3 && drows3.length) departmentId = drows3[0].id;
-      else {
-        const [ins2] = await conn.query('INSERT INTO `department` (`code`, `name`) VALUES (?, ?)', [genCode, deptName]);
-        departmentId = ins2.insertId;
+      if (!departmentId && deptCode) {
+        const [drows2] = await conn.query('SELECT id FROM `department` WHERE `code` = ? LIMIT 1', [deptCode]);
+        if (drows2 && drows2.length) departmentId = drows2[0].id;
+        else {
+          const nameToInsert = deptName && deptName.length ? deptName : deptCode;
+          const [ins] = await conn.query('INSERT INTO `department` (`code`, `name`) VALUES (?, ?)', [deptCode, nameToInsert]);
+          departmentId = ins.insertId;
+        }
+      } else if (!departmentId && deptName && FORCE) {
+        // when forcing, create a department even if code is missing by generating a slug code
+        function slug(s: string) { return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0,50); }
+        const genCode = slug(deptName) || ('dept_' + Math.floor(Math.random()*100000));
+        const [drows3] = await conn.query('SELECT id FROM `department` WHERE `code` = ? LIMIT 1', [genCode]);
+        if (drows3 && drows3.length) departmentId = drows3[0].id;
+        else {
+          const [ins2] = await conn.query('INSERT INTO `department` (`code`, `name`) VALUES (?, ?)', [genCode, deptName]);
+          departmentId = ins2.insertId;
+        }
       }
     }
 
@@ -190,11 +229,28 @@ async function processFile(conn: any, filePath: string) {
       }
     }
 
-    // activity/sous/tache ids: prefer explicit columns, else parse description
+    // activity/sous/tache ids: only LOOKUP existing entries, do NOT create or update these tables from this script
+    async function findExistingId(table: string, nameCol: string, name: string, extraWhere?: string, extraParams?: any[]) {
+      if (!name) return null;
+      const params: any[] = [name].concat(extraParams || []);
+      const where = extraWhere ? (`\`${nameCol}\` = ? AND ${extraWhere}`) : (`\`${nameCol}\` = ?`);
+      try {
+        const [rows] = await conn.query(`SELECT id FROM \`${table}\` WHERE ${where} LIMIT 1`, params);
+        if (rows && rows.length) return rows[0].id;
+      } catch (e) {}
+      return null;
+    }
+
     let activityId = null; let sousId = null; let tacheId = null;
-    if (activityName) activityId = await upsertActivity(conn, activityName);
-    if (sousName) sousId = await upsertSousActivity(conn, activityId, sousName);
-    if (tacheName) tacheId = await upsertTache(conn, sousId, tacheName, costCode);
+    if (activityName) activityId = await findExistingId('budget_activity', 'name', activityName, '`department_id` = ?', [departmentId]);
+    if (sousName) {
+      if (activityId) sousId = await findExistingId('budget_sous_activity', 'name', sousName, '`activity_id` = ? AND `department_id` = ?', [activityId,departmentId]);
+      else sousId = await findExistingId('budget_sous_activity', 'name', sousName, '`department_id` = ?', [departmentId]);
+    }
+    if (tacheName) {
+      if (sousId) tacheId = await findExistingId('budget_tache', 'name', tacheName, '`sous_activity_id` = ? AND `department_id` = ?', [sousId,departmentId]);
+      else tacheId = await findExistingId('budget_tache', 'name', tacheName, '`department_id` = ?', [departmentId]);
+    }
 
     // description must exist
     const descVal = map.description != null ? (r[map.description] || '').toString().trim() : null;
@@ -249,14 +305,43 @@ async function processFile(conn: any, filePath: string) {
       if (processed < 200) console.log('Prepared insert cols=', cols, 'vals=', vals.slice(0,24));
 
     try {
-      const placeholders = cols.map(() => '?').join(',');
-      const sql = `INSERT INTO ` + '`budget`' + ` (${cols.join(',')}) VALUES (${placeholders})`;
-      if (processed < 50) console.log('Executing:', sql, vals.slice(0, 24));
-      const [res] = await conn.query(sql, vals);
-      if (processed < 50) console.log('Inserted id:', res && res.insertId);
-      inserted++;
+      // determine key values for upsert lookup
+      const costCenterVal = map.costCenter != null ? (r[map.costCenter] || null) : null;
+      const descKey = descVal || null;
+      const existingId = await findExistingBudget(costCenterVal, descKey, departmentId);
+      if (existingId) {
+        // perform update but do NOT overwrite existing activity/sous/tache ids
+        const skipCols = ['`activity_id`', '`sous_activity_id`', '`tache_id`'];
+        const updateCols: string[] = [];
+        const updateVals: any[] = [];
+        for (let i = 0; i < cols.length; i++) {
+          const c = cols[i];
+          if (skipCols.includes(c)) continue;
+          updateCols.push(c);
+          updateVals.push(vals[i]);
+        }
+        if (updateCols.length > 0) {
+          const sets = updateCols.map(c => c + ' = ?');
+          const sql = `UPDATE ` + '`budget`' + ` SET ${sets.join(',')} WHERE id = ?`;
+          try {
+            await conn.query(sql, [...updateVals, existingId]);
+            if (processed < 50) console.log('Updated id:', existingId);
+          } catch (e) {
+            console.error('Update error for row:', (e && e.message) ? e.message : e, 'SQL:', sql, 'vals:', updateVals.slice(0,24));
+          }
+        } else {
+          if (processed < 50) console.log('Skipping update for id (no updatable cols):', existingId);
+        }
+      } else {
+        const placeholders = cols.map(() => '?').join(',');
+        const sql = `INSERT INTO ` + '`budget`' + ` (${cols.join(',')}) VALUES (${placeholders})`;
+        if (processed < 50) console.log('Executing:', sql, vals.slice(0, 24));
+        const [res] = await conn.query(sql, vals);
+        if (processed < 50) console.log('Inserted id:', res && res.insertId);
+        inserted++;
+      }
     } catch (err) {
-      console.error('Insert error for row:', (err && err.message) ? err.message : err);
+      console.error('Insert/Update error for row:', (err && err.message) ? err.message : err);
     }
 
     processed++;

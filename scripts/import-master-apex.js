@@ -126,7 +126,8 @@ async function addBudgetActivities(conn, rows) {
 
 
 
-  let inserted = 0;
+  let found = 0;
+  let missing = 0;
   for (const item of unique.values()) {
     const mappingName = item.mappingName;
     const activityName = item.activityName;
@@ -134,100 +135,39 @@ async function addBudgetActivities(conn, rows) {
     let departmentId = null;
     if (deptName) departmentId = await findDepartmentIdByName(conn, deptName);
     if (deptName === "FINANCE") departmentId = await findDepartmentIdByName(conn, "Capex");
-    // if (activityName.includes("NAS, OneDrive,"))
-    console.log("activityName", activityName, "deptName", deptName, "departmentId", departmentId);
-
+    // upsert mapping_cash_flow only; do NOT create/update budget_activity
     const mappingExtra = {};
     if (hasMappingDepartment && departmentId) mappingExtra['department_id'] = departmentId;
-    const mappingId = await upsertGetId(conn, 'mapping_cash_flow', 'name', mappingName || null, mappingExtra);
+    await upsertGetId(conn, 'mapping_cash_flow', 'name', mappingName || null, mappingExtra);
 
     const [existing] = await conn.query('SELECT id FROM `budget_activity` WHERE `name` = ? AND department_id = ? LIMIT 1', [activityName, departmentId]);
-
-    if (activityName.includes("NAS, OneDrive,")) console.log("existing", existing, "activityName", activityName, "departmentId", departmentId);
-    if (existing && existing.length > 0) {
-      const id = existing[0].id;
-      if (hasBudgetDepartment) {
-        await conn.query('UPDATE `budget_activity` SET `mapping_cash_flow_id` = ?, `department_id` = ? WHERE id = ?', [mappingId, departmentId, id]);
-      } else {
-        await conn.query('UPDATE `budget_activity` SET `mapping_cash_flow_id` = ? WHERE id = ?', [mappingId, id]);
-      }
-    } else {
-      const extra = { mapping_cash_flow_id: mappingId };
-      if (hasBudgetDepartment && departmentId) extra['department_id'] = departmentId;
-      await upsertGetId(conn, 'budget_activity', 'name', activityName || null, extra);
-      inserted++;
-    }
+    if (existing && existing.length > 0) found++; else missing++;
   }
-  console.log('Inserted budget_activity:', inserted);
+  console.log('budget_activity found:', found, 'missing (skipped):', missing);
 }
 
 async function addBudgetSousActivities(conn, rows) {
   const activityIdx = 3; // D
   const sousIdx = 4; // E
   const deptIdx = 2; // C
-  let inserted = 0, skipped = 0;
+  let found = 0; let missing = 0; let skipped = 0;
   for (const r of rows) {
     const activityName = (r[activityIdx] || '').toString().trim();
     const sousName = (r[sousIdx] || '').toString().trim();
     const deptName = (r[deptIdx] || '').toString().trim();
     if (!sousName) { skipped++; continue; }
-
     let departmentId = null;
-    console.log("deptName", deptName)
-
     if (deptName) departmentId = await findDepartmentIdByName(conn, deptName);
     if (deptName === "FINANCE") departmentId = await findDepartmentIdByName(conn, "Capex");
-    // if (deptName) {
-    //   const [drows] = await conn.query('SELECT id FROM `department` WHERE `name` = ? LIMIT 1', [deptName]);
-    //   if (drows && drows.length > 0) departmentId = drows[0].id;
-    // }
     let activityId = null;
     if (activityName) {
       const [aRows] = await conn.query('SELECT id FROM `budget_activity` WHERE `name` = ? AND department_id = ? LIMIT 1', [activityName, departmentId]);
       if (aRows && aRows.length > 0) activityId = aRows[0].id;
     }
-    console.log("activity", activityId, "deptName", deptName, "departmentId", departmentId)
-
-    // if (!activityId && activityName) {
-    //   const extra = {};
-    //   if (departmentId) extra['department_id'] = departmentId;
-    //   activityId = await upsertGetId(conn, 'budget_activity', 'name', activityName || null, extra);
-    // }
-
-    // if (!departmentId && activityId) {
-    //   const [aDeptRows] = await conn.query('SELECT department_id FROM `budget_activity` WHERE id = ? LIMIT 1', [activityId]);
-    //   if (aDeptRows && aDeptRows.length > 0) {
-    //     const actDept = aDeptRows[0].department_id;
-    //     if (actDept && actDept !== 0) departmentId = actDept;
-    //   }
-    // }
-
-    // if (activityId && departmentId) {
-    //   const [aRows2] = await conn.query('SELECT department_id FROM `budget_activity` WHERE id = ? LIMIT 1', [activityId]);
-    //   if (aRows2 && aRows2.length > 0) {
-    //     const currentDept = aRows2[0].department_id;
-    //     if (!currentDept || currentDept === 0) {
-    //       await conn.query('UPDATE `budget_activity` SET `department_id` = ? WHERE id = ?', [departmentId, activityId]);
-    //     }
-    //   }
-    // }
-
-    const [srows2] = await conn.query('SELECT id, department_id FROM `budget_sous_activity` WHERE `name` = ? AND `activity_id` = ? LIMIT 1', [sousName, activityId]);
-    if (srows2 && srows2.length > 0) {
-      const existing = srows2[0];
-      if (departmentId && (!existing.department_id || existing.department_id === 0)) {
-        await conn.query('UPDATE `budget_sous_activity` SET `department_id` = ? WHERE id = ?', [departmentId, existing.id]);
-      }
-    } else {
-      const cols = ['name', 'activity_id'];
-      const vals = [sousName || null, activityId];
-      if (departmentId) { cols.push('department_id'); vals.push(departmentId); }
-      const placeholders = vals.map(() => '?').join(',');
-      await conn.query('INSERT INTO `budget_sous_activity` (' + cols.map(c => `\`${c}\``).join(',') + `) VALUES (${placeholders})`, vals);
-      inserted++;
-    }
+    const [srows2] = await conn.query('SELECT id FROM `budget_sous_activity` WHERE `name` = ? AND `activity_id` = ? LIMIT 1', [sousName, activityId]);
+    if (srows2 && srows2.length > 0) found++; else missing++;
   }
-  console.log('Inserted budget_sous_activity:', inserted, 'Skipped (no sous):', skipped);
+  console.log('budget_sous_activity found:', found, 'missing (skipped):', missing, 'rows skipped (no sous):', skipped);
 }
 
 async function addBudgetTaches(conn, rows, idxs, hasCostCenterColumn) {
@@ -236,7 +176,7 @@ async function addBudgetTaches(conn, rows, idxs, hasCostCenterColumn) {
   const tacheIdx = 5;
   const deptIdx = 2; // C
 
-  let inserted = 0, skipped = 0;
+  let found = 0, missing = 0, skipped = 0;
   for (const r of rows) {
     const activityName = (r[activityIdx] || '').toString().trim();
     const sousName = (r[sousIdx] || '').toString().trim();
@@ -254,70 +194,17 @@ async function addBudgetTaches(conn, rows, idxs, hasCostCenterColumn) {
       if (deptName === "FINANCE") departmentId = await findDepartmentIdByName(conn, "Capex");
       const [rowsA] = await conn.query('SELECT id ,department_id FROM `budget_activity` WHERE `name` = ? AND department_id = ? LIMIT 1', [activityName, departmentId]);
       if (rowsA && rowsA.length > 0) activityId = rowsA[0].id;
-      // if (rowsA && rowsA.length > 0) departmentId = rowsA[0].department_id;
     }
-    console.log("activityName", activityName, "activityId", activityId, "departmentId", departmentId);
-    // if (!activityId && activityName) activityId = await upsertGetId(conn, 'budget_activity', 'name', activityName || null);
-
-    // if (activityId) {
-    //   const [aRows] = await conn.query('SELECT department_id FROM `budget_activity` WHERE id = ? LIMIT 1', [activityId]);
-    //   if (aRows && aRows.length > 0) {
-    //     const d = aRows[0].department_id;
-    //     if (d && d !== 0) departmentId = d;
-    //   }
-    // }
-
     let sousId = null;
     if (sousName) {
       const [srows] = await conn.query('SELECT id FROM `budget_sous_activity` WHERE `name` = ? AND `activity_id` = ? LIMIT 1', [sousName, activityId]);
       if (srows && srows.length > 0) sousId = srows[0].id;
     }
-    // if (!sousId && sousName) {
-    //   const cols = ['name', 'activity_id'];
-    //   const vals = [sousName || null, activityId];
-    //   const placeholders = vals.map(() => '?').join(',');
-    //   const [res] = await conn.query('INSERT INTO `budget_sous_activity` (' + cols.map(c => `\`${c}\``).join(',') + `) VALUES (${placeholders})`, vals);
-    //   sousId = res.insertId;
-    // }
 
-    const [trows] = await conn.query('SELECT id, code, cost_code, activity_id, department_id' + (hasCostCenterColumn ? ', cost_center' : '') + ' FROM `budget_tache` WHERE `name` = ? AND `sous_activity_id` = ? LIMIT 1', [tacheName, sousId]);
-    if (trows && trows.length > 0) {
-      const tid = trows[0].id;
-      const existingActivityId = trows[0].activity_id;
-      const existingDeptId = departmentId;
-      const existingCode = trows[0].code;
-      const existingCostCode = trows[0].cost_code;
-      const existingCostCenter = hasCostCenterColumn ? trows[0].cost_center : null;
-      if (activityId && (!existingActivityId || existingActivityId === 0)) {
-        await conn.query('UPDATE `budget_tache` SET `activity_id` = ? WHERE id = ?', [activityId, tid]);
-      }
-      if (departmentId && (!existingDeptId || existingDeptId === 0)) {
-        await conn.query('UPDATE `budget_tache` SET `department_id` = ? WHERE id = ?', [departmentId, tid]);
-      }
-      if (code && (!existingCode || existingCode === '')) {
-        await conn.query('UPDATE `budget_tache` SET `code` = ? WHERE id = ? AND (`code` IS NULL OR `code` = \'\')', [code, tid]);
-      }
-      if (costCode && (existingCostCode !== costCode)) {
-        await conn.query('UPDATE `budget_tache` SET `cost_code` = ? WHERE id = ?', [costCode, tid]);
-      }
-      if (hasCostCenterColumn && costCenter && (!existingCostCenter || existingCostCenter === '')) {
-        await conn.query('UPDATE `budget_tache` SET `cost_center` = ? WHERE id = ? AND (`cost_center` IS NULL OR `cost_center` = \'\')', [costCenter, tid]);
-      }
-    } else {
-      const cols = ['name', 'sous_activity_id'];
-      const vals = [tacheName || null, sousId];
-      if (activityId) { cols.push('activity_id'); vals.push(activityId); }
-      if (departmentId) { cols.push('department_id'); vals.push(departmentId); }
-      if (code) { cols.push('code'); vals.push(code); }
-      if (costCode) { cols.push('cost_code'); vals.push(costCode); }
-      if (hasCostCenterColumn && costCenter) { cols.push('cost_center'); vals.push(costCenter); }
-      const placeholders = vals.map(() => '?').join(',');
-      console.log("placeholders:",cols, vals,placeholders);
-      await conn.query('INSERT INTO `budget_tache` (' + cols.map(c => `\`${c}\``).join(',') + `) VALUES (${placeholders})`, vals);
-      inserted++;
-    }
+    const [trows] = await conn.query('SELECT id FROM `budget_tache` WHERE `name` = ? AND `sous_activity_id` = ? LIMIT 1', [tacheName, sousId]);
+    if (trows && trows.length > 0) found++; else missing++;
   }
-  console.log('Inserted budget_tache:', inserted, 'Skipped (no tache):', skipped);
+  console.log('budget_tache found:', found, 'missing (skipped):', missing, 'rows skipped (no tache):', skipped);
 }
 
 async function main() {
