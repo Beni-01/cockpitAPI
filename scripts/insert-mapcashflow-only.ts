@@ -16,7 +16,7 @@ async function upsertMapCashflow(conn, name) {
   const [rows] = await conn.query('SELECT id FROM `mapping_cash_flow` WHERE `name` = ? LIMIT 1', [n]);
   if (rows && rows.length > 0) return { id: rows[0].id, created: false };
   const [res] = await conn.query('INSERT INTO `mapping_cash_flow` (`name`) VALUES (?)', [n]);
-  return { id: res.insertId, created: true };
+  return { id: res.insertId, created: true }
 }
 
 async function findDepartmentIdByName(conn, name) {
