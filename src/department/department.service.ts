@@ -8,7 +8,6 @@ import { BudgetActivity } from 'src/budget/entities/budget-activity.entity';
 import { BudgetSousActivity } from 'src/budget/entities/budget-sous-activity.entity';
 import { BudgetTache } from 'src/budget/entities/budget-tache.entity';
 import { Department } from './entities/department.entity';
-import { getRelatedCodes, getRelatedDepartmentIds } from './department-relations.data';
 
 @Injectable()
 export class DepartmentService {
@@ -30,12 +29,48 @@ export class DepartmentService {
         return this.departmentRepo.find();
     }
 
+    // Helper method to get all related codes for a given department code
+    async getRelatedCodes(code: string): Promise<string[] | 'ALL'> {
+        // DG and PM should return all departments
+        if (code === 'DG' || code === 'PM') {
+            return 'ALL';
+        }
+
+        // Find the department by code
+        const department = await this.departmentRepo.findOne({ where: { code } });
+        if (!department || !department.name) {
+            return [code]; // Return the code itself if no relation found
+        }
+
+        // Find all departments with the same 
+        const relatedDepartments = await this.departmentRepo.find({
+            where: { name: department.name }
+        });
+
+        return relatedDepartments.map(d => d.code);
+    }
+
+    // Helper method to get all related department IDs for a given code
+    async getRelatedDepartmentIds(code: string): Promise<number[]> {
+        // Find the department by code
+        const department = await this.departmentRepo.findOne({ where: { code } });
+        if (!department || !department.name) {
+            return department ? [department.id] : [];
+        }
+
+        // Find all departments with the same 
+        const relatedDepartments = await this.departmentRepo.find({
+            where: { name: department.name }
+        });
+
+        return relatedDepartments.map(d => d.id);
+    }
 
 
     async getActivities(departmentCode: string) {
         if (departmentCode) {
-            // Get all related codes using the helper function
-            const codes = getRelatedCodes(departmentCode);
+            // Get all related codes using the helper method
+            const codes = await this.getRelatedCodes(departmentCode);
 
 
             // If DG or PM, fetch all activities from all departments
