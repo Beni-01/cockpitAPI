@@ -6,10 +6,11 @@
 -- This script auto-creates activities, sous_activities, and taches if they don't exist
 
 -- Set department ID variable for CX (CAPEX)
-SET @dept_id = (SELECT id FROM department WHERE code = 'CX' LIMIT 1);
+-- Department will be determined per-record from the cost_center literal below
 
 
 -- FI.0.0.01: Renumeration
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.0.0.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -47,7 +48,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Renumeration _ Renumeration _ Renumeration',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.0.0.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -59,6 +60,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.1.1.01: Preparation budgétaires
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.1.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -96,7 +98,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi budgétaire _ Session budgétaires _ Preparation budgétaires',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 152600.00, 0.00, 0.00,
     152600.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.1.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -108,6 +110,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.1.2.01: Acquisition d''outil de suivi budgétaire
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.1.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -145,7 +148,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi budgétaire _ Outils _ Acquisition d''outil de suivi budgétaire',
     25000.00, 0.00, 25000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     50000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.1.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -157,6 +160,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.2.1.01: Préparation et validation des états financiers
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.2.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -194,7 +198,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Reporting financier _ Cloture des comptes _ Préparation et validation des états financiers',
     2600.00, 2600.00, 2600.00, 62600.00, 2600.00, 2600.00, 2600.00, 2600.00, 2600.00, 2600.00, 2600.00, 2600.00,
     91200.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.2.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -206,6 +210,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.2.2.01: Inventaires des immobilisations
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.2.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -243,7 +248,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Reporting financier _ Inventaires des immobilisations _ Inventaires des immobilisations',
     27780.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     27780.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.2.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -255,6 +260,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.1.01: Fonctionnement courant
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -292,7 +298,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Fonctionnement courant _ Fonctionnement courant',
     105000.00, 105000.00, 105000.00, 105000.00, 105000.00, 105000.00, 105000.00, 105000.00, 105000.00, 105000.00, 105000.00, 105000.00,
     1260000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -304,6 +310,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.1.02: Location de bureau et Autres
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.1.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -341,7 +348,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Fonctionnement courant _ Location de bureau et Autres',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.1.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -353,6 +360,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.1.03: Approvisionnement des coordinations
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.1.03',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -390,7 +398,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Fonctionnement courant _ Approvisionnement des coordinations',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.1.03',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -402,6 +410,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.01: Autres nouvelles garanties
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -439,7 +448,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Autres nouvelles garanties',
     0.00, 0.00, 5000.00, 0.00, 0.00, 5000.00, 0.00, 0.00, 5000.00, 0.00, 5000.00, 0.00,
     20000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -451,6 +460,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.02: Loyer Kinshasa
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -488,7 +498,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Kinshasa',
     90000.00, 90000.00, 90000.00, 90000.00, 90000.00, 90000.00, 90000.00, 90000.00, 90000.00, 90000.00, 90000.00, 90000.00,
     1080000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -500,6 +510,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.03: Loyer Goma
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.03',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -537,7 +548,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Goma',
     5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00,
     60000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.03',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -549,6 +560,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.04: Loyer Bukavu
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.04',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -586,7 +598,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Bukavu',
     3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00,
     36000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.04',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -598,6 +610,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.05: Loyer Lubumbashi
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.05',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -635,7 +648,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Lubumbashi',
     10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00,
     120000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.05',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -647,6 +660,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.06: Loyer Kolwezi
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.06',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -684,7 +698,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Kolwezi',
     9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00,
     108000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.06',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -696,6 +710,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.07: Loyer Bunia
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.07',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -733,7 +748,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Bunia',
     6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00,
     72000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.07',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -745,6 +760,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.08: Loyer Kasaï
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.08',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -782,7 +798,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Kasaï',
     6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00,
     72000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.08',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -794,6 +810,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.09: Loyer Kongo Central
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.09',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -831,7 +848,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Kongo Central',
     6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00, 6000.00,
     72000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.09',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -843,6 +860,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.10: Loyer Tshopo
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.10',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -880,7 +898,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Tshopo',
     3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00,
     36000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.10',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -892,6 +910,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.2.11: Loyer Bandundu
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.11',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -929,7 +948,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Location de bureau et Autres _ Loyer Bandundu',
     3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00,
     36000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.2.11',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -941,6 +960,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.01: Goma
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -978,7 +998,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Goma',
     2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00,
     24000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -990,6 +1010,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.02: Bukavu
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1027,7 +1048,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Bukavu',
     2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00, 2000.00,
     24000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1039,6 +1060,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.03: Lubumbashi
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.03',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1076,7 +1098,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Lubumbashi',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.03',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1088,6 +1110,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.04: Kolwezi
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.04',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1125,7 +1148,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Kolwezi',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.04',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1137,6 +1160,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.05: Bunia
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.05',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1174,7 +1198,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Bunia',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.05',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1186,6 +1210,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.06: Kasaï
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.06',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1223,7 +1248,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Kasaï',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.06',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1235,6 +1260,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.07: Kongo Central
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.07',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1272,7 +1298,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Kongo Central',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.07',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1284,6 +1310,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.08: Tshopo
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.08',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1321,7 +1348,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Tshopo',
     3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00,
     36000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.08',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1333,6 +1360,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.3.3.09: Bandundu
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.09',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1370,7 +1398,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Fonctionnement courant _ Approvisionnement des coordinations _ Bandundu',
     3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00, 3000.00,
     36000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.3.3.09',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1382,6 +1410,7 @@ WHERE NOT EXISTS (
 );
 
 -- FI.4.1.01: Organiser l''audit des comptes
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.4.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1419,7 +1448,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Conformités à la règlementation et normes financières et fiscales _ Conformités à la règlementation et normes financières _ Organiser l''audit des comptes',
     145000.00, 85000.00, 25000.00, 25000.00, 85000.00, 25000.00, 25000.00, 25000.00, 25000.00, 25000.00, 25000.00, 25000.00,
     540000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.4.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1431,6 +1460,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.4.2.01: Suivi fiscal
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.4.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1468,7 +1499,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Conformités à la règlementation et normes financières et fiscales _ Conformité fiscal _ Suivi fiscal',
     662800.00, 262800.00, 462800.00, 262800.00, 262800.00, 262800.00, 262800.00, 262800.00, 262800.00, 262800.00, 262800.00, 262800.00,
     3753600.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.4.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1480,6 +1511,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.5.1.01: Formation des équipes _
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.5.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1517,7 +1550,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Renforcement des capacités _ Formation des équipes _',
     0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.5.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1529,6 +1562,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.6.1.01: Dépôts des NP
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1566,7 +1601,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi des redevances minières _ Mission de service recouvrement_Dépôts NP _ Dépôts des NP',
     14300.00, 10800.00, 6800.00, 13500.00, 6000.00, 6000.00, 13500.00, 6000.00, 6000.00, 13500.00, 6000.00, 6000.00,
     108400.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1578,6 +1613,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.6.2.01: Supervisions terrains
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1615,7 +1652,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi des redevances minières _ Mission de service recouvrement_Supervision _ Supervisions terrains',
     0.00, 627600.00, 0.00, 0.00, 627600.00, 0.00, 0.00, 627600.00, 0.00, 0.00, 627600.00, 0.00,
     2510400.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1627,6 +1664,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.6.3.01: Réconciliation avec les parties prenantes
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1664,7 +1703,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi des redevances minières _ Mission de service recouvrement_Réconciliation _ Réconciliation avec les parties prenantes',
     0.00, 0.00, 216900.00, 0.00, 0.00, 216900.00, 0.00, 0.00, 216900.00, 0.00, 0.00, 216900.00,
     867600.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1676,6 +1715,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.6.4.01: Déclenchement procédures de recouvrement forcé
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.4.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1713,7 +1754,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi des redevances minières _ Recouvrement forcés _ Déclenchement procédures de recouvrement forcé',
     30000.00, 30000.00, 30000.00, 30000.00, 30000.00, 30000.00, 30000.00, 30000.00, 30000.00, 30000.00, 30000.00, 30000.00,
     360000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.4.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1725,6 +1766,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.6.4.02: Démarche de collaboration avec la DGRAD
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.4.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1762,7 +1805,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi des redevances minières _ Recouvrement forcés _ Démarche de collaboration avec la DGRAD',
     10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00, 10000.00,
     120000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.4.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1774,6 +1817,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.6.5.01: Participation à la mining Week
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.5.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1811,7 +1856,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Suivi des redevances minières _ Réseautage _ Participation à la mining Week',
     50000.00, 0.00, 0.00, 0.00, 50000.00, 103650.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     203650.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.6.5.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1823,6 +1868,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.7.1.01: Collaboration avec le ministère des finances et l''ARCA
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.7.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1860,7 +1907,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Activer les autres sources de financements _ Activation prime d''assurance _ Collaboration avec le ministère des finances et l''ARCA',
     9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00, 9000.00,
     108000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.7.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1872,6 +1919,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.7.2.01: Collaboration avec le ministère de l''environnement
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.7.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1909,7 +1958,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Activer les autres sources de financements _ Activation quote-part crédit carbone _ Collaboration avec le ministère de l''environnement',
     21000.00, 21000.00, 21000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00, 5000.00,
     108000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.7.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1921,6 +1970,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.8.1.01: Suivi portefeuille des investissements
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.8.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -1958,7 +2009,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Gérer les investissements du fonds _ Gestion portefeuille investissements _ Suivi portefeuille des investissements',
     4180.00, 34180.00, 4180.00, 4180.00, 4180.00, 4180.00, 29180.00, 4180.00, 4180.00, 4180.00, 4180.00, 29180.00,
     130160.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.8.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -1970,6 +2021,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.8.2.01: Mission de prospection
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.8.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -2007,7 +2060,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Gérer les investissements du fonds _ prospection  acquisition  terrains et/ou immeubles à l''interieur du pays _ Mission de prospection',
     1000.00, 1000.00, 7710.00, 1000.00, 1000.00, 7710.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00, 1000.00,
     25420.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.8.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2019,6 +2072,8 @@ WHERE NOT EXISTS (
 );
 
 -- FI.8.3.01: Acquisition du logiciel spécialisé de modélisation financière
+
+SET @dept_id = (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.8.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1);
 
 -- Create activity if not exists
 INSERT INTO budget_activity (name, department_id)
@@ -2056,7 +2111,7 @@ SELECT
     'DIRECTION FINANCIÈRE _ Gérer les investissements du fonds _ _Outils _ Acquisition du logiciel spécialisé de modélisation financière',
     0.00, 0.00, 30000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
     30000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('FI.8.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2105,7 +2160,7 @@ SELECT
     'FINANCE  _  Logiciels _  Logiciels_Logiciels',
     103000.00, 30000.00, 440500.00, 15000.00, NULL, NULL, 525000.00, NULL, NULL, NULL, 375000.00, NULL,
     1488500.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.3.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2154,7 +2209,7 @@ SELECT
     'FINANCE  _  Terrain + Construction _Terrain + Construction_Terrain + Construction',
     NULL, 1300000.00, 1500000.00, 388889.00, 388889.00, 388889.00, 388889.00, 388889.00, 388889.00, 388889.00, 388889.00, 388889.00,
     6300000.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.1.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2203,7 +2258,7 @@ SELECT
     'FINANCE  _  Constructions administratives _  Constructions administratives_Constructions administratives',
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.5.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2252,7 +2307,7 @@ SELECT
     'FINANCE  _  Constructions sociales (écoles',
     22200002.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.5.1.02',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2301,7 +2356,7 @@ SELECT
     'FINANCE  _  Constructions mémorielles et monuments _  Constructions mémorielles et monuments_Constructions mémorielles et monuments',
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.5.1.03',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2350,7 +2405,7 @@ SELECT
     'FINANCE  _  Installations techniques',
     0.00, 0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.6.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2399,7 +2454,7 @@ SELECT
     'FINANCE  _  Matériel de transport _  Matériel de transport_Matériel de transport',
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.7.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2448,7 +2503,7 @@ SELECT
     'FINANCE  _  Mobilier et matériel de bureau _  Mobilier et matériel de bureau_Mobilier et matériel de bureau',
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.8.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2497,7 +2552,7 @@ SELECT
     'FINANCE  _  Matériel informatiques _  Acquisition',
     0.00, 0.00, 1100.00, 4600.00, 25538.00, 1100.00, 1100.00, 25538.00, 1100.00, 1100.00, 25538.00, 1100.00,
     25538.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.4.6.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2546,7 +2601,7 @@ SELECT
     'FINANCE  _  Autres immobilisations corporelles diverses _  Autres immobilisations corporelles diverses_Autres immobilisations corporelles diverses',
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.4.7.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2595,7 +2650,7 @@ SELECT
     'FINANCE  _  Matériels et équipements _  Matériels et équipements_Matériels et équipements',
     28667.00, 46667.00, 57867.00, 61667.00, 46667.00, 57867.00, 61667.00, 46667.00, 27867.00, 31667.00, 27867.00, 31667.00,
     526800.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.2.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2644,7 +2699,7 @@ SELECT
     'FINANCE  _  Amélioration du réseau interne (switching',
     0.00, 22500004.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, 2845.00, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.3.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2693,7 +2748,7 @@ SELECT
     'FINANCE  _  Mise en place du stockage centralisé et des sauvegardes cloud-first (NAS',
     0.00, 0.00, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.3.4.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2742,7 +2797,7 @@ SELECT
     'FINANCE  _  Acquisition des licences logicielles associés. _  Acquisition des licences logicielles associés._Achat de NAS',
     0.00, 0.00, NULL, NULL, 96385.00, NULL, NULL, 96385.00, NULL, NULL, 96385.00, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.4.1.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2791,7 +2846,7 @@ SELECT
     'FINANCE  _  Normalisation des postes de travail et équipements (Laptop pour tous les agents',
     22500006.00, 0.00, 0.00, 0.00, 0.00, 0.00, NULL, NULL, 73588.00, NULL, NULL, 73588.00,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.4.2.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2840,7 +2895,7 @@ SELECT
     'FINANCE  _  Mise en place d’un site de secours externalisé pour la continuité des activités. _  Acquisition et mise en place de l’infrastructure_Acquisition des services d’hébergement (serveurs virtualisés ou physiques',
     0.00, 0.00, NULL, NULL, 73808.00, NULL, NULL, 73808.00, NULL, NULL, 73808.00, NULL,
     73808.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.4.3.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2889,7 +2944,7 @@ SELECT
     'FINANCE  _  Déploiement d’outils de gestion de la sécurité _  Sélection et acquisition des outils_Acquérir les licences logicielles et équipements associés.',
     NULL, NULL, 29457.00, NULL, NULL, 29457.00, NULL, NULL, 29457.00, NULL, NULL, 29457.00,
     117828.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.4.4.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
@@ -2938,7 +2993,7 @@ SELECT
     'FINANCE  _  Digitalisation des processus internes (Administration',
     0.00, 0.00, 0.00, 0.00, NULL, NULL, 1290625.00, NULL, NULL, 1290625.00, NULL, NULL,
     0.00,
-    @dept_id,
+    (SELECT id FROM department WHERE code = CASE WHEN LEFT('CX.4.5.01',2) = 'FI' THEN 'FI' ELSE 'CX' END LIMIT 1),
     @activity_id,
     @sous_activity_id,
     @tache_id
