@@ -182,7 +182,8 @@ export class ApexInputService {
         monthsToReturn.push({ key: allMonths[i], label: `${monthLabels[i]} ${requestedYear}` });
       }
     }
-    console.log("acts", acts)
+    console.log("acts",activities, acts)
+    
     if (departmentCode === "RH") {
       acts = acts?.filter(x => x.name?.toLowerCase() === "renumeration_ressources humaines")
     }
@@ -193,20 +194,21 @@ export class ApexInputService {
       const monthSelect = monthsToReturn.map(m => 'COALESCE(SUM(`' + m.key + '`),0) AS `' + m.key + '`').join(', ');
       let bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
       // For realisation, we need to group transactions by month from createdAt
-      if (a.name?.toLowerCase() === "renumeration") {
-        bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ? AND assigned_department_id = ?`, [a.id, d.id])
-      }
+      // if (a.name?.toLowerCase() === "renumeration") {
+      //   bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ? AND assigned_department_id = ?`, [a.id, d.id])
+      // }
       if (a.name?.toLowerCase() === "renumeration_ressources humaines") {
         const tache = await this.tacheRepo.findOneBy({ name: a.name })
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE tache_id = ? AND department_id = ? AND assigned_department_id = ?`, [tache.id, d.id, d.id])
       }
-      console.log("bRow", bRow)
+      console.log("bRow",monthSelect, bRow)
       const monthly: Record<string, { budget: number; realisation: number }> = {};
       // First, populate budget values
       for (const mInfo of monthsToReturn) {
         const m = mInfo.key;
         const label = mInfo.label;
         const bVal = bRow && bRow[0] && bRow[0][m] ? Number(bRow[0][m]) : 0;
+        console.log("bVal", m, bVal)
         monthly[label] = { budget: bVal, realisation: 0 };
       }
 
@@ -228,7 +230,7 @@ export class ApexInputService {
         monthly[label].realisation = rVal;
       }
 
-      activities.push({ activity: a.name || null, monthly });
+      activities.push({ id: a.id, activity: a.name || null, monthly });
 
     }
 

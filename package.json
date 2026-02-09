@@ -23,9 +23,10 @@
     "migration:generate": "npm run typeorm -- -d db/typeorm.config.ts migration:generate db/migrations/$npm_config_name",
     "migration:run": "npm run typeorm -- migration:run -d db/typeorm.config.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d db/typeorm.config.ts",
-    "migration:show": "npm run typeorm -- migration:show -d db/typeorm.config.ts"
-    ,
-    "create-admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts"
+    "migration:show": "npm run typeorm -- migration:show -d db/typeorm.config.ts",
+    "create-admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts",
+    "insert-transactions": "ts-node -r tsconfig-paths/register scripts/insert-transactions-from-csv.ts",
+    "check-budget-back": "ts-node -r tsconfig-paths/register scripts/check-budget-back-cost-centers.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.1.2",
@@ -56,6 +57,7 @@
     "cookie-parser": "^1.4.7",
     "csrf-csrf": "^3.0.8",
     "csv-parse": "^6.1.0",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.4.5",
     "express-session": "^1.18.1",
     "googleapis": "^168.0.0",

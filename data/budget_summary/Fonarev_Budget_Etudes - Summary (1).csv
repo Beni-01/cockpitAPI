@@ -1,0 +1,169 @@
+Annee,,,,,,,,#VALUE!,#VALUE!,1899,#VALUE!,#VALUE!,2026,2026,2026,2026,2026,2026,2026,,,2027,2028,2029,2030,,,,,,,,,,,,,
+Mois,,,,,,,,#VALUE!,#VALUE!,12,#VALUE!,#VALUE!,1,2,3,4,5,6,7,,,,,,,,,,,,,,,,,,,
+Trimestre,,,,,,,,0,0,0,0,0,1,1,1,2,2,2,3,,,,,,,,,,,,,,,,,,,
+Semestre,,,,,,,,#N/A,#N/A,#N/A,#N/A,#N/A,1,1,1,1,1,1,2,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,ETUDES,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,Budget d'Exploitation,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Cost Center,Description CC,Province & Ville,Coordinations provinciales,Local / Etranger ?,Catégorie / Grade,Nature Depenses,Account Ohada,Departement ,Texte / Libelle,,Unite de Mesure des donnees mensuelles,Cout Unitaire en USD Hors Taxe,31-janv.,28-févr.,31-mars,30-avr.,31-mai,30-juin,31-juil.,31-août,30-sept.,31-oct.,30-nov.,31-déc.,Total en Unite de Mesure des donnees mensuelles,Total Budget en USD,2027,2028,2029,2030,Check Categorie,Check Unite de mesure,Check cout unitaire,,CODE DEPARTEMENT,CODE ACTIVITE,CODE SOUS ACTIVITE,CODE TACHE
+,,,,Ligne de depense,Direction,,,,Centre des couts ,Categories,Unite de Mesure des donnees mensuelles,Cout Unitaire en USD Hors Taxe,31/1/2025,28-Feb-26,31-Mar-26,30-Apr-26,31-May-26,30-Jun-26,31-Jul-26,31-Aug-26,30-Sep-26,31-Oct-26,30-Nov-26,31-Dec-26,Total en Unite de Mesure des donnees mensuelles,Total Budget en USD,2027,2028,2029,2030,,,,,,,,
+ET.0.0.01,ETUDES _ Renumeration _ Renumeration _ Renumeration,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,0,0,01
+ET.1.1.01,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 1. Formation  des enqueteurs aux chefs lieux des provinces pour la documentation",,,,,,,,,,,,0,0,33 448,27 648,27 648,27 648,24 468,0,0,0,0,0,140 860,140 860,142 269,143 677,145 086,146 494,,,,,ET,1,1,01
+ET.1.1.02,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 2. Deploiement des enqueteurs sur terrain",,,,,,,,,,,,0,0,29 200,29 200,29 200,29 200,29 200,0,0,0,0,0,146 000,146 000,147 460,148 920,150 380,151 840,,,,,ET,1,1,02
+ET.1.1.03,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 3.Certification par la communauté à travers les focus group",,,,,,,,,,,,0,0,2 640,2 640,2 640,2 640,2 640,0,0,0,0,0,13 200,13 200,13 332,13 464,13 596,13 728,,,,,ET,1,1,03
+ET.1.1.04,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 4. Mission de supervision par les agents du FONAREV",,,,,,,,,,,,0,0,56 150,74 150,38 150,56 150,53 150,0,0,0,0,0,277 750,277 750,280 528,283 305,286 083,288 860,,,,,ET,1,1,04
+ET.1.1.05,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 5. Rédaction du répertoire des violations par des experts (Honoraires)",,,,,,,,,,,,0,36 000,48 000,0,0,0,0,0,0,0,0,0,84 000,84 000,84 840,85 680,86 520,87 360,,,,,ET,1,1,05
+ET.1.1.06,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 6. Qualification par les Experts",,,,,,,,,,,,74 500,74 000,0,0,0,0,0,0,0,0,0,0,148 500,148 500,149 985,151 470,152 955,154 440,,,,,ET,1,1,06
+ET.1.1.07,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 7. Publication (N-1)",,,,,,,,,,,,0,0,0,0,0,32 000,150 000,0,0,0,0,0,182 000,182 000,183 820,185 640,187 460,189 280,,,,,ET,1,1,07
+ET.1.1.08,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ 8 Recrutement d'un cabinet de lobbyng chargé d'introduire et faire accepter le Repertoire du FONAREV dans les institutions internationales et gouvernements étrangers",,,,,,,,,,,,400 000,0,0,0,0,0,0,0,0,0,0,0,400 000,400 000,404 000,408 000,412 000,416 000,,,,,ET,1,1,08
+ET.1.1.09,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ Amelioration et enrichissement du centre de documentation du musée du GENOCOST via des reliques de l'Est",,,,,,,,,,,,0,0,38 400,38 400,23 100,600,0,0,0,0,0,0,100 500,100 500,101 505,102 510,103 515,104 520,,,,,ET,1,1,09
+ET.1.1.10,"ETUDES _ Cartographie des violations _ Documentation, certification et qualification des violations et incidents _ Constitution d'une banque des données des disparues (appel aux familles)",,,,,,,,,,,,0,22 500,50 000,0,0,0,0,0,0,0,0,0,72 500,72 500,73 225,73 950,74 675,75 400,,,,,ET,1,1,10
+ET.1.2.01,ETUDES _ Cartographie des violations _ Mapping des  fosses communes _ 1.Acquisition des detecteurs des ossements enfui sous terre,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,1,2,01
+ET.1.2.02,ETUDES _ Cartographie des violations _ Mapping des  fosses communes _ 2. Formation  des enqueteurs aux chefs lieux des provinces pour le mapping,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,1,2,02
+ET.1.2.03,ETUDES _ Cartographie des violations _ Mapping des  fosses communes _ 2. Deploiement des enqueteurs sur terrain,,,,,,,,,,,,0,0,0,0,0,0,34 920,69 840,34 920,34 920,0,0,174 600,174 600,176 346,178 092,179 838,181 584,,,,,ET,1,2,03
+ET.1.2.04,ETUDES _ Cartographie des violations _ Mapping des  fosses communes _ 3.Certification par la communauté à travers les focus group,,,,,,,,,,,,0,0,0,0,0,0,1 020,2 040,1 020,1 020,0,0,5 100,5 100,5 151,5 202,5 253,5 304,,,,,ET,1,2,04
+ET.1.2.05,ETUDES _ Cartographie des violations _ Mapping des  fosses communes _ 4. Mission de supervision par les agents du FONAREV,,,,,,,,,,,,0,0,0,0,0,0,12 730,25 460,12 730,12 730,0,0,63 650,63 650,64 287,64 923,65 560,66 196,,,,,ET,1,2,05
+ET.1.2.06,ETUDES _ Cartographie des violations _ Mapping des  fosses communes _ 5. Production de la carte thématique par un Expert,,,,,,,,,,,,0,0,0,0,0,0,39 000,0,0,0,0,0,39 000,39 000,39 390,39 780,40 170,40 560,,,,,ET,1,2,06
+ET.1.3.01,ETUDES _ Cartographie des violations _ Monitoring des violations et massacres recents _ 1. Recrutement et formation des  29 ONG de monitoring au chef-lieu de chaque province,,,,,,,,,,,,7 580,0,730,0,0,0,0,0,0,0,0,0,8 310,8 310,8 393,8 476,8 559,8 642,,,,,ET,1,3,01
+ET.1.3.02,ETUDES _ Cartographie des violations _ Monitoring des violations et massacres recents _ 2. Monitoring par les ONG (Honoraire/mois),,,,,,,,,,,,10 000,10 000,10 000,10 000,10 000,10 000,10 000,10 000,10 000,10 000,10 000,10 000,120 000,120 000,121 200,122 400,123 600,124 800,,,,,ET,1,3,02
+ET.1.3.03,ETUDES _ Cartographie des violations _ Monitoring des violations et massacres recents _ 1. Levée documentaire,,,,,,,,,,,,200 000,0,0,0,0,0,0,0,0,0,0,0,200 000,200 000,202 000,204 000,206 000,208 000,,,,,ET,1,3,03
+ET.1.3.04,ETUDES _ Cartographie des violations _ Monitoring des violations et massacres recents _ 2. Analyse de l'intention génocidaire dans les faits,,,,,,,,,,,,0,0,0,266 275,0,0,0,0,0,0,0,0,266 275,266 275,268 938,271 601,274 263,276 926,,,,,ET,1,3,04
+ET.1.3.05,ETUDES _ Cartographie des violations _ Monitoring des violations et massacres recents _ 3. Enquête complémentaire au Nord-Kivu avec les enquêteurs locaux (méthode GRID pour les zones occupées),,,,,,,,,,,,0,0,0,0,100 740,0,0,0,0,0,0,0,100 740,100 740,101 747,102 755,103 762,104 770,,,,,ET,1,3,05
+ET.1.3.06,ETUDES _ Cartographie des violations _ Monitoring des violations et massacres recents _ 4. Finalisation et reporting,,,,,,,,,,,,0,0,0,0,0,140 740,0,0,0,0,0,0,140 740,140 740,142 147,143 555,144 962,146 370,,,,,ET,1,3,06
+ET.1.4.01,ETUDES _ Cartographie des violations _ Levée des preuves et documentation auprès des communautés en RDC et  auprès des anciens belligérants _ 1.recrutement des détectives et remuneration,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,1,4,01
+ET.1.4.02,ETUDES _ Cartographie des violations _ Levée des preuves et documentation auprès des communautés en RDC et  auprès des anciens belligérants _ 2. Authentification des élements matériels par des experts INMC,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,1,4,02
+ET.1.4.03,ETUDES _ Cartographie des violations _ Levée des preuves et documentation auprès des communautés en RDC et  auprès des anciens belligérants _ 3. Etude sur les causes profondes des conflits armés et non armés en RDC,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,1,4,03
+ET.1.5.01,ETUDES _ Cartographie des violations _ Prise de contact avec les services de documentation internationale _ 1. Prise de contact avec les MINAFET,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,1,5,01
+ET.1.5.02,ETUDES _ Cartographie des violations _ Prise de contact avec les services de documentation internationale _ 2. Réunion de cadrage avec les représentations diplomatiques et Séances de travail  avec les services de documentation des départements des Affaires étrangères des pays concernés,,,,,,,,,,,,0,0,60 000,0,0,60 000,0,60 000,0,0,60 000,60 000,300 000,300 000,303 000,306 000,309 000,312 000,,,,,ET,1,5,02
+ET.1.6.01,ETUDES _ Cartographie des violations _ 'Mise en œuvre du programme de subvention de recherche sur les génocides commis en RDC _ 1. Sensibilisation des étudiants de 10 établissements de la RDC,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,1,6,01
+ET.1.6.02,ETUDES _ Cartographie des violations _ 'Mise en œuvre du programme de subvention de recherche sur les génocides commis en RDC _ 2.Mise en place du secretariat technique,,,,,,,,,,,,29 500,29 500,46 150,29 500,29 500,46 150,29 500,29 500,46 150,29 500,29 500,29 500,403 950,403 950,407 990,412 029,416 069,420 108,,,,,ET,1,6,02
+ET.1.6.03,ETUDES _ Cartographie des violations _ 'Mise en œuvre du programme de subvention de recherche sur les génocides commis en RDC _ 3. Subvention de recherches scientifiques,,,,,,,,,,,,0,0,1 000 000,0,0,0,0,0,192 500,0,0,0,1 192 500,1 192 500,1 204 425,1 216 350,1 228 275,1 240 200,,,,,ET,1,6,03
+ET.1.6.04,ETUDES _ Cartographie des violations _ 'Mise en œuvre du programme de subvention de recherche sur les génocides commis en RDC _ 4. Publication scientifique par le secretariat technique,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,30 000,0,0,30 000,30 000,30 300,30 600,30 900,31 200,,,,,ET,1,6,04
+ET.2.1.01,ETUDES _ Identification des victimes _ Obtention de fiches de consentement et Identification des 2500 victimes détentrices d'une décision de justice _ Obtention de fiches de consentement et Identification des 2500 victimes détentrices d'une décision de justice,,,,,,,,,,,,0,0,0,0,81 440,70 640,0,0,0,0,0,0,152 080,152 080,153 601,155 122,156 642,158 163,,,,,ET,2,1,01
+ET.2.2.01,"ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ 1.Mission exploratoire technique, logistique, financier et sécuritaire",,,,,,,,,,,,0,0,0,0,0,0,0,0,65 360,1 600,0,0,66 960,66 960,67 630,68 299,68 969,69 638,,,,,ET,2,2,01
+ET.2.2.02,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ 2. Recrutement et test des 200 agents d'identification par province pour quatre mois de travail,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,26 560,0,26 560,26 560,26 826,27 091,27 357,27 622,,,,,ET,2,2,02
+ET.2.2.03,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ 3. Installation des CIV par province (Mois),,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,12 000,12 000,12 000,12 120,12 240,12 360,12 480,,,,,ET,2,2,03
+ET.2.2.04,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ 4. Formation des agents d'identification au chef-lieu des provinces,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,311 150,0,311 150,311 150,314 262,317 373,320 485,323 596,,,,,ET,2,2,04
+ET.2.2.05,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ 5. Enregistrement des récits sur le terrain par les enquêteurs locaux,,,,,,,,,,,,0,0,0,0,0,0,0,0,20 400,20 400,20 400,0,61 200,61 200,61 812,62 424,63 036,63 648,,,,,ET,2,2,05
+ET.2.2.06,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ 6. Mission de supervision des activités d'identification par les agents du FONAREV,,,,,,,,,,,,0,0,0,0,0,0,0,0,345 940,45 940,45 940,0,437 820,437 820,442 198,446 576,450 955,455 333,,,,,ET,2,2,06
+ET.2.2.07,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ 7. Traitement des données,,,,,,,,,,,,176 000,203 000,179 000,182 000,182 000,149 300,146 800,143 800,140 800,140 800,140 800,0,1 784 300,1 784 300,1 802 143,1 819 986,1 837 829,1 855 672,,,,,ET,2,2,07
+ET.2.2.08,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Organisation EPI/ Test de cohérence des données (matching avec les incidents) via l'IA (abonnement),,,,,,,,,,,,200,200,200,200,200,200,200,200,200,200,200,200,2 400,2 400,2 424,2 448,2 472,2 496,,,,,ET,2,2,08
+ET.2.2.09,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Organisation EPI/ Formation des enquêteurs locaux (125 par province),,,,,,,,,,,,0,43 410,43 410,43 410,47 410,42 000,42 600,0,0,0,0,0,262 240,262 240,264 862,267 485,270 107,272 730,,,,,ET,2,2,09
+ET.2.2.10,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Organisation EPI/ Deploiement et supervision,,,,,,,,,,,,0,1 009 270,1 009 270,1 009 270,1 009 270,1 009 270,1 009 270,0,0,0,0,0,6 055 620,6 055 620,6 116 176,6 176 732,6 237 289,6 297 845,,,,,ET,2,2,10
+ET.2.2.11,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Organisation EPI/ Enquete de couverture,,,,,,,,,,,,0,152 600,152 600,152 600,152 600,152 600,152 600,0,0,0,0,0,915 600,915 600,924 756,933 912,943 068,952 224,,,,,ET,2,2,11
+ET.2.2.12,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Travaux de certification de la LUC/ Validation interne de la LUC par un comité ad hoc,,,,,,,,,,,,0,0,98 625,0,0,0,0,98 625,0,0,0,0,197 250,197 250,199 223,201 195,203 168,205 140,,,,,ET,2,2,12
+ET.2.2.13,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Travaux de certification de la LUC/ Cadrage méthodologique avec les TGI,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,2,13
+ET.2.2.14,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Travaux de certification de la LUC/  Travaux intensifis du comité d'authentification,,,,,,,,,,,,0,0,212 375,0,212 375,0,0,212 375,0,0,0,0,637 125,637 125,643 496,649 868,656 239,662 610,,,,,ET,2,2,14
+ET.2.2.15,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Travaux de certification de la LUC/  Travaux intensifs du comité d'homologation,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,2,15
+ET.2.2.16,ETUDES _ Identification des victimes _ Identication 700.000 victimes ménages ordinaires _ Travaux de certification de la LUC/  Reprographie des cartes et notification par des CDD,,,,,,,,,,,,0,0,36 400,0,36 400,0,0,36 400,0,0,0,0,109 200,109 200,110 292,111 384,112 476,113 568,,,,,ET,2,2,16
+ET.2.3.01,ETUDES _ Identification des victimes _ Poursuite de l'identification des victimes _ 1. Paiement des honoraires des agents d'identification,,,,,,,,,,,,0,2 246 400,2 246 400,0,0,0,0,0,0,0,0,0,4 492 800,4 492 800,4 537 728,4 582 656,4 627 584,4 672 512,,,,,ET,2,3,01
+ET.2.3.02,ETUDES _ Identification des victimes _ Poursuite de l'identification des victimes _ 2.Mission Supervision du processus par les agents du FONAREV,,,,,,,,,,,,226 440,226 440,0,0,0,0,0,0,0,0,0,0,452 880,452 880,457 409,461 938,466 466,470 995,,,,,ET,2,3,02
+ET.2.4.01,ETUDES _ Identification des victimes _ Recensement et identification  des 300.000 déplacées-victimes  dans les camps _ 1. Mission exploratoire dans les camps des provinces concernées,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,4,01
+ET.2.4.02,ETUDES _ Identification des victimes _ Recensement et identification  des 300.000 déplacées-victimes  dans les camps _ 2. Formation des 400 agents d'identification,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,4,02
+ET.2.4.03,ETUDES _ Identification des victimes _ Recensement et identification  des 300.000 déplacées-victimes  dans les camps _ 3. Location et installation des 80 tentes faisant office des CIV,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,4,03
+ET.2.4.04,ETUDES _ Identification des victimes _ Recensement et identification  des 300.000 déplacées-victimes  dans les camps _ 4.Mise en place es mesures securitaires dans les camps,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,4,04
+ET.2.4.05,ETUDES _ Identification des victimes _ Recensement et identification  des 300.000 déplacées-victimes  dans les camps _ 5. Deploiement des equipes dans les camps,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,4,05
+ET.2.4.06,ETUDES _ Identification des victimes _ Recensement et identification  des 300.000 déplacées-victimes  dans les camps _ 6. Mission de supervision,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,4,06
+ET.2.4.07,ETUDES _ Identification des victimes _ Recensement et identification  des 300.000 déplacées-victimes  dans les camps _ Programme de retour volontaire,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,2,4,07
+ET.3.1.01,"ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Catégorisation des communauté victimes _ identification, catégorisation des communautés en conflit en vue de la mise en oeuvre de l'observatoire des conflits en province",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,3,1,01
+ET.3.1.02,"ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Catégorisation des communauté victimes _ Repertoire des communautés victimes (directes et indirectes), non victimes et des communautés bourreaux",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,3,1,02
+ET.3.2.01,ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Consultation sur le droit à la repartion _ 1. Formation  des enqueteurs aux  chefs lieux des provinces sur la conduite des conultations,,,,,,,,,,,,0,48 340,42 580,19 680,2 690,0,0,0,65 020,0,0,0,178 310,178 310,180 093,181 876,183 659,185 442,,,,,ET,3,2,01
+ET.3.2.02,ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Consultation sur le droit à la repartion _ 2. Deploiement des enqueteurs sur terrain,,,,,,,,,,,,0,81 640,81 640,40 820,0,0,0,0,0,0,0,0,204 100,204 100,206 141,208 182,210 223,212 264,,,,,ET,3,2,02
+ET.3.2.03,ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Consultation sur le droit à la repartion _ 3.Certification par la communauté à travers les focus group,,,,,,,,,,,,0,28 280,28 280,17 640,0,0,0,0,0,0,0,0,74 200,74 200,74 942,75 684,76 426,77 168,,,,,ET,3,2,03
+ET.3.2.04,ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Consultation sur le droit à la repartion _ 4. Mission de supervision par les agents du FONAREV,,,,,,,,,,,,0,289 800,0,0,0,0,0,0,0,0,0,0,289 800,289 800,292 698,295 596,298 494,301 392,,,,,ET,3,2,04
+ET.3.2.05,ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Consultation sur le droit à la repartion _ 5. Rédaction du cahier de charge des communauté,,,,,,,,,,,,0,11 200,5 600,5 600,5 600,0,0,0,0,0,0,0,28 000,28 000,28 280,28 560,28 840,29 120,,,,,ET,3,2,05
+ET.3.3.01,"ETUDES _ Poursuivre les consultation des communautés sur le droit à la repartion _ Organisation des ateliers de partage et échange sur les conflits actuells, passés ou latents et pistes des solutions _ Organisation des ateliers de partage et échange sur les conflits actuells, passés ou latents et pistes des solutions",,,,,,,,,,,,0,48 870,320,1 360,0,0,0,0,1 100,0,0,0,51 650,51 650,52 167,52 683,53 200,53 716,,,,,ET,3,3,01
+ET.4.1.01,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 1.Accompagnement administratif et technique dans la formalisation et l'opérationnalisation des associations des victimes _ Sensibilisation des victimes en vue de se constituer en association",,,,,,,,,,,,0,11 730,11 730,11 730,0,5 930,5 800,11 550,0,0,0,0,58 470,58 470,59 055,59 639,60 224,60 809,,,,,ET,4,1,01
+ET.4.2.01,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 2.Renforcement des capacités ( JT, droits humains, droits des victimes, gestion, éducation financière, etc.) des associations des victimes pour renforcer système de gestion des AVEC et MUSO dans les territoires des provinces déjà identifiés en tout ou en partie _ Supervision de la formation mise en œuvre par le partenaire",,,,,,,,,,,,0,13 630,13 130,12 630,0,0,12 100,12 130,0,0,0,0,63 620,63 620,64 256,64 892,65 529,66 165,,,,,ET,4,2,01
+ET.4.3.01,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 3.Octroi de Subvention des mutuels de solidarité et AVEC par consortium _ Coaching sur la mise en œuvre de projet par le partenaire",,,,,,,,,,,,0,6 830,8 580,6 830,0,0,5 300,5 330,0,0,0,0,32 870,32 870,33 199,33 527,33 856,34 185,,,,,ET,4,3,01
+ET.4.4.01,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 4.Programme de construction des infrastructures  pour le developpement des activités AGR des associations des victimes _ 1. Mission exploratoire",,,,,,,,,,,,350 000,700 000,365 700,0,300 000,300 000,300 000,300 000,0,0,0,0,2 615 700,2 615 700,2 641 857,2 668 014,2 694 171,2 720 328,,,,,ET,4,4,01
+ET.4.4.02,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 4.Programme de construction des infrastructures  pour le developpement des activités AGR des associations des victimes _ 2. Etude de faisabilité",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,4,4,02
+ET.4.4.03,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 4.Programme de construction des infrastructures  pour le developpement des activités AGR des associations des victimes _ 3. Recrutement du partenaire",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,4,4,03
+ET.4.5.01,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 5.Reseautage _ Mise en place du circuit de distribution",,,,,,,,,,,,0,0,0,0,0,0,0,100 000,36 050,0,0,0,136 050,136 050,137 411,138 771,140 132,141 492,,,,,ET,4,5,01
+ET.4.5.02,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 5.Reseautage _ Recrutement d'un incubateur pour la transformation",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,4,5,02
+ET.4.5.03,"ETUDES _ Appui administratif, technique et financier aux associations des victimes _ 5.Reseautage _ Rencontre avec les operateurs économiques",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,4,5,03
+ET.5.1.01,ETUDES _ Suivi-Evaluation des programmes _ Suivi-evaluation du processus d'identification des victimes _ 1. Mission de suivi-evaluation,,,,,,,,,,,,0,0,0,0,0,0,0,0,44 370,0,0,0,44 370,44 370,44 814,45 257,45 701,46 145,,,,,ET,5,1,01
+ET.5.1.02,ETUDES _ Suivi-Evaluation des programmes _ Suivi-evaluation du processus d'identification des victimes _ 2. Recrutement des experts pour la modelisation du processus d'identification du FONAREV par type des conflits,,,,,,,,,,,,0,0,0,0,0,0,0,0,64 000,0,0,0,64 000,64 000,64 640,65 280,65 920,66 560,,,,,ET,5,1,02
+ET.5.2.01,ETUDES _ Suivi-Evaluation des programmes _ Suivi-Evaluation des programmes _ Suivi du programme d'appui à l'écosystème,,,,,,,,,,,,0,0,0,0,0,0,0,0,52 830,0,0,0,52 830,52 830,53 358,53 887,54 415,54 943,,,,,ET,5,2,01
+ET.6.1.01,"ETUDES _ Renforcement des capacités _ Formation et renforcement du persnnel des Etudes _ Technique de documentation multi-niveau à kinshasa avec ENA et U.N (PNUD, BCNUDH)",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,6,1,01
+ET.6.1.02,"ETUDES _ Renforcement des capacités _ Formation et renforcement du persnnel des Etudes _ Renforcement qualité sur les normes ISO-9001 sur la collecte, traitement, certification, sécurisation et la gestion des données de l'identification par le bureau Census Data avec Troika Voice à Amsterdam (Hollande)",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,6,1,02
+ET.6.1.03,"ETUDES _ Renforcement des capacités _ Formation et renforcement du persnnel des Etudes _ Principes standards d'organisation, de mise en œuvre et suivi des activités avec les associations des victimes avec l'université de Fribourg en Suisse",,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,6,1,03
+ET.6.1.04,ETUDES _ Renforcement des capacités _ Formation et renforcement du persnnel des Etudes _ Technique de recherche d'authentification et de collecte de l'analyse de l'intention génocidaire avec Lexis-nexis en France,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,ET,6,1,04
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,,,,,,,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,,,,,,,,
+,,,,,,,TOTAL,,,,,0,1 474 220,5 293 640,5 910 558,1 981 583,2 290 963,2 135 068,2 061 298,1 117 250,1 133 390,327 110,644 550,111 700,24 481 330,24 481 330,24 726 143,24 970 957,25 215 770,25 460 583,0,0,0,0,0,182,209,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Budget d'investissement,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Cost Center,Description CC,Province & Ville,Coordinations provinciales,Local / Etranger ?,Catégorie / Grade,Nature Depenses,Account Ohada,Departement ,Texte / Libelle,,Unite de Mesure des donnees mensuelles,Cout Unitaire en USD Hors Taxe,31-janv.,28-févr.,31-mars,30-avr.,31-mai,30-juin,31-juil.,31-août,30-sept.,31-oct.,30-nov.,31-déc.,Total en Unite de Mesure des donnees mensuelles,Total Budget en USD,2027,2028,2029,2030,Check Categorie,Check Unite de mesure,Check cout unitaire,,,,,
+,,,,Ligne de depense,Direction,,,,Centre des couts ,Categories,Unite de Mesure des donnees mensuelles,Cout Unitaire en USD Hors Taxe,31/1/2025,28-Feb-26,31-Mar-26,30-Apr-26,31-May-26,30-Jun-26,31-Jul-26,31-Aug-26,30-Sep-26,31-Oct-26,30-Nov-26,31-Dec-26,Total en Unite de Mesure des donnees mensuelles,Total Budget en USD,2027,2028,2029,2030,,,,,,,,
+,#REF!,,,,,,#REF!,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,"Acquisition des services d’hébergement (serveurs virtualisés ou physiques, stockage, licences logicielles).",,,,,,21200005,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,Matériels LUC,,,,,,22500007,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,TOTAL,,,,,,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,  -   ,,,,,,,
