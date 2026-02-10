@@ -22,7 +22,7 @@ export class TransactionsService {
   /**
    * Return transactions for a given department code (paginated).
    */
-  async findByDepartmentCode(code: string, page = 1, limit = 10) {
+  async findByDepartmentCode(code: string, page = 1, limit = 10, month?: number) {
     const pageNum = Math.max(1, Number(page) || 1);
     const take = Math.min(200, Number(limit) || 10);
     const skip = (pageNum - 1) * take;
@@ -31,8 +31,15 @@ export class TransactionsService {
       .createQueryBuilder('t')
       .leftJoinAndSelect('t.centre', 'c')
       .leftJoinAndSelect('c.department', 'd')
-      .where('d.code = :code', { code })
-      .orderBy('t.createdAt', 'DESC')
+      .leftJoinAndSelect('c.activity', 'activity')
+      .leftJoinAndSelect('c.sousActivity', 'sousActivity')
+      .where('d.code = :code', { code });
+
+    if (month && month >= 1 && month <= 12) {
+      qb.andWhere('MONTH(t.createdAt) = :month', { month });
+    }
+
+    qb.orderBy('t.createdAt', 'DESC')
       .skip(skip)
       .take(take);
 
@@ -68,7 +75,199 @@ export class TransactionsService {
               : null,
             departmentId: (t.centre as any).departmentId ?? (t.centre as any).department_id ?? null,
             activityId: (t.centre as any).activityId ?? (t.centre as any).activity_id ?? null,
+            activity: (t.centre as any).activity
+              ? {
+                  id: (t.centre as any).activity.id,
+                  name: (t.centre as any).activity.name ?? null,
+                  code: (t.centre as any).activity.code ?? null,
+                  departmentId: (t.centre as any).activity.departmentId ?? null,
+                }
+              : null,
             sousActivityId: (t.centre as any).sousActivityId ?? (t.centre as any).sous_activity_id ?? null,
+            sousActivity: (t.centre as any).sousActivity
+              ? {
+                  id: (t.centre as any).sousActivity.id,
+                  name: (t.centre as any).sousActivity.name ?? null,
+                  code: (t.centre as any).sousActivity.code ?? null,
+                  departmentId: (t.centre as any).sousActivity.departmentId ?? null,
+                }
+              : null,
+            tacheId: (t.centre as any).tacheId ?? (t.centre as any).tache_id ?? null,
+          }
+        : null,
+    }));
+
+    return {
+      data: mapped,
+      pagination: {
+        page: pageNum,
+        limit: take,
+        totalItems: total,
+        totalPages: Math.max(1, Math.ceil(total / take)),
+      },
+    };
+  }
+
+  /**
+   * Return transactions for a given activity ID (paginated).
+   */
+  async findByActivityId(activityId: number, page = 1, limit = 10, month?: number) {
+    const pageNum = Math.max(1, Number(page) || 1);
+    const take = Math.min(200, Number(limit) || 10);
+    const skip = (pageNum - 1) * take;
+
+    const qb = this.transactionRepository
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.centre', 'c')
+      .leftJoinAndSelect('c.department', 'd')
+      .leftJoinAndSelect('c.activity', 'activity')
+      .leftJoinAndSelect('c.sousActivity', 'sousActivity')
+      .where('c.activity_id = :activityId', { activityId });
+
+    if (month && month >= 1 && month <= 12) {
+      qb.andWhere('MONTH(t.createdAt) = :month', { month });
+    }
+
+    qb.orderBy('t.createdAt', 'DESC')
+      .skip(skip)
+      .take(take);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    const mapped = data.map((t: Transaction) => ({
+      createdAt: t.createdAt ? new Date(t.createdAt).toISOString() : null,
+      id: t.id,
+      depense: typeof t.depense === 'string' ? Number(t.depense) : t.depense,
+      devise: t.devise,
+      depense_init: typeof t.depense_init === 'string' ? Number(t.depense_init) : t.depense_init,
+      devise_convert: t.devise_convert,
+      description: t.description,
+      ref: t.ref,
+      agent: t.agent,
+      centreId: t.centreId,
+      centre: t.centre
+        ? {
+            id: t.centre.id,
+            costCenter: (t.centre as any).costCenter ?? (t.centre as any).cost_center ?? null,
+            descriptionCc: (t.centre as any).descriptionCc ?? (t.centre as any).description_cc ?? null,
+            totalUnits: Number((t.centre as any).totalUnits ?? (t.centre as any).total_units ?? 0),
+            totalBudgetUsd: Number((t.centre as any).totalBudgetUsd ?? (t.centre as any).total_budget_usd ?? 0),
+            createdAt: t.centre.createdAt ? new Date(t.centre.createdAt).toISOString() : null,
+            department: t.centre.department
+              ? {
+                  id: t.centre.department.id,
+                  code: t.centre.department.code,
+                  name: t.centre.department.name,
+                  categoryId: (t.centre.department as any).categoryId ?? null,
+                }
+              : null,
+            departmentId: (t.centre as any).departmentId ?? (t.centre as any).department_id ?? null,
+            activityId: (t.centre as any).activityId ?? (t.centre as any).activity_id ?? null,
+            activity: (t.centre as any).activity
+              ? {
+                  id: (t.centre as any).activity.id,
+                  name: (t.centre as any).activity.name ?? null,
+                  code: (t.centre as any).activity.code ?? null,
+                  departmentId: (t.centre as any).activity.departmentId ?? null,
+                }
+              : null,
+            sousActivityId: (t.centre as any).sousActivityId ?? (t.centre as any).sous_activity_id ?? null,
+            sousActivity: (t.centre as any).sousActivity
+              ? {
+                  id: (t.centre as any).sousActivity.id,
+                  name: (t.centre as any).sousActivity.name ?? null,
+                  code: (t.centre as any).sousActivity.code ?? null,
+                  departmentId: (t.centre as any).sousActivity.departmentId ?? null,
+                }
+              : null,
+            tacheId: (t.centre as any).tacheId ?? (t.centre as any).tache_id ?? null,
+          }
+        : null,
+    }));
+
+    return {
+      data: mapped,
+      pagination: {
+        page: pageNum,
+        limit: take,
+        totalItems: total,
+        totalPages: Math.max(1, Math.ceil(total / take)),
+      },
+    };
+  }
+
+  /**
+   * Return transactions for a given sous_activity ID (paginated).
+   */
+  async findBySousActivityId(sousActivityId: number, page = 1, limit = 10, month?: number) {
+    const pageNum = Math.max(1, Number(page) || 1);
+    const take = Math.min(200, Number(limit) || 10);
+    const skip = (pageNum - 1) * take;
+
+    const qb = this.transactionRepository
+      .createQueryBuilder('t')
+      .leftJoinAndSelect('t.centre', 'c')
+      .leftJoinAndSelect('c.department', 'd')
+      .leftJoinAndSelect('c.activity', 'activity')
+      .leftJoinAndSelect('c.sousActivity', 'sousActivity')
+      .where('c.sous_activity_id = :sousActivityId', { sousActivityId });
+
+    if (month && month >= 1 && month <= 12) {
+      qb.andWhere('MONTH(t.createdAt) = :month', { month });
+    }
+
+    qb.orderBy('t.createdAt', 'DESC')
+      .skip(skip)
+      .take(take);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    const mapped = data.map((t: Transaction) => ({
+      createdAt: t.createdAt ? new Date(t.createdAt).toISOString() : null,
+      id: t.id,
+      depense: typeof t.depense === 'string' ? Number(t.depense) : t.depense,
+      devise: t.devise,
+      depense_init: typeof t.depense_init === 'string' ? Number(t.depense_init) : t.depense_init,
+      devise_convert: t.devise_convert,
+      description: t.description,
+      ref: t.ref,
+      agent: t.agent,
+      centreId: t.centreId,
+      centre: t.centre
+        ? {
+            id: t.centre.id,
+            costCenter: (t.centre as any).costCenter ?? (t.centre as any).cost_center ?? null,
+            descriptionCc: (t.centre as any).descriptionCc ?? (t.centre as any).description_cc ?? null,
+            totalUnits: Number((t.centre as any).totalUnits ?? (t.centre as any).total_units ?? 0),
+            totalBudgetUsd: Number((t.centre as any).totalBudgetUsd ?? (t.centre as any).total_budget_usd ?? 0),
+            createdAt: t.centre.createdAt ? new Date(t.centre.createdAt).toISOString() : null,
+            department: t.centre.department
+              ? {
+                  id: t.centre.department.id,
+                  code: t.centre.department.code,
+                  name: t.centre.department.name,
+                  categoryId: (t.centre.department as any).categoryId ?? null,
+                }
+              : null,
+            departmentId: (t.centre as any).departmentId ?? (t.centre as any).department_id ?? null,
+            activityId: (t.centre as any).activityId ?? (t.centre as any).activity_id ?? null,
+            activity: (t.centre as any).activity
+              ? {
+                  id: (t.centre as any).activity.id,
+                  name: (t.centre as any).activity.name ?? null,
+                  code: (t.centre as any).activity.code ?? null,
+                  departmentId: (t.centre as any).activity.departmentId ?? null,
+                }
+              : null,
+            sousActivityId: (t.centre as any).sousActivityId ?? (t.centre as any).sous_activity_id ?? null,
+            sousActivity: (t.centre as any).sousActivity
+              ? {
+                  id: (t.centre as any).sousActivity.id,
+                  name: (t.centre as any).sousActivity.name ?? null,
+                  code: (t.centre as any).sousActivity.code ?? null,
+                  departmentId: (t.centre as any).sousActivity.departmentId ?? null,
+                }
+              : null,
             tacheId: (t.centre as any).tacheId ?? (t.centre as any).tache_id ?? null,
           }
         : null,

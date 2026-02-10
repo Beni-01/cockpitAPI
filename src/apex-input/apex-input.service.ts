@@ -57,18 +57,29 @@ export class ApexInputService {
     const departmentData: any[] = [];
     for (const d of deptRows) {
       console.log("department", d)
-      const bRow = d.departmentCode === "RH" ? await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ? AND assigned_department_id = ?`, [d.id, d.id]) : await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ?`, [d.id]);
-      const rRow = await this.transactionRepo.query(
-        `SELECT COALESCE(SUM(t.depense),0) AS realisation 
+      const bRow = d.departmentCode === "RH" ? await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ? AND assigned_department_id IS ?`, [d.id, null]) : await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ?`, [d.id]);
+      let rRow = []
+      if (d.departmentCode === "RH") {
+       rRow = await this.transactionRepo.query(
+          `SELECT COALESCE(SUM(t.depense),0) AS realisation 
          FROM transaction t 
          INNER JOIN budget b ON t.centreId = b.id 
-         WHERE b.department_id = ?`,
-        [d.id]
-      );
+         WHERE b.department_id = ?  AND b.assigned_department_id =?` ,
+          [d.id, d.id]
+        );
+      } else {
+        rRow = await this.transactionRepo.query(
+          `SELECT COALESCE(SUM(t.depense),0) AS realisation 
+         FROM transaction t 
+         INNER JOIN budget b ON t.centreId = b.id 
+         WHERE b.department_id = ? ` ,
+          [d.id]
+        );
+      }
       const budget = Number(bRow && bRow[0] ? bRow[0].budget : 0);
       const realisation = Number(rRow && rRow[0] ? rRow[0].realisation : 0);
       const percentage = budget > 0 ? Number(((realisation / budget) * 100).toFixed(2)) : 0;
-
+      console.log("department budget", d.departmentCode, budget, realisation, percentage)
       const actRow = await this.activityRepo.query(`SELECT name FROM budget_activity WHERE department_id = ? LIMIT 1`, [d.id]);
       const activity = actRow && actRow[0] ? actRow[0].name : null;
 
@@ -171,7 +182,8 @@ export class ApexInputService {
         monthsToReturn.push({ key: allMonths[i], label: `${monthLabels[i]} ${requestedYear}` });
       }
     }
-    console.log("acts", acts)
+    console.log("acts",activities, acts)
+    
     if (departmentCode === "RH") {
       acts = acts?.filter(x => x.name?.toLowerCase() === "renumeration_ressources humaines")
     }
@@ -182,20 +194,21 @@ export class ApexInputService {
       const monthSelect = monthsToReturn.map(m => 'COALESCE(SUM(`' + m.key + '`),0) AS `' + m.key + '`').join(', ');
       let bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
       // For realisation, we need to group transactions by month from createdAt
-      if (a.name?.toLowerCase() === "renumeration") {
-        bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ? AND assigned_department_id = ?`, [a.id, d.id])
-      }
+      // if (a.name?.toLowerCase() === "renumeration") {
+      //   bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ? AND assigned_department_id = ?`, [a.id, d.id])
+      // }
       if (a.name?.toLowerCase() === "renumeration_ressources humaines") {
         const tache = await this.tacheRepo.findOneBy({ name: a.name })
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE tache_id = ? AND department_id = ? AND assigned_department_id = ?`, [tache.id, d.id, d.id])
       }
-      console.log("bRow", bRow)
+      console.log("bRow",monthSelect, bRow)
       const monthly: Record<string, { budget: number; realisation: number }> = {};
       // First, populate budget values
       for (const mInfo of monthsToReturn) {
         const m = mInfo.key;
         const label = mInfo.label;
         const bVal = bRow && bRow[0] && bRow[0][m] ? Number(bRow[0][m]) : 0;
+        console.log("bVal", m, bVal)
         monthly[label] = { budget: bVal, realisation: 0 };
       }
 
@@ -217,7 +230,7 @@ export class ApexInputService {
         monthly[label].realisation = rVal;
       }
 
-      activities.push({ activity: a.name || null, monthly });
+      activities.push({ id: a.id, activity: a.name || null, monthly });
 
     }
 
@@ -496,7 +509,7 @@ export class ApexInputService {
           WHERE b.department_id = ? 
           AND (b.cost_center NOT LIKE 'RH%' OR b.cost_center IS NULL) ${monthFilter}
         `;
-        const queryParams = dept.code==="RH" ? [dept.id, dept.id, ...params] : [dept.id, ...params];
+        const queryParams = dept.code === "RH" ? [dept.id, dept.id, ...params] : [dept.id, ...params];
         const deptBudgetResult = await this.budgetRepo.query(deptBudgetQuery, queryParams);
         const deptBudget = Number(deptBudgetResult?.[0]?.deptBudget || 0);
 
@@ -544,7 +557,7 @@ export class ApexInputService {
         const opDepartments: any[] = [];
         for (const dd of departmentDetails) {
           if (dd.departmentCode === 'CO') {
-            console.log("dd.budget",dd.budget)
+            console.log("dd.budget", dd.budget)
             const funcBudget = Math.round((dd.budget || 0) * funcRatio);
             const opBudget = Math.round((dd.budget || 0) * opRatio);
             const funcHr = Math.round((dd.hr || 0) * funcRatio);

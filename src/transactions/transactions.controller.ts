@@ -46,10 +46,38 @@ async createTransactionMultiple(
     @Param('departmentCode') departmentCode: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('month') month?: string,
   ) {
     const p = page ? parseInt(page, 10) : 1;
     const l = limit ? parseInt(limit, 10) : 20;
-    return this.transactionsService.findByDepartmentCode(departmentCode, p, l);
+    const m = month ? parseInt(month, 10) : undefined;
+    return this.transactionsService.findByDepartmentCode(departmentCode, p, l, m);
+  }
+
+  @Get('by-activity/:activityId')
+  findByActivity(
+    @Param('activityId') activityId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('month') month?: string,
+  ) {
+    const p = page ? parseInt(page, 10) : 1;
+    const l = limit ? parseInt(limit, 10) : 20;
+    const m = month ? parseInt(month, 10) : undefined;
+    return this.transactionsService.findByActivityId(+activityId, p, l, m);
+  }
+
+  @Get('by-sous-activity/:sousActivityId')
+  findBySousActivity(
+    @Param('sousActivityId') sousActivityId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('month') month?: string,
+  ) {
+    const p = page ? parseInt(page, 10) : 1;
+    const l = limit ? parseInt(limit, 10) : 20;
+    const m = month ? parseInt(month, 10) : undefined;
+    return this.transactionsService.findBySousActivityId(+sousActivityId, p, l, m);
   }
 
   @Get(':id')
@@ -83,14 +111,14 @@ async createTransactionMultiple(
     return this.transactionsService.getDepensesPardepartmentByYearPrecision(+year)
   }
 
-  @Get('by-department/:code')
-  getByDepartment(
-    @Param('code') code: string,
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.transactionsService.findByDepartmentCode(code, Number(page), Number(limit));
-  }
+  // @Get('by-department/:code')
+  // getByDepartment(
+  //   @Param('code') code: string,
+  //   @Query('page') page = '1',
+  //   @Query('limit') limit = '10',
+  // ) {
+  //   return this.transactionsService.findByDepartmentCode(code, Number(page), Number(limit));
+  // }
 
 
   @Delete('removeItem/:id')
