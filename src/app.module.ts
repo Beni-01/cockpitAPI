@@ -106,7 +106,6 @@ import { CategoryModule } from './category/category.module';
   controllers: [AppController],
   providers: [
     AppService,
-
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
