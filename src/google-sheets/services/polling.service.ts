@@ -44,7 +44,7 @@ export class PollingService {
                     use_polling: true
                 },
             });
-
+            console.log("activeConfigs", activeConfigs)
             this.logger.log(`Found ${activeConfigs.length} active configs with polling enabled`);
 
             for (const config of activeConfigs) {

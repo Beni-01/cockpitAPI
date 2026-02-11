@@ -28,10 +28,14 @@ export class GoogleSheetsService {
     async createConfig(createConfigDto: CreateConfigDto): Promise<GoogleSheetConfig> {
         const sheetId = this.extractSheetId(createConfigDto.sheet_url);
 
+        const worksheet = createConfigDto.worksheet_name || 'Sheet1';
+        const defaultRange = `${worksheet}!A2:K`;
+
         const config = this.configRepository.create({
             ...createConfigDto,
             sheet_id: sheetId,
             created_by: 1,
+            range: (createConfigDto as any).range || defaultRange,
         });
 
         return this.configRepository.save(config);
@@ -63,6 +67,12 @@ export class GoogleSheetsService {
             Object.assign(config, updateConfigDto);
         }
 
+        // Ensure range is set when worksheet_name changes or when empty
+        if ((!config.range || config.range.trim() === '') && (config.worksheet_name || updateConfigDto.worksheet_name)) {
+            const ws = updateConfigDto.worksheet_name || config.worksheet_name || 'Sheet1';
+            config.range = `${ws}!A2:K`;
+        }
+
         return this.configRepository.save(config);
     }
 
@@ -88,6 +98,8 @@ export class GoogleSheetsService {
             return { message: 'Sync failed', error: error.message, configId: id };
         }
     }
+
+
 
     async getSyncLogs(): Promise<SyncLog[]> {
         return this.syncLogRepository.find({

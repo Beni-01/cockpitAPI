@@ -37,10 +37,15 @@ export class GoogleSheetsService {
     async createConfig(createConfigDto: CreateConfigDto): Promise<GoogleSheetConfig> {
         const sheetId = this.extractSheetId(createConfigDto.sheet_url);
 
+        const worksheet = createConfigDto.worksheet_name || 'Sheet1';
+        const defaultRange = `${worksheet}!A2:K`;
+
         const config = this.configRepository.create({
             ...createConfigDto,
             sheet_id: sheetId,
             created_by: 1,
+            range: (createConfigDto as any).range || defaultRange,
+            use_polling: (createConfigDto as any).use_polling ?? false,
         });
 
         const saved = await this.configRepository.save(config);
@@ -105,6 +110,13 @@ export class GoogleSheetsService {
             Object.assign(config, updateConfigDto, { sheet_id: sheetId });
         } else {
             Object.assign(config, updateConfigDto);
+        }
+
+
+        // Ensure range is set when worksheet_name changes or when empty
+        if ((!config.range || config.range.trim() === '') && (config.worksheet_name || updateConfigDto.worksheet_name)) {
+            const ws = updateConfigDto.worksheet_name || config.worksheet_name || 'Sheet1';
+            config.range = `${ws}!A2:K`;
         }
 
         const updated = await this.configRepository.save(config);

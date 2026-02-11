@@ -60,13 +60,14 @@ export class GoogleSheetConfig {
     this.last_sync_at = value;
   }
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
+  @Column({ name: 'last_sync_status', type: 'varchar', length: 50, nullable: true })
   lastSyncStatus: string;
 
-  @Column({ type: 'text', nullable: true })
+  @Column({ name: 'last_sync_message', type: 'text', nullable: true })
   lastSyncMessage: string;
 
   @Column({
+    name: 'column_mapping',
     type: 'json',
     nullable: true,
     transformer: {
