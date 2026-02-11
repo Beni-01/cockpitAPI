@@ -596,6 +596,8 @@ export class SyncService {
                         const trimmedDesc = description.replace("RESSOURCES HUMAINES", "").trim();
                         const departmentsList: Array<{ id: number; name: string }> = await this.departmentRepo.find();
                         const descUpper = trimmedDesc.toUpperCase();
+                        console.log("departmentsList", descUpper, departmentsList?.length, departmentsList?.map(d => d.name))
+
                         departmentsList?.map((d) => {
                             if (descUpper?.includes(d.name.toUpperCase())) {
                                 console.log(`Looking for department name "${departmentName}" in description "${descUpper}"`,);
@@ -641,7 +643,10 @@ export class SyncService {
                         existing.oct = months.oct ?? existing.oct;
                         existing.nov = months.nov ?? existing.nov;
                         existing.dec = months.dec ?? existing.dec;
-
+                        if (assignedDepartmentId !== null && assignedDepartmentId !== undefined) {
+                            existing.assignedDepartment = { id: assignedDepartmentId } as any;
+                        }
+                        console.log("existing", existing)
                         if (tache) {
                             existing.tache = tache as any;
                             existing.activity = (tache as any).activity ?? existing.activity;
@@ -649,7 +654,11 @@ export class SyncService {
                             existing.department = (tache as any).department ?? existing.department;
                         }
 
-                        await this.budgetDataRepository.save(existing);
+                        const beforeSave = { ...existing };
+                        const saved = await this.budgetDataRepository.save(existing);
+                        this.logger.debug(`Budget updated for costCenter=${costCenter} id=${saved.id} updatedAt=${saved.updatedAt}`);
+                        this.logger.debug(`Before save snapshot: ${JSON.stringify(beforeSave)}`);
+                        this.logger.debug(`After save snapshot: ${JSON.stringify(saved)}`);
                         recordsUpdated++;
                     } else {
                         // create
@@ -680,6 +689,7 @@ export class SyncService {
                             dec: months.dec || null,
                             totalUnits: totalUnits || null,
                             totalBudgetUsd: totalBudget || null,
+                            assignedDepartment: assignedDepartmentId ? ({ id: assignedDepartmentId } as any) : null,
                         });
 
                         if (tache) {
@@ -689,7 +699,9 @@ export class SyncService {
                             b.department = (tache as any).department ?? null;
                         }
 
-                        await this.budgetDataRepository.save(b);
+                        const created = await this.budgetDataRepository.save(b);
+                        this.logger.debug(`Budget created for costCenter=${costCenter} id=${created.id} createdAt=${created.createdAt}`);
+                        this.logger.debug(`Created snapshot: ${JSON.stringify(created)}`);
                         recordsCreated++;
                     }
                 }

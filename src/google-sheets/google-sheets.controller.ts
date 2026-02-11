@@ -54,6 +54,12 @@ export class GoogleSheetsController {
         return this.googleSheetsService.triggerSync(id);
     }
 
+    @Post('sync-all')
+    @ApiOperation({ summary: 'Trigger manual sync for all configs' })
+    async manualSyncAll() {
+        return this.googleSheetsService.syncAllConfigs();
+    }
+
     @Get('logs')
     async getSyncLogs() {
         return this.googleSheetsService.getSyncLogs();
@@ -84,5 +90,10 @@ export class GoogleSheetsController {
     @Get('activities')
     async getActivities(@Query('department') department: string) {
         return this.googleSheetsService.getActivities(department);
+    }
+
+    @Post('repair-transactions-centre')
+    async repiarTransactionCentre() {
+        return this.googleSheetsService.repiarTransactionCentre();
     }
 }

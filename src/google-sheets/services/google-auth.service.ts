@@ -25,7 +25,7 @@ export class GoogleAuthService {
                 'service.json'
                 // 'google-service-account.json',
             );
-
+            console.log("Key file path:", keyFilePath);
             // Check if key file exists
             if (!fs.existsSync(keyFilePath)) {
                 this.logger.warn(

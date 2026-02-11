@@ -26,7 +26,10 @@
     "migration:show": "npm run typeorm -- migration:show -d db/typeorm.config.ts",
     "create-admin": "ts-node -r tsconfig-paths/register scripts/create-admin.ts",
     "insert-transactions": "ts-node -r tsconfig-paths/register scripts/insert-transactions-from-csv.ts",
-    "check-budget-back": "ts-node -r tsconfig-paths/register scripts/check-budget-back-cost-centers.ts"
+    "check-budget-back": "ts-node -r tsconfig-paths/register scripts/check-budget-back-cost-centers.ts",
+    "backup:transactions": "ts-node -r tsconfig-paths/register scripts/backup-transactions-with-cost-center.ts",
+    "apply:fixes-raw": "ts-node -r tsconfig-paths/register scripts/apply-all-fixes-raw.ts",
+    "apply:fixes-ds": "ts-node -r tsconfig-paths/register scripts/apply-all-fixes-datasource.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.1.2",

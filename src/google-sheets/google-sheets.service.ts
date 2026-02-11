@@ -99,6 +99,47 @@ export class GoogleSheetsService {
         }
     }
 
+    async syncAllConfigs(): Promise<any> {
+        const configs = await this.getAllConfigs();
+        const results: Array<any> = [];
+
+        // Prefer running the Master Budget sheet first (if present), and
+        // prefer running the HR budget sheet last (Fonarev_Budget_Ressources Humaines).
+        let ordered = [...configs];
+
+        // Move Master Budget to the front if found
+        const firstIdx = ordered.findIndex(c => {
+            const combined = ((c.name || '') + ' ' + (c.worksheet_name || '')).toLowerCase();
+            return combined.includes('master budget') || combined.includes('master_budget') || combined.includes('master');
+        });
+        if (firstIdx > 0) {
+            const [firstItem] = ordered.splice(firstIdx, 1);
+            ordered.unshift(firstItem);
+        }
+
+        // Move HR budget to the end if found
+        const lastIdx = ordered.findIndex(c => {
+            const combined = ((c.name || '') + ' ' + (c.worksheet_name || '')).toLowerCase();
+            return combined.includes('ressources humaines') || combined.includes('ressources_humaines') || combined.includes('ressources');
+        });
+        if (lastIdx !== -1 && lastIdx !== ordered.length - 1) {
+            const [lastItem] = ordered.splice(lastIdx, 1);
+            ordered.push(lastItem);
+        }
+
+        // Run sequentially to avoid exhausting API quotas; change to parallel with throttling if desired
+        for (const cfg of ordered) {
+            try {
+                await this.syncService.syncSheet(cfg.id);
+                results.push({ configId: cfg.id, status: 'success', triggeredBy: null });
+            } catch (err) {
+                results.push({ configId: cfg.id, status: 'error', error: err?.message || String(err), triggeredBy: null });
+            }
+        }
+
+        return { message: 'Sync attempted for all configs', total: configs.length, results };
+    }
+
 
 
     async getSyncLogs(): Promise<SyncLog[]> {
@@ -177,5 +218,66 @@ export class GoogleSheetsService {
             [department]
         );
         return result.map((row: any) => row.activity);
+    }
+
+    async repiarTransactionCentre(): Promise<any> {
+        const rows: any[] = await this.dataSource.query(
+            'SELECT * FROM transactions_backup_with_cost_center',
+            []
+        );
+
+        let updated = 0;
+        for (const row of rows) {
+            const contRaw = row.cont_center;
+            const cont = contRaw ? String(contRaw).trim() : null;
+            if (!cont) continue;
+            console.log(`Processing transaction id=${row.id} cont_center="${cont}" currentCentre=${row.centreId}`);
+
+            // Case-insensitive trimmed match against budget.cost_center
+            const budget = await this.dataSource.query(
+                'SELECT id FROM budget WHERE LOWER(TRIM(cost_center)) = LOWER(TRIM(?)) LIMIT 1',
+                [cont]
+            );
+
+            if (budget && budget.length > 0) {
+                const budgetId = budget[0].id;
+                // If there are transactions that currently reference the old centreId, update them all
+                if (row.centreId) {
+                    const txs = await this.dataSource.query('SELECT id FROM transaction WHERE centreId = ?', [row.centreId]);
+                    if (txs && txs.length > 0) {
+                        const res: any = await this.dataSource.query('UPDATE transaction SET centreId = ? WHERE centreId = ?', [budgetId, row.centreId]);
+                        const affected = res && (res.affectedRows ?? res.affected ?? res.changedRows ?? txs.length);
+                        updated += Number(affected ?? txs.length);
+                        console.log(`Updated ${affected ?? txs.length} transaction(s) with old centreId=${row.centreId} -> ${budgetId}`);
+                    }
+                    //  else {
+                    //     // No transactions matching the old centreId — try updating this specific transaction id
+                    //     const res: any = await this.dataSource.query('UPDATE transaction SET centreId = ? WHERE id = ?', [budgetId, row.id]);
+                    //     const affected = res && (res.affectedRows ?? res.affected ?? res.changedRows ?? 0);
+                    //     if (affected && affected > 0) {
+                    //         updated += Number(affected);
+                    //         console.log(`Updated transaction ${row.id} centreId ${row.centreId} -> ${budgetId}`);
+                    //     } else {
+                    //         console.log(`No transaction rows updated for id=${row.id} or centreId=${row.centreId}`);
+                    //     }
+                    // }
+                }
+                // else {
+                //     // No existing centreId on backup row — update by id
+                //     const res: any = await this.dataSource.query('UPDATE transaction SET centreId = ? WHERE id = ?', [budgetId, row.id]);
+                //     const affected = res && (res.affectedRows ?? res.affected ?? res.changedRows ?? 0);
+                //     if (affected && affected > 0) {
+                //         updated += Number(affected);
+                //         console.log(`Updated transaction ${row.id} centreId -> ${budgetId}`);
+                //     } else {
+                //         console.log(`No transaction updated for id=${row.id}`);
+                //     }
+                // }
+            } else {
+                console.log(`No budget found for cont_center="${cont}"`);
+            }
+        }
+
+        return { totalRows: rows.length, updated };
     }
 }
