@@ -216,16 +216,23 @@ export class ApexInputService {
       for (const mInfo of monthsToReturn) {
         const label = mInfo.label;
         const monthIndex = allMonths.indexOf(mInfo.key) + 1; // 1-based month
-
         const rRow = await this.transactionRepo.query(
-          `SELECT COALESCE(SUM(t.depense),0) AS realisation 
-           FROM transaction t 
-           INNER JOIN budget b ON t.centreId = b.id 
-           WHERE b.activity_id = ? 
-           AND MONTH(t.createdAt) = ? 
-           AND YEAR(t.createdAt) = ?`,
-          [a.id, monthIndex, requestedYear]
+          `SELECT COALESCE(SUM(t.depense),0) AS realisation
+   FROM transaction t
+   WHERE t.centreId = ?
+   AND MONTH(t.createdAt) = ?
+   AND YEAR(t.createdAt) = ?`,
+          [/* budgetCenterId */ a.id, monthIndex, requestedYear]
         );
+        // const rRow = await this.transactionRepo.query(
+        //   `SELECT COALESCE(SUM(t.depense),0) AS realisation 
+        //    FROM transaction t 
+        //    INNER JOIN budget b ON t.centreId = b.id 
+        //    WHERE b.activity_id = ? 
+        //    AND MONTH(t.createdAt) = ? 
+        //    AND YEAR(t.createdAt) = ?`,
+        //   [a.id, monthIndex, requestedYear]
+        // );
         const rVal = rRow && rRow[0] && rRow[0].realisation ? Number(rRow[0].realisation) : 0;
         monthly[label].realisation = rVal;
       }

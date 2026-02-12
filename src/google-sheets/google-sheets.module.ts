@@ -12,6 +12,12 @@ import { SyncLog } from './entities/sync-log.entity';
 import { BudgetData } from './entities/budget-data.entity';
 import { BudgetDataChangeLog } from './entities/budget-data-change-log.entity';
 import { Activity } from '../activity/entities/activity.entity';
+import { Department } from '../department/entities/department.entity';
+import { Category } from '../category/entities/category.entity';
+import { BudgetActivity } from '../budget/entities/budget-activity.entity';
+import { BudgetSousActivity } from '../budget/entities/budget-sous-activity.entity';
+import { BudgetTache } from '../budget/entities/budget-tache.entity';
+import { Budget } from '../budget/entities/budget.entity';
 import { GoogleSheetsGateway } from './google-sheets.gateway';
 import { RealtimeNotifierService } from './services/realtime-notifier.service';
 import { PollingService } from './services/polling.service';
@@ -33,6 +39,12 @@ import { AutoDetectionService } from './services/auto-detection.service';
             BudgetData,
             BudgetDataChangeLog,
             Activity,
+            Department,
+            Category,
+            BudgetActivity,
+            BudgetSousActivity,
+            BudgetTache,
+            Budget,
         ]),
         EventEmitterModule.forRoot(),
         ScheduleModule.forRoot(),
