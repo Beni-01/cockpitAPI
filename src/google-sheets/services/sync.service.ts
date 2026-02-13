@@ -341,6 +341,18 @@ export class SyncService {
         return null;
     }
 
+    private normalizeName(value: string | null | undefined): string | null {
+        if (value === undefined || value === null) return null;
+        const s = String(value).trim();
+        try {
+            const noDia = s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
+            return noDia.replace(/\s+/g, ' ').trim().toLowerCase();
+        } catch (e) {
+            const noDia = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            return noDia.replace(/\s+/g, ' ').trim().toLowerCase();
+        }
+    }
+
     private parseCostCode(costCode: string): { dept: string; act: string; sous: string; tache: string } | null {
         const raw = this.cleanCell(costCode);
         if (!raw) return null;
@@ -371,29 +383,101 @@ export class SyncService {
         return this.departmentRepo.save(created);
     }
 
-    private async upsertActivity(department: Department, code: string, name?: string | null): Promise<BudgetActivity> {
-        const existing = await this.activityRepo
-            .createQueryBuilder('a')
-            .where('a.code = :code', { code })
-            .andWhere('a.department_id = :deptId', { deptId: department.id })
-            .getOne();
+    private async upsertActivity(department: Department, code: string | null, name?: string | null): Promise<BudgetActivity> {
+        // Try match by code when given
+        let existing: BudgetActivity | undefined;
+        console.log('Upsert activity - trying code match:', { department: department.name, code, name });
+        // if (code) {
+        //     existing = await this.activityRepo
+        //         .createQueryBuilder('a')
+        //         .where('a.code = :code', { code })
+        //         .andWhere('a.department_id = :deptId', { deptId: department.id })
+        //         .getOne();
+        // }
 
-        if (existing) {
-            const nextName = name ?? existing.name;
-            if (nextName !== existing.name || !existing.departmentId) {
-                existing.name = nextName ?? null;
-                existing.department = department;
-                return this.activityRepo.save(existing);
+        // Fallback: match by normalized name within the department
+        if (!existing && name) {
+            const norm = this.normalizeName(name);
+            if (norm) {
+                const candidates = await this.activityRepo
+                    .createQueryBuilder('a')
+                    .where('a.department_id = :deptId', { deptId: department.id })
+                    .andWhere('a.name IS NOT NULL')
+                    .getMany();
+                existing = candidates.find((c) => this.normalizeName((c as any).name) === norm);
             }
-            return existing;
+        }
+        console.log('Upsert activity - existing found:',existing);
+        if (existing) {
+            // Ensure association exists; do NOT overwrite existing.name
+            let changed = false;
+            if (!existing.departmentId) {
+                existing.department = department;
+                changed = true;
+            }
+            const saved = changed ? await this.activityRepo.save(existing) : existing;
+            await this.dedupeActivityDuplicates(saved);
+            return saved;
         }
 
         const created = this.activityRepo.create({
-            code,
+            code: code ?? null,
             name: name ?? null,
             department,
         });
-        return this.activityRepo.save(created);
+        const saved = await this.activityRepo.save(created);
+        // After creating a new activity, consolidate any other records with the same normalized name
+        await this.dedupeActivityDuplicates(saved);
+        return saved;
+    }
+
+    // Consolidate duplicate activities (same normalized name) within the same department.
+    private async dedupeActivityDuplicates(activity: BudgetActivity): Promise<void> {
+        if (!activity || !activity.name || !activity.departmentId) return;
+        const norm = this.normalizeName(activity.name);
+        if (!norm) return;
+
+        await this.activityRepo.manager.transaction(async (manager) => {
+            const repo = manager.getRepository(BudgetActivity);
+            const duplicates = (await repo
+                .createQueryBuilder('a')
+                .where('a.department_id = :deptId', { deptId: activity.departmentId })
+                .andWhere('a.id != :id', { id: activity.id })
+                .andWhere('a.name IS NOT NULL')
+                .getMany())
+                .filter((d) => this.normalizeName((d as any).name) === norm);
+
+            if (!duplicates || duplicates.length === 0) return;
+
+            for (const dup of duplicates) {
+                // Reassign sous activities
+                await manager
+                    .createQueryBuilder()
+                    .update(BudgetSousActivity)
+                    .set({ activity: activity as any })
+                    .where('activity_id = :oldId', { oldId: dup.id })
+                    .execute();
+
+                // Reassign taches
+                await manager
+                    .createQueryBuilder()
+                    .update(BudgetTache)
+                    .set({ activity: activity as any })
+                    .where('activity_id = :oldId', { oldId: dup.id })
+                    .execute();
+
+                // Reassign budgets
+                await manager
+                    .createQueryBuilder()
+                    .update(Budget)
+                    .set({ activity: activity as any })
+                    .where('activity_id = :oldId', { oldId: dup.id })
+                    .execute();
+
+                // Delete duplicate activity
+                await repo.delete(dup.id);
+            }
+        });
     }
 
     private async upsertSousActivity(
@@ -526,12 +610,12 @@ export class SyncService {
 
         // Create/update activity only if we have a code (from COST CODE) OR a name
         const activity = activityCode || activityName
-            ? await this.upsertActivity(department, activityCode || '0', activityName)
+            ? await this.upsertActivity(department, activityCode || null, activityName)
             : null;
 
         // Create/update sous-activity only if we have a code (from COST CODE) OR a name
         const sousActivity = sousCode || sousName
-            ? await this.upsertSousActivity(department, activity, sousCode || '0', sousName)
+            ? await this.upsertSousActivity(department, activity, sousCode || null, sousName)
             : null;
 
         if (tacheCode && costCode) {
