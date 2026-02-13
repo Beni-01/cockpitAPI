@@ -237,7 +237,7 @@ export class ApexInputService {
         monthly[label].realisation = rVal;
       }
 
-      activities.push({ id: a.id, activity: a.name || null, monthly });
+      activities.push({ id: a.id, activity: a.name || null,sousActivity:a.sousActivity || null, monthly });
 
     }
 

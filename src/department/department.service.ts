@@ -9,6 +9,38 @@ import { BudgetSousActivity } from 'src/budget/entities/budget-sous-activity.ent
 import { BudgetTache } from 'src/budget/entities/budget-tache.entity';
 import { Department } from './entities/department.entity';
 
+
+const codeGroupMap = {
+    ET: ["ET", "EO"],
+    EO: ["ET", "EO"],
+
+    AJ: ["AJ"],
+
+    RE: ["RE"],
+
+    CO: ["CO", "GO"],
+    GO: ["CO", "GO"],
+
+    DG: ["DG", "PI"],
+    PI: ["DG", "PI"],
+
+    CA: ["CA"],
+
+    FI: ["FI"],
+
+    AU: ["AU"],
+
+    RH: ["RH", "RJ", "SC"],
+    RJ: ["RH", "RJ", "SC"],
+    SC: ["RH", "RJ", "SC"],
+
+    AM: ["AM"],
+
+    PM: ["PM"],
+
+    ME: ["ME"]
+};
+
 @Injectable()
 export class DepartmentService {
     constructor(
@@ -31,23 +63,24 @@ export class DepartmentService {
 
     // Helper method to get all related codes for a given department code
     async getRelatedCodes(code: string): Promise<string[] | 'ALL'> {
-        // DG and PM should return all departments
-        if (code === 'DG' || code === 'PM') {
-            return 'ALL';
-        }
+        return codeGroupMap[code] || [code];
+        // // DG and PM should return all departments
+        // if (code === 'DG' || code === 'PM') {
+        //     return 'ALL';
+        // }
 
-        // Find the department by code
-        const department = await this.departmentRepo.findOne({ where: { code } });
-        if (!department || !department.name) {
-            return [code]; // Return the code itself if no relation found
-        }
+        // // Find the department by code
+        // const department = await this.departmentRepo.findOne({ where: { code } });
+        // if (!department || !department.name) {
+        //     return [code]; // Return the code itself if no relation found
+        // }
 
-        // Find all departments with the same 
-        const relatedDepartments = await this.departmentRepo.find({
-            where: { name: department.name }
-        });
+        // // Find all departments with the same 
+        // const relatedDepartments = await this.departmentRepo.find({
+        //     where: { name: department.name }
+        // });
 
-        return relatedDepartments.map(d => d.code);
+        // return relatedDepartments.map(d => d.code);
     }
 
     // Helper method to get all related department IDs for a given code
@@ -72,11 +105,12 @@ export class DepartmentService {
             // Get all related codes using the helper method
             const codes = await this.getRelatedCodes(departmentCode);
 
-
+            console.log("Related department codes:", codes);
             // If DG or PM, fetch all activities from all departments
             if (codes === 'ALL') {
                 const acts = await this.activityRepo
                     .createQueryBuilder('activity')
+                    .where('activity.code IS NOT NULL')
                     .leftJoinAndSelect('activity.department', 'department')
                     .getMany();
 
@@ -111,6 +145,7 @@ export class DepartmentService {
                 .createQueryBuilder('activity')
                 .leftJoinAndSelect('activity.department', 'department')
                 .where('activity.department_id IN (:...ids)', { ids: departmentIds })
+                // .andWhere('activity.code IS NOT NULL')
                 .getMany();
 
             return acts.map(a => ({
