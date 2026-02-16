@@ -63,6 +63,8 @@ import { BudgetSousActivity } from '../../budget/entities/budget-sous-activity.e
 import { BudgetTache } from '../../budget/entities/budget-tache.entity';
 import { Category } from '../../category/entities/category.entity';
 import { Budget } from 'src/budget/entities/budget.entity';
+import { HierarchySyncService } from './hierarchy-sync.ervice';
+import { ApexInput } from '../../apex-input/apex-input.entity';
 
 interface SyncResult {
     configId: number;
@@ -99,11 +101,15 @@ export class SyncService {
         private sousActivityRepo: Repository<BudgetSousActivity>,
         @InjectRepository(BudgetTache)
         private tacheRepo: Repository<BudgetTache>,
+        @InjectRepository(ApexInput)
+        private apexInputRepo: Repository<ApexInput>,
         @InjectRepository(Category)
         private categoryRepo: Repository<Category>,
         private sheetReaderService: SheetReaderService,
         private dataTransformerService: DataTransformerService,
         private eventEmitter: EventEmitter2,
+        private readonly hierarchySync: HierarchySyncService,
+
     ) { }
 
     /**
@@ -141,7 +147,7 @@ export class SyncService {
     /**
      * Sync a specific sheet configuration
      */
-    async syncSheet(configId: number): Promise<SyncResult> {
+    async syncSheet(configId: number, workSpace = ""): Promise<SyncResult> {
         const startTime = new Date();
         let syncLog: SyncLog | null = null;
 
@@ -159,15 +165,7 @@ export class SyncService {
         this.syncInProgress.set(configId, true);
 
         try {
-            // Get configuration
-            const config = await this.sheetConfigRepository.findOne({
-                where: { id: configId },
-            });
-
-            if (!config) {
-                throw new Error(`Configuration ${configId} not found`);
-            }
-
+            // `config` already loaded above; ensure it's active
             if (!config.is_active) {
                 throw new Error(`Configuration ${configId} is not active`);
             }
@@ -189,20 +187,36 @@ export class SyncService {
             // Read data from sheet
             const range = config.range || config.worksheet_name;
             let sheetData: any = [];
-            if (config.worksheet_name === "Cost Center") {
-                sheetData = await this.sheetReaderService.readAndGetHeaderCostCenter(
+            let sheetDataInput: any = [];
+            if (workSpace === "Depart_Budget_Opex Input") {
+                sheetDataInput = await this.sheetReaderService.readAndGetHeaderInput(
                     config.spreadsheetId,
-                    range,
+                    "Depart_Budget_Opex Input",
                 );
-            }
-            if (config.worksheet_name === "Summary") {
-                sheetData = await this.sheetReaderService.readAndGetHeaderBudgetSummary(
-                    config.spreadsheetId,
-                    range,
-                )
+            } else {
+                if (config.worksheet_name === "Cost Center") {
+                    sheetData = await this.sheetReaderService.readAndGetHeaderCostCenter(
+                        config.spreadsheetId,
+                        range,
+                    );
+                }
+                if (config.worksheet_name === "Summary") {
+                    sheetData = await this.sheetReaderService.readAndGetHeaderBudgetSummary(
+                        config.spreadsheetId,
+                        range,
+                    )
+                    sheetDataInput = await this.sheetReaderService.readAndGetHeaderInput(
+                        config.spreadsheetId,
+                        "Depart_Budget_Opex Input",
+                    );
+                }
             }
 
-            if (!sheetData || sheetData.length === 0) {
+
+
+
+
+            if ((!sheetData || sheetData.length === 0) && (!sheetDataInput || sheetDataInput.length === 0)) {
                 this.logger.warn(`No data found in sheet for config ${configId}`);
 
                 // Update sync log before returning
@@ -240,7 +254,7 @@ export class SyncService {
                 return syncResult;
             }
             // Transform and sync data
-            const result = await this.transformAndSyncData(config, sheetData, syncLog);
+            const result = await this.transformAndSyncData(config, sheetData, sheetDataInput, syncLog);
 
             // Update sync log with results
             if (syncLog) {
@@ -341,287 +355,7 @@ export class SyncService {
         return null;
     }
 
-    private normalizeName(value: string | null | undefined): string | null {
-        if (value === undefined || value === null) return null;
-        const s = String(value).trim();
-        try {
-            const noDia = s.normalize('NFD').replace(/\p{Diacritic}/gu, '');
-            return noDia.replace(/\s+/g, ' ').trim().toLowerCase();
-        } catch (e) {
-            const noDia = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            return noDia.replace(/\s+/g, ' ').trim().toLowerCase();
-        }
-    }
 
-    private parseCostCode(costCode: string): { dept: string; act: string; sous: string; tache: string } | null {
-        const raw = this.cleanCell(costCode);
-        if (!raw) return null;
-
-        const parts = raw.split('.').map((p) => p.trim());
-        if (parts.length < 4) return null;
-
-        const [dept, act, sous, tache] = parts;
-        if (!dept || !act || !sous || !tache) return null;
-
-        return { dept, act, sous, tache };
-    }
-
-    private async upsertDepartment(code: string, name: string): Promise<Department> {
-        const cat = inferCategoryFromDepartment(name === "FINANCE" ? "CAPEX" : name || "");
-        const catobj = cat ? await this.categoryRepo.findOne({ where: { name: cat } }) : null;
-        const existing = await this.departmentRepo.findOne({ where: { code } });
-        if (existing) {
-            if (name) {
-                existing.name = name === "FINANCE" ? "CAPEX" : name;
-                existing.categoryId = catobj ? catobj.id : null;
-                return this.departmentRepo.save(existing);
-            }
-            return existing;
-        }
-
-        const created: any = this.departmentRepo.create({ code, name: name === "FINANCE" ? "CAPEX" : name, categoryId: catobj ? catobj.id : null });
-        return this.departmentRepo.save(created);
-    }
-
-    private async upsertActivity(department: Department, code: string | null, name?: string | null): Promise<BudgetActivity> {
-        // Try match by code when given
-        let existing: BudgetActivity | undefined;
-        console.log('Upsert activity - trying code match:', { department: department.name, code, name });
-        // if (code) {
-        //     existing = await this.activityRepo
-        //         .createQueryBuilder('a')
-        //         .where('a.code = :code', { code })
-        //         .andWhere('a.department_id = :deptId', { deptId: department.id })
-        //         .getOne();
-        // }
-
-        // Fallback: match by normalized name within the department
-        if (!existing && name) {
-            const norm = this.normalizeName(name);
-            if (norm) {
-                const candidates = await this.activityRepo
-                    .createQueryBuilder('a')
-                    .where('a.department_id = :deptId', { deptId: department.id })
-                    .andWhere('a.name IS NOT NULL')
-                    .getMany();
-                existing = candidates.find((c) => this.normalizeName((c as any).name) === norm);
-            }
-        }
-        console.log('Upsert activity - existing found:',existing);
-        if (existing) {
-            // Ensure association exists; do NOT overwrite existing.name
-            let changed = false;
-            if (!existing.departmentId) {
-                existing.department = department;
-                changed = true;
-            }
-            const saved = changed ? await this.activityRepo.save(existing) : existing;
-            await this.dedupeActivityDuplicates(saved);
-            return saved;
-        }
-
-        const created = this.activityRepo.create({
-            code: code ?? null,
-            name: name ?? null,
-            department,
-        });
-        const saved = await this.activityRepo.save(created);
-        // After creating a new activity, consolidate any other records with the same normalized name
-        await this.dedupeActivityDuplicates(saved);
-        return saved;
-    }
-
-    // Consolidate duplicate activities (same normalized name) within the same department.
-    private async dedupeActivityDuplicates(activity: BudgetActivity): Promise<void> {
-        if (!activity || !activity.name || !activity.departmentId) return;
-        const norm = this.normalizeName(activity.name);
-        if (!norm) return;
-
-        await this.activityRepo.manager.transaction(async (manager) => {
-            const repo = manager.getRepository(BudgetActivity);
-            const duplicates = (await repo
-                .createQueryBuilder('a')
-                .where('a.department_id = :deptId', { deptId: activity.departmentId })
-                .andWhere('a.id != :id', { id: activity.id })
-                .andWhere('a.name IS NOT NULL')
-                .getMany())
-                .filter((d) => this.normalizeName((d as any).name) === norm);
-
-            if (!duplicates || duplicates.length === 0) return;
-
-            for (const dup of duplicates) {
-                // Reassign sous activities
-                await manager
-                    .createQueryBuilder()
-                    .update(BudgetSousActivity)
-                    .set({ activity: activity as any })
-                    .where('activity_id = :oldId', { oldId: dup.id })
-                    .execute();
-
-                // Reassign taches
-                await manager
-                    .createQueryBuilder()
-                    .update(BudgetTache)
-                    .set({ activity: activity as any })
-                    .where('activity_id = :oldId', { oldId: dup.id })
-                    .execute();
-
-                // Reassign budgets
-                await manager
-                    .createQueryBuilder()
-                    .update(Budget)
-                    .set({ activity: activity as any })
-                    .where('activity_id = :oldId', { oldId: dup.id })
-                    .execute();
-
-                // Delete duplicate activity
-                await repo.delete(dup.id);
-            }
-        });
-    }
-
-    private async upsertSousActivity(
-        department: Department,
-        activity: BudgetActivity | null,
-        code: string,
-        name?: string | null,
-    ): Promise<BudgetSousActivity> {
-        const qb = this.sousActivityRepo
-            .createQueryBuilder('s')
-            .where('s.code = :code', { code })
-            .andWhere('s.department_id = :deptId', { deptId: department.id });
-
-        if (activity?.id) {
-            qb.andWhere('s.activity_id = :actId', { actId: activity.id });
-        } else {
-            qb.andWhere('s.activity_id IS NULL');
-        }
-
-        const existing = await qb.getOne();
-        if (existing) {
-            const nextName = name ?? existing.name;
-            let changed = false;
-            if (nextName !== existing.name) {
-                existing.name = nextName ?? null;
-                changed = true;
-            }
-            if (!existing.departmentId) {
-                existing.department = department;
-                changed = true;
-            }
-            if (activity?.id && (!existing.activity || (existing.activity as any).id !== activity.id)) {
-                existing.activity = activity;
-                changed = true;
-            }
-            return changed ? this.sousActivityRepo.save(existing) : existing;
-        }
-
-        const created = this.sousActivityRepo.create({
-            code,
-            name: name ?? null,
-            department,
-            activity: activity ?? null,
-        });
-        return this.sousActivityRepo.save(created);
-    }
-
-    private async upsertTache(
-        department: Department,
-        activity: BudgetActivity | null,
-        sousActivity: BudgetSousActivity | null,
-        code: string,
-        costCode: string,
-        name?: string | null,
-    ): Promise<BudgetTache> {
-        const existing = await this.tacheRepo
-            .createQueryBuilder('t')
-            .where('t.costCode = :costCode', { costCode })
-            .andWhere('t.department_id = :deptId', { deptId: department.id })
-            .getOne();
-
-        if (existing) {
-            let changed = false;
-            const nextName = name ?? existing.name;
-            if (nextName !== existing.name) {
-                existing.name = nextName ?? null;
-                changed = true;
-            }
-            if (existing.code !== code) {
-                existing.code = code;
-                changed = true;
-            }
-            if (existing.costCode !== costCode) {
-                existing.costCode = costCode;
-                changed = true;
-            }
-            if (!existing.departmentId) {
-                existing.department = department;
-                changed = true;
-            }
-            if (activity?.id && existing.activityId !== activity.id) {
-                existing.activity = activity;
-                changed = true;
-            }
-            if (sousActivity?.id && (!existing.sousActivity || (existing.sousActivity as any).id !== sousActivity.id)) {
-                existing.sousActivity = sousActivity;
-                changed = true;
-            }
-            return changed ? this.tacheRepo.save(existing) : existing;
-        }
-
-        const created = this.tacheRepo.create({
-            code,
-            costCode,
-            name: name ?? null,
-            department,
-            activity: activity ?? null,
-            sousActivity: sousActivity ?? null,
-        });
-        return this.tacheRepo.save(created);
-    }
-
-    private async ensureHierarchyForRow(row: any): Promise<void> {
-        // Only use these sheet headers:
-        // DEPARTEMENT / DIRECTION, ACTIVITES, SOUS ACTVITES, TACHES, COST CODE, CODE DEPARTEMENT
-
-        console.log("ensureHierarchyForRow", row)
-        const costCode = this.getCellValue(row, ['COST CODE', 'COST_CODE', 'COSTCODE']);
-        const parsed = costCode ? this.parseCostCode(costCode) : null;
-
-        const departmentCode = this.getCellValue(row, ['CODE DEPARTEMENT', 'CODE_DEPARTEMENT', 'CODE DEPARTMENT', 'DEPARTMENT CODE']) || parsed?.dept || null;
-        const departmentName = this.getCellValue(row, ['DEPARTEMENT / DIRECTION', 'DIRECTION', 'DEPARTEMENT', 'DEPARTMENT', 'DEPARTEMENT/DIRECTION']);
-
-        const activityName = this.getCellValue(row, ['ACTIVITES', 'ACTIVITIES', 'ACTIVITÉS', 'ACTIVITE']);
-        const sousName = this.getCellValue(row, ['SOUS ACTVITES', 'SOUS ACTIVITES', 'SOUS-ACTIVITES', 'SOUS ACTIVITY', 'SOUS_ACTVITES', 'SOUS_ACTIVITES']);
-        const tacheName = this.getCellValue(row, ['TACHES', 'TÂCHES', 'TASKS', 'TACHE']);
-
-        const activityCode = parsed?.act || null;
-        const sousCode = parsed?.sous || null;
-        const tacheCode = parsed?.tache || null;
-
-        if (!departmentCode) return;
-        if (!departmentName) {
-            throw new Error(`Missing DEPARTEMENT / DIRECTION for CODE DEPARTEMENT=${departmentCode}`);
-        }
-
-        const department = await this.upsertDepartment(departmentCode, departmentName);
-
-
-
-        // Create/update activity only if we have a code (from COST CODE) OR a name
-        const activity = activityCode || activityName
-            ? await this.upsertActivity(department, activityCode || null, activityName)
-            : null;
-
-        // Create/update sous-activity only if we have a code (from COST CODE) OR a name
-        const sousActivity = sousCode || sousName
-            ? await this.upsertSousActivity(department, activity, sousCode || null, sousName)
-            : null;
-
-        if (tacheCode && costCode) {
-            await this.upsertTache(department, activity, sousActivity, tacheCode, costCode, tacheName);
-        }
-    }
 
     /**
      * Transform and sync data to database
@@ -629,6 +363,7 @@ export class SyncService {
     private async transformAndSyncData(
         config: GoogleSheetConfig,
         sheetData: any[],
+        sheetDataInput: any[],
         syncLog?: SyncLog,
     ): Promise<{
         success: boolean;
@@ -642,19 +377,25 @@ export class SyncService {
         let recordsUpdated = 0;
         let recordsSkipped = 0;
         const errors: string[] = [];
-        console.log("transformAndSyncData", sheetData[10])
         const parseMoneyToString = (v: string | null) => {
             if (!v) return null;
             const num = String(v).replace(/[^0-9.-]+/g, '');
             if (num === '') return null;
             return num;
         };
+        if (config.worksheet_name === "Cost Center") {
+            const hres = await this.syncCostCenters(sheetData);
+            if (hres) {
+                recordsCreated = hres.created ?? 0;
+                recordsUpdated = hres.updated ?? 0;
+                recordsSkipped = hres.skipped ?? 0;
+            }
+        }
+        if (config.worksheet_name === "Summary") {
 
-        for (const row of sheetData) {
-            try {
-                if (config.worksheet_name === "Cost Center") {
-                    await this.ensureHierarchyForRow(row);
-                } else {
+            for (const row of sheetData) {
+                try {
+
                     // Only process Cost Center rows into the `budget` table
                     const costCenter = this.getCellValue(row, ['Cost Center', 'Cost_Center', 'CostCenter', 'Cost center', 'Cost centre']);
                     if (!costCenter) {
@@ -788,11 +529,155 @@ export class SyncService {
                         this.logger.debug(`Created snapshot: ${JSON.stringify(created)}`);
                         recordsCreated++;
                     }
-                }
 
-            } catch (error) {
-                errors.push(`Row processing error: ${error.message}`);
-                recordsSkipped++;
+
+                } catch (error) {
+                    errors.push(`Row processing error: ${error.message}`);
+                    recordsSkipped++;
+                }
+            }
+        }
+        if (sheetDataInput?.length) {
+            // Implement transformation and sync logic for "input" worksheet
+            for (const row of sheetDataInput) {
+                try {
+                    const costCenter = this.getCellValue(row, ['Cost Center', 'Cost_Center', 'CostCenter', 'Cost center', 'Cost centre']);
+                    console.log("Processing input row for cost center", costCenter)
+                    if (!costCenter) {
+                        this.logger.debug(`Skipping input row without Cost Center for config ${config.id}`);
+                        recordsSkipped++;
+                        continue;
+                    }
+
+                    // try to find a matching tache to attach hierarchy ids
+                    const tache = await this.tacheRepo.findOne({ where: { costCode: costCenter }, relations: ['activity', 'sousActivity', 'department'] });
+                    console.log("Found tache for input row", tache)
+                    const parseMoneyToString = (v: string | null) => {
+                        if (!v) return null;
+                        const num = String(v).replace(/[^0-9.-]+/g, '');
+                        if (num === '') return null;
+                        return num;
+                    };
+
+                    const months = {
+                        jan: parseMoneyToString(this.getCellValue(row, ['31-janv.', '31-janv', 'janv', 'jan'])),
+                        feb: parseMoneyToString(this.getCellValue(row, ['28-févr.', '28-fevr.', '28-febr', 'fev', 'feb'])),
+                        mar: parseMoneyToString(this.getCellValue(row, ['31-mars', '31-mars.', 'mar'])),
+                        apr: parseMoneyToString(this.getCellValue(row, ['30-avr.', '30-avr', 'apr'])),
+                        may: parseMoneyToString(this.getCellValue(row, ['31-mai', 'mai', 'may'])),
+                        jun: parseMoneyToString(this.getCellValue(row, ['30-juin', 'juin', 'jun'])),
+                        jul: parseMoneyToString(this.getCellValue(row, ['31-juil.', 'juil', 'jul'])),
+                        aug: parseMoneyToString(this.getCellValue(row, ['31-août', '31-aout', 'aout', 'aug'])),
+                        sep: parseMoneyToString(this.getCellValue(row, ['30-sept.', '30-sept', 'sept', 'sep'])),
+                        oct: parseMoneyToString(this.getCellValue(row, ['31-oct.', '31-oct', 'oct'])),
+                        nov: parseMoneyToString(this.getCellValue(row, ['30-nov.', '30-nov', 'nov'])),
+                        dec: parseMoneyToString(this.getCellValue(row, ['31-déc.', '31-dec', 'dec', 'déc'])),
+                    };
+
+                    const description_cc = this.getCellValue(row, ['Description CC', 'Description', 'description_cc']) || null;
+                    const province_ville = this.getCellValue(row, ['Province & Ville', 'Province', 'Ville']) || null;
+                    const coordinations_provinciales = this.getCellValue(row, ['Coordinations provinciales', 'Coordinations Provinciales']) || null;
+                    const local_etranger = this.getCellValue(row, ['Local / Etranger ?', 'Local / Etranger', 'Local / Etranger']) || null;
+                    const categorie_grade = this.getCellValue(row, ['Catégorie / Grade', 'Categorie / Grade']) || null;
+                    const nature_depenses = this.getCellValue(row, ['Nature Depenses', 'Nature des depenses']) || null;
+                    const account_ohada = this.getCellValue(row, ['Account Ohada']) || null;
+                    const departement = this.getCellValue(row, ['Departement', 'DEPARTEMENT', 'DEPARTMENT']) || (tache?.department && (tache.department as any).name) || null;
+                    const texte_libelle = this.getCellValue(row, ['Texte / Libelle', 'Texte', 'Libelle']) || null;
+                    const cout_unitaire_auto = parseMoneyToString(this.getCellValue(row, ['Cout Unitaire en USD Hors Taxe', 'Cout Unitaire en USD', 'cout_unitaire_auto'])) || null;
+                    const unite_de_mesure = this.getCellValue(row, ['Unite de Mesure des donnees mensuelles', 'Unite de Mesure']) || null;
+                    const cout_unitaire_manuel = parseMoneyToString(this.getCellValue(row, ['Cout Unitaire Manuel', 'cout_unitaire_manuel'])) || null;
+                    const total_units = parseMoneyToString(this.getCellValue(row, ['Total en Unite de Mesure des donnees mensuelles', 'Total Units', 'Total_units'])) || null;
+                    const total_budget_usd = parseMoneyToString(this.getCellValue(row, ['Total Budget en USD', 'Total Budget', 'Total Budget USD', 'Total Budget in USD'])) || null;
+
+                    const department_id = tache?.department ? (tache.department as any).id : null;
+                    const activity_id = tache?.activity ? (tache.activity as any).id : null;
+                    const sous_activity_id = tache?.sousActivity ? (tache.sousActivity as any).id : null;
+                    const tache_id = tache ? (tache as any).id : null;
+
+                    const existings = await this.apexInputRepo.find({ where: { cost_center: costCenter } });
+                    console.log("existing apex input", department_id, activity_id, sous_activity_id, existings)
+                    if (existings?.length) {
+                        for (const existing of existings) {
+                            existing.description_cc = description_cc ?? existing.description_cc;
+                            existing.province_ville = province_ville ?? existing.province_ville;
+                            existing.coordinations_provinciales = coordinations_provinciales ?? existing.coordinations_provinciales;
+                            existing.local_etranger = local_etranger ?? existing.local_etranger;
+                            existing.categorie_grade = categorie_grade ?? existing.categorie_grade;
+                            existing.nature_depenses = nature_depenses ?? existing.nature_depenses;
+                            existing.account_ohada = account_ohada ?? existing.account_ohada;
+                            existing.departement = departement ?? existing.departement;
+                            existing.texte_libelle = texte_libelle ?? existing.texte_libelle;
+                            existing.cout_unitaire_auto = cout_unitaire_auto ?? existing.cout_unitaire_auto;
+                            existing.unite_de_mesure = unite_de_mesure ?? existing.unite_de_mesure;
+                            existing.cout_unitaire_manuel = cout_unitaire_manuel ?? existing.cout_unitaire_manuel;
+                            existing.jan = months.jan ?? existing.jan;
+                            existing.feb = months.feb ?? existing.feb;
+                            existing.mar = months.mar ?? existing.mar;
+                            existing.apr = months.apr ?? existing.apr;
+                            existing.may = months.may ?? existing.may;
+                            existing.jun = months.jun ?? existing.jun;
+                            existing.jul = months.jul ?? existing.jul;
+                            existing.aug = months.aug ?? existing.aug;
+                            existing.sep = months.sep ?? existing.sep;
+                            existing.oct = months.oct ?? existing.oct;
+                            existing.nov = months.nov ?? existing.nov;
+                            existing.dec = months.dec ?? existing.dec;
+                            existing.total_units = total_units ?? existing.total_units;
+                            existing.total_budget_usd = total_budget_usd ?? existing.total_budget_usd;
+                            existing.department_id = department_id ?? existing.department_id;
+                            existing.activity_id = activity_id ?? existing.activity_id;
+                            existing.sous_activity_id = sous_activity_id ?? existing.sous_activity_id;
+                            existing.tache_id = tache_id ?? existing.tache_id;
+                            existing.departement = departement ?? existing.departement;
+                            console.log("updating apex input", existing)
+                            const savedApex = await this.apexInputRepo.save(existing);
+                            console.log('ApexInput updated:', savedApex?.id, savedApex);
+                            recordsUpdated++;
+                        }
+                    } else {
+                        const payload: any = this.apexInputRepo.create({
+                            cost_center: costCenter,
+                            description_cc,
+                            province_ville,
+                            coordinations_provinciales,
+                            local_etranger,
+                            categorie_grade,
+                            nature_depenses,
+                            account_ohada,
+                            departement,
+                            texte_libelle,
+                            cout_unitaire_auto,
+                            unite_de_mesure,
+                            cout_unitaire_manuel,
+                            jan: months.jan || null,
+                            feb: months.feb || null,
+                            mar: months.mar || null,
+                            apr: months.apr || null,
+                            may: months.may || null,
+                            jun: months.jun || null,
+                            jul: months.jul || null,
+                            aug: months.aug || null,
+                            sep: months.sep || null,
+                            oct: months.oct || null,
+                            nov: months.nov || null,
+                            dec: months.dec || null,
+                            total_units,
+                            total_budget_usd,
+                            department_id,
+                            activity_id,
+                            sous_activity_id,
+                            tache_id,
+                        });
+                        console.log("creating apex input", payload)
+                        const createdApex = await this.apexInputRepo.save(payload);
+                        console.log('ApexInput created:', createdApex?.id, createdApex);
+                        recordsCreated++;
+                    }
+
+                } catch (error) {
+                    errors.push(`Row processing error: ${error.message}`);
+                    recordsSkipped++;
+                }
             }
         }
 
@@ -893,6 +778,12 @@ export class SyncService {
             lastSync: config?.lastSyncAt || null,
             lastStatus: config?.lastSyncStatus || null,
         };
+    }
+
+    async syncCostCenters(sheetRows: any[]) {
+        const result = await this.hierarchySync.syncHierarchy(sheetRows);
+        console.log('Hierarchy sync result:', result);
+        return result;
     }
 
 }

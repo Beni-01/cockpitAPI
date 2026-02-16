@@ -98,6 +98,26 @@ export class GoogleSheetsService {
             return { message: 'Sync failed', error: error.message, configId: id };
         }
     }
+    async triggerSyncInput(id: number): Promise<any> {
+        try {
+            await this.syncService.syncSheet(id, "Depart_Budget_Opex Input");
+            return { message: 'Sync triggered successfully', configId: id };
+        } catch (error) {
+            return { message: 'Sync failed', error: error.message, configId: id };
+        }
+    }
+
+    async triggerSyncAllInput(): Promise<any> {
+        try {
+            const configs = await this.getAllConfigs();
+            for (const cfg of configs) {
+                await this.syncService.syncSheet(cfg.id, "Depart_Budget_Opex Input");
+            }
+            return { message: 'Sync triggered successfully for all configs' };
+        } catch (error) {
+            return { message: 'Sync failed', error: error.message };
+        }
+    }
 
     async syncAllConfigs(): Promise<any> {
         const configs = await this.getAllConfigs();

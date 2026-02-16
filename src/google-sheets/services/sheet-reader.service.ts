@@ -196,6 +196,25 @@ export class SheetReaderService {
         }
     }
 
+        async readAndGetHeaderInput(spreadsheetId: string, rangeOrSheetName: string): Promise<any[]> {
+        const sheetName = String(rangeOrSheetName || '').split('!')[0];
+        const range = `${sheetName}!A13:AK`;
+        try {
+            const rows = await this.readSheetWithHeaders(spreadsheetId, range, {
+                startCol: 'A',
+                endCol: 'AK',
+                headerRow: 13,
+            });
+
+            // const normalizedRows = this.applyBudgetRowLogic(rows);
+            console.log(`Read ${rows.length} rows from ${range}:`, JSON.stringify(rows[0], null, 2));
+            return rows;
+        } catch (err) {
+            console.error(`Failed to read and log ${range}:`, err);
+            return [];
+        }
+    }
+
     /**
      * Get sheet metadata
      */
