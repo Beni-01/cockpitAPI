@@ -205,10 +205,10 @@ export class SyncService {
                         config.spreadsheetId,
                         range,
                     )
-                    sheetDataInput = await this.sheetReaderService.readAndGetHeaderInput(
-                        config.spreadsheetId,
-                        "Depart_Budget_Opex Input",
-                    );
+                    // sheetDataInput = await this.sheetReaderService.readAndGetHeaderInput(
+                    //     config.spreadsheetId,
+                    //     "Depart_Budget_Opex Input",
+                    // );
                 }
             }
 
@@ -594,7 +594,7 @@ export class SyncService {
                     const sous_activity_id = tache?.sousActivity ? (tache.sousActivity as any).id : null;
                     const tache_id = tache ? (tache as any).id : null;
 
-                    const existings = await this.apexInputRepo.find({ where: { cost_center: costCenter } });
+                    const existings = await this.apexInputRepo.find({ where: { cost_center: costCenter,province_ville,categorie_grade } });
                     console.log("existing apex input", department_id, activity_id, sous_activity_id, existings)
                     if (existings?.length) {
                         for (const existing of existings) {
