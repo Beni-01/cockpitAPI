@@ -64,7 +64,7 @@ export class ApexInputService {
           `SELECT COALESCE(SUM(t.depense),0) AS realisation 
          FROM transaction t 
          INNER JOIN budget b ON t.centreId = b.id 
-         WHERE b.department_id = ?  AND b.assigned_department_id =?` ,
+         WHERE b.department_id = ? AND b.assigned_department_id = ? AND t.deletedAt IS NULL` ,
           [d.id, d.id]
         );
       } else {
@@ -72,7 +72,7 @@ export class ApexInputService {
           `SELECT COALESCE(SUM(t.depense),0) AS realisation 
          FROM transaction t 
          INNER JOIN budget b ON t.centreId = b.id 
-         WHERE b.department_id = ? ` ,
+         WHERE b.department_id = ? AND t.deletedAt IS NULL` ,
           [d.id]
         );
       }
@@ -240,7 +240,7 @@ export class ApexInputService {
      INNER JOIN budget b ON t.centreId = b.id
      WHERE ${budgetCondition}
      AND MONTH(t.createdAt) = ?
-     AND YEAR(t.createdAt) = ?`,
+     AND YEAR(t.createdAt) = ? AND t.deletedAt IS NULL`,
             [...budgetParams, monthIndex, requestedYear],
           );
         }
@@ -382,7 +382,7 @@ export class ApexInputService {
         `SELECT COALESCE(SUM(t.depense),0) AS realisation
          FROM transaction t
          INNER JOIN budget b ON t.centreId = b.id
-         WHERE b.tache_id = ? OR b.cost_center = ?`,
+         WHERE (b.tache_id = ? OR b.cost_center = ?) AND t.deletedAt IS NULL`,
         [resolvedTacheId, responseCostCenter],
       );
       if (transRows && transRows[0]) totalRealisationUsd = Number(transRows[0].realisation || 0);
