@@ -141,12 +141,16 @@ export class DepartmentService {
             console.log("Department IDs:", departmentIds);
 
             // Fetch activities from all related departments
-            const acts = await this.activityRepo
+            let acts = await this.activityRepo
                 .createQueryBuilder('activity')
                 .leftJoinAndSelect('activity.department', 'department')
                 .where('activity.department_id IN (:...ids)', { ids: departmentIds })
                 // .andWhere('activity.code IS NOT NULL')
                 .getMany();
+
+            if (departmentCode === "RH") {
+                acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
+            }
 
             return acts.map(a => ({
                 id: a.id,

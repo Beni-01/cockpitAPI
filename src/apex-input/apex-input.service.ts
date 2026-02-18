@@ -182,11 +182,12 @@ export class ApexInputService {
         monthsToReturn.push({ key: allMonths[i], label: `${monthLabels[i]} ${requestedYear}` });
       }
     }
-    console.log("acts", activities, acts)
 
     if (departmentCode === "RH") {
-      acts = acts?.filter(x => x.name?.toLowerCase() === "renumeration_ressources humaines")
+      acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
     }
+    console.log("acts", activities, acts)
+
     for (const a of acts) {
 
 
@@ -199,7 +200,7 @@ export class ApexInputService {
       let budgetParams: any[] = [a.id];
       if (a.name?.toLowerCase() === "renumeration_ressources humaines") {
         const tache = await this.tacheRepo.findOneBy({ name: a.name });
-        bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE tache_id = ? AND department_id = ? AND assigned_department_id = ?`, [tache.id, d.id, d.id]);
+        bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE tache_id = ? AND department_id = ? `, [tache.id, d.id]);
         budgetCondition = 'b.tache_id = ? AND b.department_id = ? AND b.assigned_department_id = ?';
         budgetParams = [tache.id, d.id, d.id];
       }
