@@ -90,10 +90,9 @@ export class GoogleSheetsService {
     }
 
     async triggerSync(id: number): Promise<any> {
-        const config = await this.getConfig(id);
         try {
-            await this.syncService.syncSheet(id);
-            return { message: 'Sync triggered successfully', configId: id };
+            const res = await this.syncService.syncSheet(id);
+            return { message: 'Sync triggered successfully', res, configId: id };
         } catch (error) {
             return { message: 'Sync failed', error: error.message, configId: id };
         }
