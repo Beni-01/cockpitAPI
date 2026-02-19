@@ -594,46 +594,46 @@ export class SyncService {
                     const sous_activity_id = tache?.sousActivity ? (tache.sousActivity as any).id : null;
                     const tache_id = tache ? (tache as any).id : null;
 
-                    const existings = await this.apexInputRepo.find({ where: { cost_center: costCenter,province_ville,categorie_grade } });
-                    console.log("existing apex input", department_id, activity_id, sous_activity_id, existings)
-                    if (existings?.length) {
-                        for (const existing of existings) {
-                            existing.description_cc = description_cc ?? existing.description_cc;
-                            existing.province_ville = province_ville ?? existing.province_ville;
-                            existing.coordinations_provinciales = coordinations_provinciales ?? existing.coordinations_provinciales;
-                            existing.local_etranger = local_etranger ?? existing.local_etranger;
-                            existing.categorie_grade = categorie_grade ?? existing.categorie_grade;
-                            existing.nature_depenses = nature_depenses ?? existing.nature_depenses;
-                            existing.account_ohada = account_ohada ?? existing.account_ohada;
-                            existing.departement = departement ?? existing.departement;
-                            existing.texte_libelle = texte_libelle ?? existing.texte_libelle;
-                            existing.cout_unitaire_auto = cout_unitaire_auto ?? existing.cout_unitaire_auto;
-                            existing.unite_de_mesure = unite_de_mesure ?? existing.unite_de_mesure;
-                            existing.cout_unitaire_manuel = cout_unitaire_manuel ?? existing.cout_unitaire_manuel;
-                            existing.jan = months.jan ?? existing.jan;
-                            existing.feb = months.feb ?? existing.feb;
-                            existing.mar = months.mar ?? existing.mar;
-                            existing.apr = months.apr ?? existing.apr;
-                            existing.may = months.may ?? existing.may;
-                            existing.jun = months.jun ?? existing.jun;
-                            existing.jul = months.jul ?? existing.jul;
-                            existing.aug = months.aug ?? existing.aug;
-                            existing.sep = months.sep ?? existing.sep;
-                            existing.oct = months.oct ?? existing.oct;
-                            existing.nov = months.nov ?? existing.nov;
-                            existing.dec = months.dec ?? existing.dec;
-                            existing.total_units = total_units ?? existing.total_units;
-                            existing.total_budget_usd = total_budget_usd ?? existing.total_budget_usd;
-                            existing.department_id = department_id ?? existing.department_id;
-                            existing.activity_id = activity_id ?? existing.activity_id;
-                            existing.sous_activity_id = sous_activity_id ?? existing.sous_activity_id;
-                            existing.tache_id = tache_id ?? existing.tache_id;
-                            existing.departement = departement ?? existing.departement;
-                            console.log("updating apex input", existing)
-                            const savedApex = await this.apexInputRepo.save(existing);
-                            console.log('ApexInput updated:', savedApex?.id, savedApex);
-                            recordsUpdated++;
-                        }
+                    const existing = await this.apexInputRepo.findOne({ where: { cost_center: costCenter, province_ville, categorie_grade } });
+                    console.log("existing apex input", department_id, activity_id, sous_activity_id, existing)
+                    if (existing) {
+
+                        existing.description_cc = description_cc ?? existing.description_cc;
+                        existing.province_ville = province_ville ?? existing.province_ville;
+                        existing.coordinations_provinciales = coordinations_provinciales ?? existing.coordinations_provinciales;
+                        existing.local_etranger = local_etranger ?? existing.local_etranger;
+                        existing.categorie_grade = categorie_grade ?? existing.categorie_grade;
+                        existing.nature_depenses = nature_depenses ?? existing.nature_depenses;
+                        existing.account_ohada = account_ohada ?? existing.account_ohada;
+                        existing.departement = departement ?? existing.departement;
+                        existing.texte_libelle = texte_libelle ?? existing.texte_libelle;
+                        existing.cout_unitaire_auto = cout_unitaire_auto ?? existing.cout_unitaire_auto;
+                        existing.unite_de_mesure = unite_de_mesure ?? existing.unite_de_mesure;
+                        existing.cout_unitaire_manuel = cout_unitaire_manuel ?? existing.cout_unitaire_manuel;
+                        existing.jan = months.jan ?? existing.jan;
+                        existing.feb = months.feb ?? existing.feb;
+                        existing.mar = months.mar ?? existing.mar;
+                        existing.apr = months.apr ?? existing.apr;
+                        existing.may = months.may ?? existing.may;
+                        existing.jun = months.jun ?? existing.jun;
+                        existing.jul = months.jul ?? existing.jul;
+                        existing.aug = months.aug ?? existing.aug;
+                        existing.sep = months.sep ?? existing.sep;
+                        existing.oct = months.oct ?? existing.oct;
+                        existing.nov = months.nov ?? existing.nov;
+                        existing.dec = months.dec ?? existing.dec;
+                        existing.total_units = total_units ?? existing.total_units;
+                        existing.total_budget_usd = total_budget_usd ?? existing.total_budget_usd;
+                        existing.department_id = department_id ?? existing.department_id;
+                        existing.activity_id = activity_id ?? existing.activity_id;
+                        existing.sous_activity_id = sous_activity_id ?? existing.sous_activity_id;
+                        existing.tache_id = tache_id ?? existing.tache_id;
+                        existing.departement = departement ?? existing.departement;
+                        console.log("updating apex input", existing)
+                        const savedApex = await this.apexInputRepo.save(existing);
+                        console.log('ApexInput updated:', savedApex?.id, savedApex);
+                        recordsUpdated++;
+
                     } else {
                         const payload: any = this.apexInputRepo.create({
                             cost_center: costCenter,
