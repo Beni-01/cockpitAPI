@@ -192,9 +192,31 @@ export class ApexInputService {
 
 
       // select only requested months to reduce payload (aggregated sums)
-      const monthSelect = monthsToReturn.map(m => 'COALESCE(SUM(`' + m.key + '`),0) AS `' + m.key + '`').join(', ');
+      // If no months were requested (defensive), fall back to a single total column
+      let monthSelect = '';
+      if (monthsToReturn && monthsToReturn.length) {
+        monthSelect = monthsToReturn.map(m => 'COALESCE(SUM(`' + m.key + '`),0) AS `' + m.key + '`').join(', ');
+      } else {
+        monthSelect = `COALESCE(SUM(total_budget_usd),0) AS totalBudget`;
+      }
       // aggregate budgets for this activity (or tache for RH special-case)
-      let bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
+      // use case-insensitive LIKE for description_cc matches
+      // match description_cc examples like
+      // "RESSOURCES HUMAINES _ Renumeration_Etudes _ Renumeration_Etudes _ Renumeration_Etudes"
+      // use a case-insensitive wildcard match on the activity name OR on the pattern {dept}_{activity}
+      // and require RH cost_center
+      let bRow = null
+      if (a.name.toLowerCase() === "renumeration") {
+        console.log("renumeration", a.name, d.id)
+
+        bRow = await this.budgetRepo.query(
+          `SELECT ${monthSelect} FROM budget WHERE assigned_department_id=?`,
+          [d.id],
+        )
+      } else {
+        bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
+      }
+      console.log("activity", a.name, "budget row", bRow)
       // prepare a budget filtering condition and params for transaction queries
       let budgetCondition = 'b.activity_id = ?';
       let budgetParams: any[] = [a.id];
@@ -208,7 +230,6 @@ export class ApexInputService {
       const budgetWhere = budgetCondition.replace(/b\./g, '');
       const idRows: Array<{ id: number }> = await this.budgetRepo.query(`SELECT id FROM budget WHERE ${budgetWhere}`, budgetParams);
       const budgetIds = idRows && idRows.length ? idRows.map(r => r.id) : [];
-      console.log("renumeration_ressources", budgetIds, bRow)
       const monthly: Record<string, { budget: number; realisation: number }> = {};
       // First, populate budget values
       for (const mInfo of monthsToReturn) {
