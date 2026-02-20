@@ -526,7 +526,7 @@ export class SyncService {
                             dec: months.dec || null,
                             totalUnits: totalUnits || null,
                             totalBudgetUsd: totalBudget || null,
-                            assignedDepartment: assignedDepartmentId ? ({ id: assignedDepartmentId } as any) : null,
+                            assignedDepartment: ({ id: assignedDepartmentId } as any),
                         });
 
                         if (tache) {
@@ -551,6 +551,8 @@ export class SyncService {
         }
         if (sheetDataInput?.length) {
             // Implement transformation and sync logic for "input" worksheet
+            // Track departments we've already soft-deleted this run to avoid repeated deletes per row
+            const deletedDepartments = new Set<string>();
             for (const row of sheetDataInput) {
                 try {
                     const costCenter = this.getCellValue(row, ['Cost Center', 'Cost_Center', 'CostCenter', 'Cost center', 'Cost centre']);
@@ -560,6 +562,7 @@ export class SyncService {
                         recordsSkipped++;
                         continue;
                     }
+
 
                     // try to find a matching tache to attach hierarchy ids
                     const tache = await this.tacheRepo.findOne({ where: { costCode: costCenter }, relations: ['activity', 'sousActivity', 'department'] });
@@ -602,89 +605,67 @@ export class SyncService {
                     const total_budget_usd = parseMoneyToString(this.getCellValue(row, ['Total Budget en USD', 'Total Budget', 'Total Budget USD', 'Total Budget in USD'])) || null;
 
                     const department_id = tache?.department ? (tache.department as any).id : null;
+                    // Soft-delete existing apex_input rows for this department (once per department per sync)
+                    try {
+                        const key = departement ? `name:${departement}` : department_id ? `id:${department_id}` : null;
+                        if (key && !deletedDepartments.has(key)) {
+                            if (departement) {
+                                await this.apexInputRepo.softDelete({ departement });
+                            } else if (department_id) {
+                                await this.apexInputRepo.softDelete({ department_id: department_id });
+                            }
+                            deletedDepartments.add(key);
+                        }
+                    } catch (e) {
+                        this.logger.error(`Failed to soft-delete ApexInput for department="${departement}" id=${department_id}`, e && (e as Error).message);
+                    }
                     const activity_id = tache?.activity ? (tache.activity as any).id : null;
                     const sous_activity_id = tache?.sousActivity ? (tache.sousActivity as any).id : null;
                     const tache_id = tache ? (tache as any).id : null;
 
-                    const existing = await this.apexInputRepo.findOne({ where: { cost_center: costCenter, province_ville, categorie_grade } });
-                    console.log("existing apex input", department_id, activity_id, sous_activity_id, existing)
-                    if (existing) {
 
-                        existing.description_cc = description_cc ?? existing.description_cc;
-                        existing.province_ville = province_ville ?? existing.province_ville;
-                        existing.coordinations_provinciales = coordinations_provinciales ?? existing.coordinations_provinciales;
-                        existing.local_etranger = local_etranger ?? existing.local_etranger;
-                        existing.categorie_grade = categorie_grade ?? existing.categorie_grade;
-                        existing.nature_depenses = nature_depenses ?? existing.nature_depenses;
-                        existing.account_ohada = account_ohada ?? existing.account_ohada;
-                        existing.departement = departement ?? existing.departement;
-                        existing.texte_libelle = texte_libelle ?? existing.texte_libelle;
-                        existing.cout_unitaire_auto = cout_unitaire_auto ?? existing.cout_unitaire_auto;
-                        existing.unite_de_mesure = unite_de_mesure ?? existing.unite_de_mesure;
-                        existing.cout_unitaire_manuel = cout_unitaire_manuel ?? existing.cout_unitaire_manuel;
-                        existing.jan = months.jan ?? existing.jan;
-                        existing.feb = months.feb ?? existing.feb;
-                        existing.mar = months.mar ?? existing.mar;
-                        existing.apr = months.apr ?? existing.apr;
-                        existing.may = months.may ?? existing.may;
-                        existing.jun = months.jun ?? existing.jun;
-                        existing.jul = months.jul ?? existing.jul;
-                        existing.aug = months.aug ?? existing.aug;
-                        existing.sep = months.sep ?? existing.sep;
-                        existing.oct = months.oct ?? existing.oct;
-                        existing.nov = months.nov ?? existing.nov;
-                        existing.dec = months.dec ?? existing.dec;
-                        existing.total_units = total_units ?? existing.total_units;
-                        existing.total_budget_usd = total_budget_usd ?? existing.total_budget_usd;
-                        existing.department_id = department_id ?? existing.department_id;
-                        existing.activity_id = activity_id ?? existing.activity_id;
-                        existing.sous_activity_id = sous_activity_id ?? existing.sous_activity_id;
-                        existing.tache_id = tache_id ?? existing.tache_id;
-                        existing.departement = departement ?? existing.departement;
-                        console.log("updating apex input", existing)
-                        const savedApex = await this.apexInputRepo.save(existing);
-                        console.log('ApexInput updated:', savedApex?.id, savedApex);
-                        recordsUpdated++;
 
-                    } else {
-                        const payload: any = this.apexInputRepo.create({
-                            cost_center: costCenter,
-                            description_cc,
-                            province_ville,
-                            coordinations_provinciales,
-                            local_etranger,
-                            categorie_grade,
-                            nature_depenses,
-                            account_ohada,
-                            departement,
-                            texte_libelle,
-                            cout_unitaire_auto,
-                            unite_de_mesure,
-                            cout_unitaire_manuel,
-                            jan: months.jan || null,
-                            feb: months.feb || null,
-                            mar: months.mar || null,
-                            apr: months.apr || null,
-                            may: months.may || null,
-                            jun: months.jun || null,
-                            jul: months.jul || null,
-                            aug: months.aug || null,
-                            sep: months.sep || null,
-                            oct: months.oct || null,
-                            nov: months.nov || null,
-                            dec: months.dec || null,
-                            total_units,
-                            total_budget_usd,
-                            department_id,
-                            activity_id,
-                            sous_activity_id,
-                            tache_id,
-                        });
-                        console.log("creating apex input", payload)
-                        const createdApex = await this.apexInputRepo.save(payload);
-                        console.log('ApexInput created:', createdApex?.id, createdApex);
-                        recordsCreated++;
-                    }
+
+
+
+                    const payload: any = this.apexInputRepo.create({
+                        cost_center: costCenter,
+                        description_cc,
+                        province_ville,
+                        coordinations_provinciales,
+                        local_etranger,
+                        categorie_grade,
+                        nature_depenses,
+                        account_ohada,
+                        departement,
+                        texte_libelle,
+                        cout_unitaire_auto,
+                        unite_de_mesure,
+                        cout_unitaire_manuel,
+                        jan: months.jan || null,
+                        feb: months.feb || null,
+                        mar: months.mar || null,
+                        apr: months.apr || null,
+                        may: months.may || null,
+                        jun: months.jun || null,
+                        jul: months.jul || null,
+                        aug: months.aug || null,
+                        sep: months.sep || null,
+                        oct: months.oct || null,
+                        nov: months.nov || null,
+                        dec: months.dec || null,
+                        total_units,
+                        total_budget_usd,
+                        department_id,
+                        activity_id,
+                        sous_activity_id,
+                        tache_id,
+                    });
+                    console.log("creating apex input", payload)
+                    const createdApex = await this.apexInputRepo.save(payload);
+                    console.log('ApexInput created:', createdApex?.id, createdApex);
+                    recordsCreated++;
+
 
                 } catch (error) {
                     errors.push(`Row processing error: ${error.message}`);
