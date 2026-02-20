@@ -170,6 +170,65 @@ export class GoogleSheetsService {
         });
     }
 
+    async getAnalytics(since?: string): Promise<any> {
+        // Optional since filter (ISO date)
+        const params: any[] = [];
+        let sinceClause = '';
+        if (since) {
+            sinceClause = 'AND l.started_at >= ?';
+            params.push(since);
+        }
+
+        const perConfigSql = `
+            SELECT
+                c.id,
+                c.name,
+                c.worksheet_name,
+                c.last_sync_at,
+                c.last_sync_status,
+                COUNT(l.id) AS total_syncs,
+                COALESCE(SUM(l.records_fetched),0) AS records_fetched,
+                COALESCE(SUM(l.records_inserted),0) AS records_inserted,
+                COALESCE(SUM(l.records_updated),0) AS records_updated,
+                COALESCE(SUM(l.records_skipped),0) AS records_skipped,
+                COALESCE(SUM(CASE WHEN l.status = 'success' THEN 1 ELSE 0 END),0) AS success_count,
+                COALESCE(SUM(CASE WHEN l.status = 'failed' THEN 1 ELSE 0 END),0) AS failed_count,
+                MAX(CASE WHEN l.status = 'success' THEN l.completed_at ELSE NULL END) AS last_success_at,
+                MAX(CASE WHEN l.status = 'failed' THEN l.completed_at ELSE NULL END) AS last_failed_at
+            FROM google_sheet_config c
+            LEFT JOIN google_sheet_sync_log l ON l.config_id = c.id ${since ? `AND l.started_at >= ?` : ''}
+            GROUP BY c.id
+            ORDER BY c.name ASC
+        `;
+
+        // execute per-config query
+        const perConfigParams = since ? [since] : [];
+        const perConfig = await this.dataSource.query(perConfigSql, perConfigParams);
+
+        // overall totals
+        const overallSql = `
+            SELECT
+                COUNT(l.id) AS total_syncs,
+                COALESCE(SUM(l.records_fetched),0) AS records_fetched,
+                COALESCE(SUM(l.records_inserted),0) AS records_inserted,
+                COALESCE(SUM(l.records_updated),0) AS records_updated,
+                COALESCE(SUM(l.records_skipped),0) AS records_skipped,
+                COALESCE(SUM(CASE WHEN l.status = 'success' THEN 1 ELSE 0 END),0) AS success_count,
+                COALESCE(SUM(CASE WHEN l.status = 'failed' THEN 1 ELSE 0 END),0) AS failed_count
+            FROM google_sheet_sync_log l
+            WHERE 1=1 ${sinceClause}
+        `;
+
+        const overall = await this.dataSource.query(overallSql, params);
+
+        return {
+            generated_at: new Date(),
+            since: since || null,
+            overall: overall[0] || {},
+            perConfig,
+        };
+    }
+
     async getBudgetData(): Promise<BudgetData[]> {
         return this.budgetDataRepository.find({
             order: { last_synced_at: 'DESC' },

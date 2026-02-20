@@ -79,6 +79,11 @@ export class GoogleSheetsController {
         return this.googleSheetsService.getSyncLogs();
     }
 
+    @Get('analytics')
+    async getAnalytics(@Query('since') since?: string) {
+        return this.googleSheetsService.getAnalytics(since);
+    }
+
     @Get('budget-data')
     async getBudgetData() {
         return this.googleSheetsService.getBudgetData();

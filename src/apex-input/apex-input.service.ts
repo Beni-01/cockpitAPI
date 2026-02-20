@@ -129,7 +129,7 @@ export class ApexInputService {
     const assignedSalary = Number(assignedSalaryRow && assignedSalaryRow[0] ? assignedSalaryRow[0].salary : 0);
     const salaryAmount = assignedSalary || 0;
 
-    let acts = await this.activityRepo.query(`SELECT id, name FROM budget_activity WHERE department_id = ?`, [d.id]);
+    let activitiesDb = await this.activityRepo.query(`SELECT id, name FROM budget_activity WHERE department_id = ?`, [d.id]);
 
     const activities: any[] = [];
     const allMonths = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -182,9 +182,19 @@ export class ApexInputService {
         monthsToReturn.push({ key: allMonths[i], label: `${monthLabels[i]} ${requestedYear}` });
       }
     }
-
+    let acts = []
     if (departmentCode === "RH") {
-      acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
+      activitiesDb?.map((a: any) => {
+        console.log("activity", a.name)
+        if (a.name.toLowerCase().includes("renumeration_ressources humaines")) {
+          acts.push(a)
+        }
+        if (!a.name.toLowerCase().includes("renumeration")) {
+          acts.push(a)
+        }
+      })
+    } else {
+      acts = activitiesDb;
     }
     console.log("acts", activities, acts)
 
