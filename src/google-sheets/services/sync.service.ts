@@ -383,6 +383,13 @@ export class SyncService {
             if (num === '') return null;
             return num;
         };
+
+        const normalizeNumericString = (s: string | null) => {
+            if (!s) return null;
+            // Extract first valid number like -1234.56 or 1234
+            const m = String(s).match(/-?\d+(?:\.\d+)?/);
+            return m ? m[0] : null;
+        };
         if (config.worksheet_name === "Cost Center") {
             const hres = await this.syncCostCenters(sheetData);
             if (hres) {
@@ -419,21 +426,23 @@ export class SyncService {
                     let assignedDepartmentId: number | null = null;
                     if (departmentName === "RESSOURCES HUMAINES") {
                         const trimmedDesc = description.replace("RESSOURCES HUMAINES", "").trim();
-                        const departmentsList: Array<{ id: number; name: string }> = await this.departmentRepo.find();
-                        const descUpper = trimmedDesc.toUpperCase();
-                        console.log("departmentsList", descUpper, departmentsList?.length, departmentsList?.map(d => d.name))
+                        if (costCenter.includes("RH.0")) {
+                            const departmentsList: Array<{ id: number; name: string }> = await this.departmentRepo.find();
+                            const descUpper = trimmedDesc.toUpperCase();
+                            console.log("departmentsList", descUpper, departmentsList?.length, departmentsList?.map(d => d.name))
 
-                        departmentsList?.map((d) => {
-                            if (descUpper?.includes(d.name.toUpperCase())) {
-                                console.log(`Looking for department name "${departmentName}" in description "${descUpper}"`,);
-                                assignedDepartmentId = d.id;
-                            }
-                        })
+                            departmentsList?.map((d) => {
+                                if (descUpper?.includes(d.name.toUpperCase())) {
+                                    console.log(`Looking for department name "${departmentName}" in description "${descUpper}"`,);
+                                    assignedDepartmentId = d.id;
+                                }
+                            })
 
-                        console.log(`Row cost_center=${costCenter} assigned_department_id=${assignedDepartmentId} `);
+                            console.log(`Row cost_center=${costCenter} assigned_department_id=${assignedDepartmentId} `);
 
+                        }
                     }
-                    const months = {
+                    let months = {
                         jan: parseMoneyToString(this.getCellValue(row, ['31-janv.', '31-janv', 'janv', 'jan'])),
                         feb: parseMoneyToString(this.getCellValue(row, ['28-févr.', '28-fevr.', '28-febr', 'fev', 'feb'])),
                         mar: parseMoneyToString(this.getCellValue(row, ['31-mars', '31-mars.', 'mar'])),
@@ -447,6 +456,9 @@ export class SyncService {
                         nov: parseMoneyToString(this.getCellValue(row, ['30-nov.', '30-nov', 'nov'])),
                         dec: parseMoneyToString(this.getCellValue(row, ['31-déc.', '31-dec', 'dec', 'déc'])),
                     };
+
+                    // normalize extracted strings to ensure valid numeric values (or null)
+                    months = Object.fromEntries(Object.entries(months).map(([k, v]) => [k, normalizeNumericString(v as string | null)])) as any;
 
                     // find existing budget by costCenter
                     const existing = await this.budgetDataRepository.findOne({ where: { costCenter } });
@@ -468,10 +480,10 @@ export class SyncService {
                         existing.oct = months.oct ?? existing.oct;
                         existing.nov = months.nov ?? existing.nov;
                         existing.dec = months.dec ?? existing.dec;
-                        if (assignedDepartmentId !== null && assignedDepartmentId !== undefined) {
-                            existing.assignedDepartment = { id: assignedDepartmentId } as any;
-                        }
-                        console.log("existing", existing)
+                        // if (assignedDepartmentId !== null && assignedDepartmentId !== undefined) {
+                        existing.assignedDepartment = { id: assignedDepartmentId } as any;
+                        // }
+                        console.log("existing", costCenter, existing.totalBudgetUsd, totalBudget)
                         if (tache) {
                             existing.tache = tache as any;
                             existing.activity = (tache as any).activity ?? existing.activity;
