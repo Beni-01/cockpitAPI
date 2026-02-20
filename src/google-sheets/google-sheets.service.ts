@@ -9,6 +9,7 @@ import { UpdateConfigDto } from './dto/update-config.dto';
 import { SyncService } from './services/sync.service';
 import { AutoDetectionService } from './services/auto-detection.service';
 import { GoogleAuthService } from './services/google-auth.service';
+import { version } from 'os';
 
 @Injectable()
 export class GoogleSheetsService {
@@ -94,7 +95,7 @@ export class GoogleSheetsService {
             const res = await this.syncService.syncSheet(id);
             return { message: 'Sync triggered successfully', res, configId: id };
         } catch (error) {
-            return { message: 'Sync failed', error: error.message, configId: id };
+            return { message: 'Sync failed', error: error.message, configId: id,version: "v1.0" };
         }
     }
     async triggerSyncInput(id: number): Promise<any> {

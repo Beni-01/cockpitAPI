@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 
 @Entity({ name: 'apex_input' })
 export class ApexInput {
@@ -81,6 +81,9 @@ export class ApexInput {
 
   @UpdateDateColumn({ name: 'updated_at', nullable: true })
   updatedAt: Date | null;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deleteAt: Date | null;
 }
 
 export default ApexInput;
