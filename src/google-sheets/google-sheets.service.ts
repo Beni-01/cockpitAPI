@@ -9,6 +9,7 @@ import { UpdateConfigDto } from './dto/update-config.dto';
 import { SyncService } from './services/sync.service';
 import { AutoDetectionService } from './services/auto-detection.service';
 import { GoogleAuthService } from './services/google-auth.service';
+import { version } from 'os';
 
 @Injectable()
 export class GoogleSheetsService {
@@ -90,12 +91,31 @@ export class GoogleSheetsService {
     }
 
     async triggerSync(id: number): Promise<any> {
-        const config = await this.getConfig(id);
         try {
-            await this.syncService.syncSheet(id);
+            const res = await this.syncService.syncSheet(id);
+            return { message: 'Sync triggered successfully', res, configId: id ,version: "v1.0" };
+        } catch (error) {
+            return { message: 'Sync failed', error: error.message, configId: id,version: "v1.0" };
+        }
+    }
+    async triggerSyncInput(id: number): Promise<any> {
+        try {
+            await this.syncService.syncSheet(id, "Depart_Budget_Opex Input");
             return { message: 'Sync triggered successfully', configId: id };
         } catch (error) {
             return { message: 'Sync failed', error: error.message, configId: id };
+        }
+    }
+
+    async triggerSyncAllInput(): Promise<any> {
+        try {
+            const configs = await this.getAllConfigs();
+            for (const cfg of configs) {
+                await this.syncService.syncSheet(cfg.id, "Depart_Budget_Opex Input");
+            }
+            return { message: 'Sync triggered successfully for all configs' };
+        } catch (error) {
+            return { message: 'Sync failed', error: error.message };
         }
     }
 
