@@ -216,6 +216,8 @@ export class ApexInputService {
       // use a case-insensitive wildcard match on the activity name OR on the pattern {dept}_{activity}
       // and require RH cost_center
       let bRow = null
+      let budgetCondition = 'b.activity_id = ?';
+      let budgetParams: any[] = [a.id];
       if (a.name.toLowerCase() === "renumeration") {
         console.log("renumeration", a.name, d.id)
 
@@ -223,13 +225,14 @@ export class ApexInputService {
           `SELECT ${monthSelect} FROM budget WHERE assigned_department_id=?`,
           [d.id],
         )
+        budgetCondition = 'b.assigned_department_id = ?';
+        budgetParams = [d.id];
       } else {
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
       }
       console.log("activity", a.name, "budget row", bRow)
       // prepare a budget filtering condition and params for transaction queries
-      let budgetCondition = 'b.activity_id = ?';
-      let budgetParams: any[] = [a.id];
+
       if (a.name?.toLowerCase() === "renumeration_ressources humaines") {
         const tache = await this.tacheRepo.findOneBy({ name: a.name });
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE tache_id = ? AND department_id = ? `, [tache.id, d.id]);
