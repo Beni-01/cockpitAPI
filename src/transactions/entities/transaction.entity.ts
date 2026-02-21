@@ -77,6 +77,14 @@ export class Transaction extends Timestamp {
     agent: string;
 
     @Column({
+        name: 'cost_center',
+        type: 'varchar',
+        nullable: true,
+        comment: 'centre de coût associé à la transaction (ex: IT, RH, Marketing)'
+    })
+    cost_center:string
+
+    @Column({
         name: 'centreId',
         type: 'int',
         nullable: true,
