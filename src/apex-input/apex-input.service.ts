@@ -129,7 +129,7 @@ export class ApexInputService {
     const assignedSalary = Number(assignedSalaryRow && assignedSalaryRow[0] ? assignedSalaryRow[0].salary : 0);
     const salaryAmount = assignedSalary || 0;
 
-    let acts = await this.activityRepo.query(`SELECT id, name FROM budget_activity WHERE department_id = ?`, [d.id]);
+    let activitiesDb = await this.activityRepo.query(`SELECT id, name FROM budget_activity WHERE department_id = ?`, [d.id]);
 
     const activities: any[] = [];
     const allMonths = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -182,9 +182,19 @@ export class ApexInputService {
         monthsToReturn.push({ key: allMonths[i], label: `${monthLabels[i]} ${requestedYear}` });
       }
     }
-
+    let acts = []
     if (departmentCode === "RH") {
-      acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
+      activitiesDb?.map((a: any) => {
+        console.log("activity", a.name)
+        if (a.name.toLowerCase().includes("renumeration_ressources humaines")) {
+          acts.push(a)
+        }
+        if (!a.name.toLowerCase().includes("renumeration")) {
+          acts.push(a)
+        }
+      })
+    } else {
+      acts = activitiesDb;
     }
     console.log("acts", activities, acts)
 
@@ -206,6 +216,8 @@ export class ApexInputService {
       // use a case-insensitive wildcard match on the activity name OR on the pattern {dept}_{activity}
       // and require RH cost_center
       let bRow = null
+      let budgetCondition = 'b.activity_id = ?';
+      let budgetParams: any[] = [a.id];
       if (a.name.toLowerCase() === "renumeration") {
         console.log("renumeration", a.name, d.id)
 
@@ -213,13 +225,14 @@ export class ApexInputService {
           `SELECT ${monthSelect} FROM budget WHERE assigned_department_id=?`,
           [d.id],
         )
+        budgetCondition = 'b.assigned_department_id = ?';
+        budgetParams = [d.id];
       } else {
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
       }
       console.log("activity", a.name, "budget row", bRow)
       // prepare a budget filtering condition and params for transaction queries
-      let budgetCondition = 'b.activity_id = ?';
-      let budgetParams: any[] = [a.id];
+
       if (a.name?.toLowerCase() === "renumeration_ressources humaines") {
         const tache = await this.tacheRepo.findOneBy({ name: a.name });
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE tache_id = ? AND department_id = ? `, [tache.id, d.id]);
