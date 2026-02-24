@@ -728,9 +728,11 @@ export class ApexInputService {
     if (code && !department) {
       department = await this.deptRepo.findOne({ where: { code } });
     }
+    const result: { rhBudget: number, totalBudget: number; realisation: number; rh: number; otherBudget: number } = { rhBudget: 0, totalBudget: 0, realisation: 0, rh: 0, otherBudget: 0 };
+
     const budgetCount = await this.budgetRepo.query(`SELECT COUNT(*) AS count FROM budget WHERE department_id = ?`, [departmentId]);
     if (!department?.id && !departmentId && (!budgetCount || budgetCount[0].count === 0)) {
-      return { rhBudget: 0, totalBudget: 0, realisation: 0, rh: 0, otherBudget: 0, department: null };
+      return { ...result, department: null };
     }
     departmentId = department?.id || departmentId;
     const rhBudgetQuery = await this.budgetRepo.query(
@@ -758,15 +760,26 @@ export class ApexInputService {
       `SELECT COALESCE(SUM(total_budget_usd),0) AS totalBudget FROM budget WHERE  ${budgetCondition}`,
       budgetParams,
     );
-
+    const realisationCondition = department.code === "RH" ? `( b.department_id = ? AND b.assigned_department_id IS NULL )` : `( b.department_id = ? OR b.assigned_department_id = ? )`
+    const realisationParams = department.code === "RH" ? [departmentId] : [departmentId, departmentId];
     const realisation = await this.transactionRepo.query(
-      `SELECT COALESCE(SUM(t.depense), 0) AS total_realisation FROM transaction t INNER JOIN budget b ON t.centreId = b.id WHERE t.deletedAt IS NULL AND ( b.department_id = ? OR b.assigned_department_id = ? )`,
-      [departmentId, departmentId],
+      `SELECT COALESCE(SUM(t.depense), 0) AS total_realisation FROM transaction t INNER JOIN budget b ON t.centreId = b.id WHERE t.deletedAt IS NULL AND ${realisationCondition}`,
+      realisationParams,
     );
-    const rh = rhBudgetQuery.filter((b: any) => b.assigned_department_id === departmentId).reduce((sum: number, b: any) => sum + Number(b.total_budget_usd || 0), 0);
-    const result: { rhBudget: number, totalBudget: number; realisation: number; rh: number; otherBudget: number } = { rhBudget: 0, totalBudget: 0, realisation: 0, rh: 0, otherBudget: 0 };
-    result.totalBudget = Number(budget && budget[0] ? budget[0].totalBudget || 0 : 0);
     result.realisation = Number(realisation && realisation[0] ? realisation[0].total_realisation || 0 : 0);
+
+    if (department.code === "RH") {
+      const rhBudget = rhBudgetQuery.find((b: any) => b.assigned_department_id === departmentId);
+      const rhRenumeration = await this.transactionRepo.query(
+        `SELECT COALESCE(SUM(depense), 0) AS total_realisation FROM transaction WHERE centreId = ? AND deletedAt IS NULL`,
+        [rhBudget?.id || 0],
+      );
+      result.realisation += Number(rhRenumeration && rhRenumeration[0] ? rhRenumeration[0].total_realisation || 0 : 0);
+
+    }
+    const rh = rhBudgetQuery.filter((b: any) => b.assigned_department_id === departmentId).reduce((sum: number, b: any) => sum + Number(b.total_budget_usd || 0), 0);
+    result.totalBudget = Number(budget && budget[0] ? budget[0].totalBudget || 0 : 0);
+
     result.rh = rh;
     result.rhBudget = result.rh + result.totalBudget;
     result.otherBudget = 0; // Initialize otherBudget to 0
