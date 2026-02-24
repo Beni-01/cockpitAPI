@@ -31,15 +31,6 @@ export class ApexInputService {
     const params: any[] = [];
     const whereDept = deptCode ? 'WHERE d.code = ?' : '';
     if (deptCode) params.push(deptCode);
-
-    const totalAnnualRow = await this.budgetRepo.query(
-      `SELECT COALESCE(SUM(total_budget_usd),0) AS total FROM budget b
-       LEFT JOIN department d ON d.id = b.department_id
-       ${whereDept}`,
-      params,
-    );
-    const totalAnnualAlldepartment = Number(totalAnnualRow && totalAnnualRow[0] ? totalAnnualRow[0].total : 0);
-
     const deptRows = await this.deptRepo.query(
       `SELECT d.id, d.code AS departmentCode, d.name AS departmentName
        FROM department d
@@ -56,39 +47,22 @@ export class ApexInputService {
 
     const departmentData: any[] = [];
     for (const d of deptRows) {
-      console.log("department", d)
-      const bRow = d.departmentCode === "RH" ? await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ? AND assigned_department_id IS ?`, [d.id, null]) : await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ?`, [d.id]);
-      let rRow = []
-      if (d.departmentCode === "RH") {
-        rRow = await this.transactionRepo.query(
-          `SELECT COALESCE(SUM(t.depense),0) AS realisation 
-         FROM transaction t 
-         INNER JOIN budget b ON t.centreId = b.id 
-         WHERE b.department_id = ? AND b.assigned_department_id = ? AND t.deletedAt IS NULL` ,
-          [d.id, d.id]
-        );
-      } else {
-        rRow = await this.transactionRepo.query(
-          `SELECT COALESCE(SUM(t.depense),0) AS realisation 
-         FROM transaction t 
-         INNER JOIN budget b ON t.centreId = b.id 
-         WHERE b.department_id = ? AND t.deletedAt IS NULL` ,
-          [d.id]
-        );
-      }
-      const budget = Number(bRow && bRow[0] ? bRow[0].budget : 0);
-      const realisation = Number(rRow && rRow[0] ? rRow[0].realisation : 0);
+
+      const result = await this.getTotalBudgetRealisationDepartment(d.id, '');
+      const budget = result ? result.totalBudget : 0;
+      const realisation = result ? result.realisation : 0;
       const percentage = budget > 0 ? Number(((realisation / budget) * 100).toFixed(2)) : 0;
       console.log("department budget", d.departmentCode, budget, realisation, percentage)
-      const actRow = await this.activityRepo.query(`SELECT name FROM budget_activity WHERE department_id = ? LIMIT 1`, [d.id]);
-      const activity = actRow && actRow[0] ? actRow[0].name : null;
+      const hr = result ? result.rh : 0;
+
 
       departmentData.push({
         id: String(d.id),
         departmentCode: d.departmentCode,
         departmentName: d.departmentName,
-        activity,
+        hr: hr,
         budget,
+        rhBudget: result ? result.rhBudget : 0,
         realisation,
         percentage,
       });
@@ -97,7 +71,7 @@ export class ApexInputService {
     const totalPages = Math.max(1, Math.ceil(totalItems / limit));
 
     return {
-      totalAnnualAlldepartment,
+      totalAnnualAlldepartment: departmentData.reduce((sum, d) => sum + Number(d.rhBudget || 0), 0),
       pagination: {
         page: Math.max(0, pageNum - 1),
         pageSize: limit,
@@ -105,6 +79,7 @@ export class ApexInputService {
         totalPages,
       },
       departmentData,
+      version: '1.0'
     };
   }
 
@@ -209,15 +184,11 @@ export class ApexInputService {
       } else {
         monthSelect = `COALESCE(SUM(total_budget_usd),0) AS totalBudget`;
       }
-      // aggregate budgets for this activity (or tache for RH special-case)
-      // use case-insensitive LIKE for description_cc matches
-      // match description_cc examples like
-      // "RESSOURCES HUMAINES _ Renumeration_Etudes _ Renumeration_Etudes _ Renumeration_Etudes"
-      // use a case-insensitive wildcard match on the activity name OR on the pattern {dept}_{activity}
-      // and require RH cost_center
+
       let bRow = null
       let budgetCondition = 'b.activity_id = ?';
       let budgetParams: any[] = [a.id];
+      let budgetIds = []
       if (a.name.toLowerCase() === "renumeration") {
         console.log("renumeration", a.name, d.id)
 
@@ -225,8 +196,12 @@ export class ApexInputService {
           `SELECT ${monthSelect} FROM budget WHERE assigned_department_id=?`,
           [d.id],
         )
-        // budgetCondition = 'b.assigned_department_id = ?';
-        budgetParams = [a.id];
+        const bbRow = await this.budgetRepo.query(
+          `SELECT id,activity_id FROM budget WHERE assigned_department_id=?`,
+          [d.id],
+        )
+        budgetIds = bbRow?.length ? bbRow.map((r: any) => r.id) : [];
+        a.id = bbRow?.[0]?.activity_id
       } else {
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
       }
@@ -243,7 +218,7 @@ export class ApexInputService {
       const budgetWhere = budgetCondition.replace(/b\./g, '');
       console.log("budgetWhere", budgetWhere, "budgetParams", budgetParams)
       const idRows: Array<{ id: number }> = await this.budgetRepo.query(`SELECT id FROM budget WHERE ${budgetWhere}`, budgetParams);
-      const budgetIds = idRows && idRows.length ? idRows.map(r => r.id) : [];
+      budgetIds = budgetIds?.length ? budgetIds : idRows && idRows.length ? idRows.map(r => r.id) : [];
       const monthly: Record<string, { budget: number; realisation: number }> = {};
       console.log("monthsToReturn", budgetIds)
       // First, populate budget values
@@ -268,7 +243,7 @@ export class ApexInputService {
              AND MONTH(t.createdAt) = ?
              AND YEAR(t.createdAt) = ?
              AND t.deletedAt IS NULL`,
-             [...budgetIds, monthIndex, requestedYear],
+            [...budgetIds, monthIndex, requestedYear],
           );
         } else {
           rRow = await this.transactionRepo.query(
@@ -282,15 +257,6 @@ export class ApexInputService {
             [...budgetParams, monthIndex, requestedYear],
           );
         }
-        // const rRow = await this.transactionRepo.query(
-        //   `SELECT COALESCE(SUM(t.depense),0) AS realisation 
-        //    FROM transaction t 
-        //    INNER JOIN budget b ON t.centreId = b.id 
-        //    WHERE b.activity_id = ? 
-        //    AND MONTH(t.createdAt) = ? 
-        //    AND YEAR(t.createdAt) = ?`,
-        //   [a.id, monthIndex, requestedYear]
-        // );
         const rVal = rRow && rRow[0] && rRow[0].realisation ? Number(rRow[0].realisation) : 0;
         monthly[label].realisation = rVal;
       }
@@ -510,7 +476,6 @@ export class ApexInputService {
     const categoryData: any[] = [];
     // hold split amounts for COMMUNICATION to merge into Fonctionnement/Operation
     const commSplit: { func?: any; op?: any } = {};
-
     for (const category of categories) {
       const departmentIds = category.departments.map(d => d.id);
 
@@ -527,92 +492,24 @@ export class ApexInputService {
         continue;
       }
 
-      const deptIdPlaceholders = departmentIds.map(() => '?').join(',');
-
-      // Get total budget for all departments in this category using assigned_department_id
-      const totalBudgetQuery = `
-        SELECT COALESCE(SUM(b.total_budget_usd), 0) AS totalBudget 
-        FROM budget b 
-        WHERE b.department_id IN (${deptIdPlaceholders}) ${monthFilter}
-      `;
-      const totalBudgetResult = await this.budgetRepo.query(totalBudgetQuery, [...departmentIds, ...params]);
-      const totalBudget = Number(totalBudgetResult?.[0]?.totalBudget || 0);
-
-      // Get RH (Resources Humaines) budget - cost_center starts with 'RH'
-      const rhBudgetQuery = `
-        SELECT COALESCE(SUM(b.total_budget_usd), 0) AS rhBudget 
-        FROM budget b 
-        WHERE b.assigned_department_id IN (${deptIdPlaceholders}) 
-        AND UPPER(b.cost_center) LIKE 'RH%' ${monthFilter}
-      `;
-      const rhBudgetResult = await this.budgetRepo.query(rhBudgetQuery, [...departmentIds, ...params]);
-      const rhBudget = Number(rhBudgetResult?.[0]?.rhBudget || 0);
-
-      // Get realisation from transactions
-      const realisationQuery = `
-        SELECT COALESCE(SUM(t.depense), 0) AS realisation 
-        FROM transaction t 
-        INNER JOIN budget b ON t.centreId = b.id 
-        WHERE b.department_id IN (${deptIdPlaceholders}) ${monthFilter.replace('b.createdAt', 't.createdAt')}
-      `;
-      const realisationResult = await this.transactionRepo.query(realisationQuery, [...departmentIds, ...params]);
-      const realisation = Number(realisationResult?.[0]?.realisation || 0);
-
-      // Calculate percentage
-      const percentage = totalBudget > 0 ? Number(((realisation / totalBudget) * 100).toFixed(2)) : 0;
-      // HR (rh) and Other budgets
 
       // Get department details with their individual budgets
       const departmentDetails = [];
       for (const dept of category.departments) {
-        const deptBudgetResult = dept.code === "RH" ? await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ? AND assigned_department_id IS ?`, [dept.id, null]) : await this.budgetRepo.query(`SELECT COALESCE(SUM(total_budget_usd),0) AS budget FROM budget WHERE department_id = ?`, [dept.id]);
 
-        const deptBudget = Number(deptBudgetResult?.[0]?.budget || 0);
-
-        const deptRhBudgetQuery = `
-          SELECT COALESCE(SUM(b.total_budget_usd), 0) AS deptRhBudget 
-          FROM budget b 
-          WHERE b.assigned_department_id = ? 
-          AND UPPER(b.cost_center) LIKE 'RH%' ${monthFilter}
-        `;
-        const deptRhBudgetResult = await this.budgetRepo.query(deptRhBudgetQuery, [dept.id, ...params]);
-        const deptRhBudget = Number(deptRhBudgetResult?.[0]?.deptRhBudget || 0);
-
-        let deptRealisationQuery = `
-          SELECT COALESCE(SUM(t.depense), 0) AS deptRealisation 
-          FROM transaction t 
-          INNER JOIN budget b ON t.centreId = b.id 
-          WHERE b.department_id = ? ${monthFilter.replace('b.createdAt', 't.createdAt')}
-        `;
-        let deptRealisationResult = null
-        if (dept.code === "RH") {
-          deptRealisationQuery = `
-          SELECT COALESCE(SUM(t.depense), 0) AS deptRealisation 
-          FROM transaction t 
-          INNER JOIN budget b ON t.centreId = b.id 
-          WHERE b.department_id = ? AND b.assigned_department_id = ? ${monthFilter.replace('b.createdAt', 't.createdAt')}
-        `;
-          deptRealisationResult = await this.transactionRepo.query(deptRealisationQuery, [dept.id, dept.id, ...params]);
-
-
-        } else {
-          deptRealisationResult = await this.transactionRepo.query(deptRealisationQuery, [dept.id, ...params]);
-
-        }
-        const deptRealisation = Number(deptRealisationResult?.[0]?.deptRealisation || 0);
-        const deptOtherBudget = Math.max(0, deptBudget - deptRhBudget);
-
+        const result = await this.getTotalBudgetRealisationDepartment(dept.id);
         departmentDetails.push({
           departmentId: dept.id,
           departmentCode: dept.code,
           departmentName: dept.name,
           categoryId: category.id,
           categoryName: category.name,
-          budget: deptBudget,
-          hr: deptRhBudget,
-          otherBudget: deptOtherBudget,
-          realisation: deptRealisation,
-          percentage: deptBudget > 0 ? Number(((deptRealisation / deptBudget) * 100).toFixed(2)) : 0,
+          budget: result.totalBudget,
+          hr: result.rh,
+          rhBudget: result.rhBudget,
+          otherBudget: result.otherBudget,
+          realisation: result.realisation,
+          percentage: result.totalBudget > 0 ? Number(((result.realisation / result.totalBudget) * 100).toFixed(2)) : 0,
         });
       }
 
@@ -628,6 +525,7 @@ export class ApexInputService {
         for (const dd of departmentDetails) {
           if (dd.departmentCode === 'CO') {
             console.log("dd.budget", dd.budget)
+
             const funcBudget = Math.round((dd.budget || 0) * funcRatio);
             const opBudget = Math.round((dd.budget || 0) * opRatio);
             const funcHr = Math.round((dd.hr || 0) * funcRatio);
@@ -644,6 +542,7 @@ export class ApexInputService {
               budget: funcBudget,
               hr: funcHr,
               otherBudget: funcOther,
+              rhBudget: Math.round((dd.rhBudget || 0) * funcRatio),
               realisation: Math.round((dd.realisation || 0) * funcRatio),
               percentage: funcBudget > 0 ? Number(((Math.round((dd.realisation || 0) * funcRatio) / funcBudget) * 100).toFixed(2)) : 0,
             });
@@ -657,6 +556,7 @@ export class ApexInputService {
               budget: opBudget,
               hr: opHr,
               otherBudget: opOther,
+              rhBudget: Math.round((dd.rhBudget || 0) * opRatio),
               realisation: Math.round((dd.realisation || 0) * opRatio),
               percentage: opBudget > 0 ? Number(((Math.round((dd.realisation || 0) * opRatio) / opBudget) * 100).toFixed(2)) : 0,
             });
@@ -666,32 +566,35 @@ export class ApexInputService {
         commSplit.func = {
           categoryId: null,
           categoryName: 'Fonctionnement',
-          totalBudget: Math.round(totalBudget * funcRatio),
-          hr: Math.round(rhBudget * funcRatio),
-          realisation: Math.round(realisation * funcRatio),
-          percentage: Math.round(totalBudget * funcRatio) > 0 ? Number(((Math.round(realisation * funcRatio) / Math.round(totalBudget * funcRatio)) * 100).toFixed(2)) : 0,
+          totalBudget: funcDepartments.reduce((sum, d) => sum + (d.budget || 0), 0),
+          hr: funcDepartments.reduce((sum, d) => sum + (d.hr || 0), 0),
+          realisation: funcDepartments.reduce((sum, d) => sum + (d.realisation || 0), 0),
+          percentage: funcDepartments.reduce((sum, d) => sum + (d.budget || 0), 0) > 0 ? Number(((funcDepartments.reduce((sum, d) => sum + (d.realisation || 0), 0) / funcDepartments.reduce((sum, d) => sum + (d.budget || 0), 0)) * 100).toFixed(2)) : 0,
           departments: funcDepartments,
+          rhBudget: funcDepartments.reduce((sum, d) => sum + (d.rhBudget || 0), 0),
         };
 
         commSplit.op = {
           categoryId: null,
           categoryName: 'Operation',
-          totalBudget: Math.round(totalBudget * opRatio),
-          hr: Math.round(rhBudget * opRatio),
-          realisation: Math.round(realisation * opRatio),
-          percentage: Math.round(totalBudget * opRatio) > 0 ? Number(((Math.round(realisation * opRatio) / Math.round(totalBudget * opRatio)) * 100).toFixed(2)) : 0,
+          totalBudget: opDepartments.reduce((sum, d) => sum + (d.budget || 0), 0),
+          hr: opDepartments.reduce((sum, d) => sum + (d.hr || 0), 0),
+          realisation: opDepartments.reduce((sum, d) => sum + (d.realisation || 0), 0),
+          percentage: opDepartments.reduce((sum, d) => sum + (d.budget || 0), 0) > 0 ? Number(((opDepartments.reduce((sum, d) => sum + (d.realisation || 0), 0) / opDepartments.reduce((sum, d) => sum + (d.budget || 0), 0)) * 100).toFixed(2)) : 0,
           departments: opDepartments,
+          rhBudget: opDepartments.reduce((sum, d) => sum + (d.rhBudget || 0), 0),
         };
         // do not push the COMMUNICATION category itself
       } else {
         categoryData.push({
           categoryId: category.id,
           categoryName: category.name,
-          totalBudget,
-          hr: rhBudget,
-          realisation,
-          percentage,
+          totalBudget: departmentDetails.reduce((sum, d) => sum + (d.budget || 0), 0),
+          hr: departmentDetails.reduce((sum, d) => sum + (d.hr || 0), 0),
+          realisation: departmentDetails.reduce((sum, d) => sum + (d.realisation || 0), 0),
+          percentage: departmentDetails.reduce((sum, d) => sum + (d.budget || 0), 0) > 0 ? Number(((departmentDetails.reduce((sum, d) => sum + (d.realisation || 0), 0) / departmentDetails.reduce((sum, d) => sum + (d.budget || 0), 0)) * 100).toFixed(2)) : 0,
           departments: departmentDetails,
+          rhBudget: departmentDetails.reduce((sum, d) => sum + (d.rhBudget || 0), 0),
         });
       }
     }
@@ -706,6 +609,7 @@ export class ApexInputService {
         target.realisation = (target.realisation || 0) + (commSplit.func.realisation || 0);
         target.departments = (target.departments || []).concat(commSplit.func.departments || []);
         target.percentage = target.totalBudget > 0 ? Number(((target.realisation / target.totalBudget) * 100).toFixed(2)) : 0;
+        target.rhBudget = (target.rhBudget || 0) + (commSplit.func.rhBudget || 0);
       } else {
         categoryData.push(commSplit.func);
       }
@@ -719,6 +623,7 @@ export class ApexInputService {
         target.realisation = (target.realisation || 0) + (commSplit.op.realisation || 0);
         target.departments = (target.departments || []).concat(commSplit.op.departments || []);
         target.percentage = target.totalBudget > 0 ? Number(((target.realisation / target.totalBudget) * 100).toFixed(2)) : 0;
+        target.rhBudget = (target.rhBudget || 0) + (commSplit.op.rhBudget || 0);
       } else {
         categoryData.push(commSplit.op);
       }
@@ -729,6 +634,7 @@ export class ApexInputService {
     const grandTotalRH = categoryData.reduce((sum, cat) => sum + (cat.hr || 0), 0);
     const grandRealisation = categoryData.reduce((sum, cat) => sum + (cat.realisation || 0), 0);
     const grandPercentage = grandTotal > 0 ? Number(((grandRealisation / grandTotal) * 100).toFixed(2)) : 0;
+    const grandRhBudget = categoryData.reduce((sum, cat) => sum + (cat.rhBudget || 0), 0);
 
     return {
       period: period || 'all',
@@ -739,6 +645,7 @@ export class ApexInputService {
         totalRhBudget: grandTotalRH,
         totalRealisation: grandRealisation,
         overallPercentage: grandPercentage,
+        grandRhBudget: grandRhBudget,
       },
     };
   }
@@ -787,34 +694,84 @@ export class ApexInputService {
 
     for (const d of depts) {
       // HR salary budgets where assigned_department_id = dept.id and cost_center starts with 'RH'
-      const bQuery = `SELECT COALESCE(SUM(b.total_budget_usd),0) AS hrBudget FROM budget b WHERE b.assigned_department_id = ? AND UPPER(b.cost_center) LIKE 'RH%' ${monthFilter}`;
-      const bParams = [d.id, ...paramsExtra];
-      const bRow = await this.budgetRepo.query(bQuery, bParams);
-      const hrBudget = Number(bRow && bRow[0] ? bRow[0].hrBudget || 0 : 0);
-
-      // Realisation from transactions linked to budgets assigned to this department and HR cost center
-      // Use t.createdAt for transaction date filtering when monthFilter applies
-      let rQuery = `SELECT COALESCE(SUM(t.depense),0) AS hrReal FROM transaction t INNER JOIN budget b ON t.centreId = b.id WHERE b.assigned_department_id = ? AND UPPER(b.cost_center) LIKE 'RH%'`;
-      const rParams: any[] = [d.id];
-      if (monthFilter) {
-        // adapt monthFilter to use t.createdAt instead of b.createdAt
-        const tMonthFilter = monthFilter.replace(/b\.createdAt/g, 't.createdAt');
-        rQuery += ` ${tMonthFilter}`;
-        rParams.push(...paramsExtra);
-      }
-      const rRow = await this.transactionRepo.query(rQuery, rParams);
-      const hrReal = Number(rRow && rRow[0] ? rRow[0].hrReal || 0 : 0);
-
+      const deptData = await this.getTotalBudgetRealisationDepartment(d.id, "")
       rows.push({
         id: d.id,
         departmentName: d.name,
         departmentCode: d.code,
-        hrSalaryBudget: hrBudget,
-        hrSalaryRealisation: hrReal,
+        hrSalaryBudget: deptData.totalBudget,
+        hrSalaryRealisation: deptData.realisation,
+        ...deptData
       });
     }
 
     return rows;
+  }
+
+
+
+  /**
+   * Compute total budget for one or more departments.
+   *
+   * This method attempts to include budget records that are tied to the
+   * department via `department_id` **or** via an associated `activity_id`.
+   * The caller may supply an optional SQL `monthFilter` and corresponding
+   * parameters (identical to the other queries in this service).
+   *
+   * Returns a map from departmentId to summed budget amount.
+   */
+  private async getTotalBudgetRealisationDepartment(
+    departmentId: number,
+    code = ""
+  ): Promise<{ rhBudget: number, totalBudget: number; realisation: number; rh: number; otherBudget: number; department: any }> {
+    let department = departmentId ? await this.deptRepo.findOne({ where: { id: departmentId } }) : null;
+    if (code && !department) {
+      department = await this.deptRepo.findOne({ where: { code } });
+    }
+    const budgetCount = await this.budgetRepo.query(`SELECT COUNT(*) AS count FROM budget WHERE department_id = ?`, [departmentId]);
+    if (!department?.id && !departmentId && (!budgetCount || budgetCount[0].count === 0)) {
+      return { rhBudget: 0, totalBudget: 0, realisation: 0, rh: 0, otherBudget: 0, department: null };
+    }
+    departmentId = department?.id || departmentId;
+    const rhBudgetQuery = await this.budgetRepo.query(
+      `SELECT id, total_budget_usd, department_id,assigned_department_id,description_cc FROM budget WHERE UPPER(cost_center) LIKE 'RH%'`,
+    );
+
+    let budgetQuery = `SELECT  activity_id, description_cc,department_id FROM budget WHERE department_id = ?`
+    budgetQuery = department.code === "RH" ? `${budgetQuery} AND assigned_department_id IS NULL` : budgetQuery;
+    const activityRows = await this.budgetRepo.query(
+      budgetQuery,
+      [departmentId])
+    let activityIds = activityRows
+      .map((r: any) => {
+        if (r.description_cc && r.description_cc.toLowerCase().includes('renumération')) {
+          const rh = rhBudgetQuery.find((b: any) => b.assigned_department_id === r.department_id);
+          console.log("r.description_cc", "rh", rh, department)
+          return rh ? r.activity_id : null;
+        }
+        return r.activity_id;
+      })
+      .filter((id: any) => id !== null && id !== undefined);
+    const budgetCondition = activityIds.length ? `activity_id IN (${activityIds.map(() => '?').join(',')})` : `department_id = ?`;
+    const budgetParams = activityIds?.length ? activityIds : [departmentId];
+    const budget = await this.budgetRepo.query(
+      `SELECT COALESCE(SUM(total_budget_usd),0) AS totalBudget FROM budget WHERE  ${budgetCondition}`,
+      budgetParams,
+    );
+
+    const realisation = await this.transactionRepo.query(
+      `SELECT COALESCE(SUM(t.depense), 0) AS total_realisation FROM transaction t INNER JOIN budget b ON t.centreId = b.id WHERE t.deletedAt IS NULL AND ( b.department_id = ? OR b.assigned_department_id = ? )`,
+      [departmentId, departmentId],
+    );
+    const rh = rhBudgetQuery.filter((b: any) => b.assigned_department_id === departmentId).reduce((sum: number, b: any) => sum + Number(b.total_budget_usd || 0), 0);
+    const result: { rhBudget: number, totalBudget: number; realisation: number; rh: number; otherBudget: number } = { rhBudget: 0, totalBudget: 0, realisation: 0, rh: 0, otherBudget: 0 };
+    result.totalBudget = Number(budget && budget[0] ? budget[0].totalBudget || 0 : 0);
+    result.realisation = Number(realisation && realisation[0] ? realisation[0].total_realisation || 0 : 0);
+    result.rh = rh;
+    result.rhBudget = result.rh + result.totalBudget;
+    result.otherBudget = 0; // Initialize otherBudget to 0
+
+    return { ...result, department };
   }
 }
 

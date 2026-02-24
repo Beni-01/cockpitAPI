@@ -13,8 +13,7 @@ import * as bodyParser from 'body-parser';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { AuditInterceptor } from './audit-log/audti-log.interceptor';
-import { AuditLogService } from './audit-log/audit-log.service';
+
 import { CustomValidationPipe } from './custom-app.pipe';
 
 
