@@ -225,12 +225,12 @@ export class ApexInputService {
           `SELECT ${monthSelect} FROM budget WHERE assigned_department_id=?`,
           [d.id],
         )
-        budgetCondition = 'b.assigned_department_id = ?';
-        budgetParams = [d.id];
+        // budgetCondition = 'b.assigned_department_id = ?';
+        budgetParams = [a.id];
       } else {
         bRow = await this.budgetRepo.query(`SELECT ${monthSelect} FROM budget WHERE activity_id = ?`, [a.id]);
       }
-      console.log("activity", a.name, "budget row", bRow)
+      console.log("activity", a, "budget row", bRow)
       // prepare a budget filtering condition and params for transaction queries
 
       if (a.name?.toLowerCase() === "renumeration_ressources humaines") {
@@ -241,9 +241,11 @@ export class ApexInputService {
       }
       // fetch matching budget ids so we can filter transactions by centreId (avoid non-aggregated columns)
       const budgetWhere = budgetCondition.replace(/b\./g, '');
+      console.log("budgetWhere", budgetWhere, "budgetParams", budgetParams)
       const idRows: Array<{ id: number }> = await this.budgetRepo.query(`SELECT id FROM budget WHERE ${budgetWhere}`, budgetParams);
       const budgetIds = idRows && idRows.length ? idRows.map(r => r.id) : [];
       const monthly: Record<string, { budget: number; realisation: number }> = {};
+      console.log("monthsToReturn", budgetIds)
       // First, populate budget values
       for (const mInfo of monthsToReturn) {
         const m = mInfo.key;
@@ -261,20 +263,22 @@ export class ApexInputService {
           const placeholders = budgetIds.map(() => '?').join(',');
           rRow = await this.transactionRepo.query(
             `SELECT COALESCE(SUM(t.depense),0) AS realisation
-     FROM transaction t
-     WHERE t.centreId IN (${placeholders})
-     AND MONTH(t.createdAt) = ?
-     AND YEAR(t.createdAt) = ?`,
-            [...budgetIds, monthIndex, requestedYear],
+             FROM transaction t
+             WHERE t.centreId IN (${placeholders})
+             AND MONTH(t.createdAt) = ?
+             AND YEAR(t.createdAt) = ?
+             AND t.deletedAt IS NULL`,
+             [...budgetIds, monthIndex, requestedYear],
           );
         } else {
           rRow = await this.transactionRepo.query(
             `SELECT COALESCE(SUM(t.depense),0) AS realisation
-     FROM transaction t
-     INNER JOIN budget b ON t.centreId = b.id
-     WHERE ${budgetCondition}
-     AND MONTH(t.createdAt) = ?
-     AND YEAR(t.createdAt) = ? AND t.deletedAt IS NULL`,
+             FROM transaction t
+             INNER JOIN budget b ON t.centreId = b.id
+             WHERE ${budgetCondition}
+             AND MONTH(t.createdAt) = ?
+             AND YEAR(t.createdAt) = ? 
+             AND t.deletedAt IS NULL`,
             [...budgetParams, monthIndex, requestedYear],
           );
         }

@@ -188,28 +188,59 @@ export class SyncService {
             const range = config.range || config.worksheet_name;
             let sheetData: any = [];
             let sheetDataInput: any = [];
-            if (workSpace === "Depart_Budget_Opex Input") {
-                sheetDataInput = await this.sheetReaderService.readAndGetHeaderInput(
-                    config.spreadsheetId,
-                    "Depart_Budget_Opex Input",
-                );
-            } else {
-                if (config.worksheet_name === "Cost Center") {
-                    sheetData = await this.sheetReaderService.readAndGetHeaderCostCenter(
+            try {
+                if (workSpace === "Depart_Budget_Opex Input") {
+                    sheetDataInput = await this.sheetReaderService.readAndGetHeaderInput(
                         config.spreadsheetId,
-                        range,
+                        "Depart_Budget_Opex Input",
                     );
+                } else {
+                    if (config.worksheet_name === "Cost Center") {
+                        sheetData = await this.sheetReaderService.readAndGetHeaderCostCenter(
+                            config.spreadsheetId,
+                            range,
+                        );
+                    }
+                    if (config.worksheet_name === "Summary") {
+                        sheetData = await this.sheetReaderService.readAndGetHeaderBudgetSummary(
+                            config.spreadsheetId,
+                            range,
+                        );
+                    }
                 }
-                if (config.worksheet_name === "Summary") {
-                    sheetData = await this.sheetReaderService.readAndGetHeaderBudgetSummary(
-                        config.spreadsheetId,
-                        range,
-                    )
-                    // sheetDataInput = await this.sheetReaderService.readAndGetHeaderInput(
-                    //     config.spreadsheetId,
-                    //     "Depart_Budget_Opex Input",
-                    // );
+            } catch (err) {
+                const msg = err?.message || String(err);
+                this.logger.error(`Error reading sheet for config ${configId}: ${msg}`);
+
+                // update sync log
+                if (syncLog) {
+                    syncLog.status = 'failed';
+                    syncLog.error_message = msg;
+                    syncLog.completed_at = new Date();
+                    await this.syncLogRepository.save(syncLog);
                 }
+
+                // update config
+                config.lastSyncAt = new Date();
+                config.lastSyncStatus = 'failed';
+                config.lastSyncMessage = msg;
+                await this.sheetConfigRepository.save(config);
+
+                const endTime = new Date();
+                const syncResult = this.createSyncResult(configId, startTime, {
+                    success: false,
+                    recordsProcessed: 0,
+                    recordsCreated: 0,
+                    recordsUpdated: 0,
+                    recordsSkipped: 0,
+                    errors: [msg],
+                    endTime,
+                });
+
+                // Emit sync completed event
+                this.eventEmitter.emit('sheet.sync.completed', syncResult);
+                this.syncInProgress.set(configId, false);
+                return syncResult;
             }
 
 

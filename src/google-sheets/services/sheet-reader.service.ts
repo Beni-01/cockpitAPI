@@ -48,11 +48,12 @@ export class SheetReaderService {
                 range: response.data.range || range,
             };
         } catch (error) {
+            // log the original error and then propagate it so callers can decide how to handle it
             this.logger.error(
                 `Failed to read sheet ${spreadsheetId}, range ${range}`,
                 error,
             );
-            return null;
+            throw error;
         }
     }
 
@@ -168,8 +169,9 @@ export class SheetReaderService {
             console.log(`Read ${normalizedRows.length} rows from ${range}:`, JSON.stringify(normalizedRows[0], null, 2));
             return normalizedRows;
         } catch (err) {
+            // propagate error after logging so caller can surface it in response
             console.error(`Failed to read and log ${range}:`, err);
-            return [];
+            throw err;
         }
     }
 
@@ -192,7 +194,7 @@ export class SheetReaderService {
             return rows;
         } catch (err) {
             console.error(`Failed to read and log ${range}:`, err);
-            return [];
+            throw err;
         }
     }
 
@@ -211,7 +213,7 @@ export class SheetReaderService {
             return rows;
         } catch (err) {
             console.error(`Failed to read and log ${range}:`, err);
-            return [];
+            throw err;
         }
     }
 
