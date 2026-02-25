@@ -9,6 +9,7 @@ import { UpdateConfigDto } from './dto/update-config.dto';
 import { SyncService } from './services/sync.service';
 import { AutoDetectionService } from './services/auto-detection.service';
 import { GoogleAuthService } from './services/google-auth.service';
+import { version } from 'os';
 
 @Injectable()
 export class GoogleSheetsService {
@@ -90,12 +91,31 @@ export class GoogleSheetsService {
     }
 
     async triggerSync(id: number): Promise<any> {
-        const config = await this.getConfig(id);
         try {
-            await this.syncService.syncSheet(id);
+            const res = await this.syncService.syncSheet(id);
+            return { message: 'Sync triggered successfully', res, configId: id ,version: "v1.0" };
+        } catch (error) {
+            return { message: 'Sync failed', error: error.message, configId: id,version: "v1.0" };
+        }
+    }
+    async triggerSyncInput(id: number): Promise<any> {
+        try {
+            await this.syncService.syncSheet(id, "Depart_Budget_Opex Input");
             return { message: 'Sync triggered successfully', configId: id };
         } catch (error) {
             return { message: 'Sync failed', error: error.message, configId: id };
+        }
+    }
+
+    async triggerSyncAllInput(): Promise<any> {
+        try {
+            const configs = await this.getAllConfigs();
+            for (const cfg of configs) {
+                await this.syncService.syncSheet(cfg.id, "Depart_Budget_Opex Input");
+            }
+            return { message: 'Sync triggered successfully for all configs' };
+        } catch (error) {
+            return { message: 'Sync failed', error: error.message };
         }
     }
 
@@ -148,6 +168,65 @@ export class GoogleSheetsService {
             order: { started_at: 'DESC' },
             take: 50,
         });
+    }
+
+    async getAnalytics(since?: string): Promise<any> {
+        // Optional since filter (ISO date)
+        const params: any[] = [];
+        let sinceClause = '';
+        if (since) {
+            sinceClause = 'AND l.started_at >= ?';
+            params.push(since);
+        }
+
+        const perConfigSql = `
+            SELECT
+                c.id,
+                c.name,
+                c.worksheet_name,
+                c.last_sync_at,
+                c.last_sync_status,
+                COUNT(l.id) AS total_syncs,
+                COALESCE(SUM(l.records_fetched),0) AS records_fetched,
+                COALESCE(SUM(l.records_inserted),0) AS records_inserted,
+                COALESCE(SUM(l.records_updated),0) AS records_updated,
+                COALESCE(SUM(l.records_skipped),0) AS records_skipped,
+                COALESCE(SUM(CASE WHEN l.status = 'success' THEN 1 ELSE 0 END),0) AS success_count,
+                COALESCE(SUM(CASE WHEN l.status = 'failed' THEN 1 ELSE 0 END),0) AS failed_count,
+                MAX(CASE WHEN l.status = 'success' THEN l.completed_at ELSE NULL END) AS last_success_at,
+                MAX(CASE WHEN l.status = 'failed' THEN l.completed_at ELSE NULL END) AS last_failed_at
+            FROM google_sheet_config c
+            LEFT JOIN google_sheet_sync_log l ON l.config_id = c.id ${since ? `AND l.started_at >= ?` : ''}
+            GROUP BY c.id
+            ORDER BY c.name ASC
+        `;
+
+        // execute per-config query
+        const perConfigParams = since ? [since] : [];
+        const perConfig = await this.dataSource.query(perConfigSql, perConfigParams);
+
+        // overall totals
+        const overallSql = `
+            SELECT
+                COUNT(l.id) AS total_syncs,
+                COALESCE(SUM(l.records_fetched),0) AS records_fetched,
+                COALESCE(SUM(l.records_inserted),0) AS records_inserted,
+                COALESCE(SUM(l.records_updated),0) AS records_updated,
+                COALESCE(SUM(l.records_skipped),0) AS records_skipped,
+                COALESCE(SUM(CASE WHEN l.status = 'success' THEN 1 ELSE 0 END),0) AS success_count,
+                COALESCE(SUM(CASE WHEN l.status = 'failed' THEN 1 ELSE 0 END),0) AS failed_count
+            FROM google_sheet_sync_log l
+            WHERE 1=1 ${sinceClause}
+        `;
+
+        const overall = await this.dataSource.query(overallSql, params);
+
+        return {
+            generated_at: new Date(),
+            since: since || null,
+            overall: overall[0] || {},
+            perConfig,
+        };
     }
 
     async getBudgetData(): Promise<BudgetData[]> {

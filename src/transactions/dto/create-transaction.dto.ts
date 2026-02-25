@@ -64,6 +64,10 @@ export class DeleteTransactionObjectDto {
 
   @IsString()
   @IsOptional()
+  cost_center?: string;
+
+  @IsString()
+  @IsOptional()
   devise?: string;
 
   @IsString()

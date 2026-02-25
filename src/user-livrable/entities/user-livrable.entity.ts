@@ -34,10 +34,8 @@ export class UserLivrable extends Timestamp {
     isValidate?: boolean;
 
     @ManyToOne(() => User, (agent) => agent.agentValidateur, { eager: true })
-  
     user: User;
 
     @ManyToOne(() => Livrable, (livrable) => livrable.agentValidateur)
- 
     livrable: Livrable;
 }

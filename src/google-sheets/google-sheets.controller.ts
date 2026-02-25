@@ -54,6 +54,20 @@ export class GoogleSheetsController {
         return this.googleSheetsService.triggerSync(id);
     }
 
+
+    @Post('sync-input/:id')
+    @ApiOperation({ summary: 'Trigger manual sync for a config' })
+    @ApiParam({ name: 'id', type: Number })
+    async manualSyncInput(@Param('id') id: number) {
+        return this.googleSheetsService.triggerSyncInput(id);
+    }
+
+    @Post('sync-all-input')
+    @ApiOperation({ summary: 'Trigger manual sync for all configs' })
+    async manualSyncAllInput() {
+        return this.googleSheetsService.triggerSyncAllInput();
+    }
+
     @Post('sync-all')
     @ApiOperation({ summary: 'Trigger manual sync for all configs' })
     async manualSyncAll() {
@@ -63,6 +77,11 @@ export class GoogleSheetsController {
     @Get('logs')
     async getSyncLogs() {
         return this.googleSheetsService.getSyncLogs();
+    }
+
+    @Get('analytics')
+    async getAnalytics(@Query('since') since?: string) {
+        return this.googleSheetsService.getAnalytics(since);
     }
 
     @Get('budget-data')

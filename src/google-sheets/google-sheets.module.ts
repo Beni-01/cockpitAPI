@@ -11,6 +11,7 @@ import { WebhookConfig } from './entities/webhook-config.entity';
 import { SyncLog } from './entities/sync-log.entity';
 import { BudgetData } from './entities/budget-data.entity';
 import { BudgetDataChangeLog } from './entities/budget-data-change-log.entity';
+import { ApexInput } from '../apex-input/apex-input.entity';
 import { Activity } from '../activity/entities/activity.entity';
 import { Department } from '../department/entities/department.entity';
 import { Category } from '../category/entities/category.entity';
@@ -27,6 +28,7 @@ import { SheetReaderService } from './services/sheet-reader.service';
 import { GoogleAuthService } from './services/google-auth.service';
 import { WebhookService } from './services/webhook.service';
 import { AutoDetectionService } from './services/auto-detection.service';
+import { HierarchySyncService } from './services/hierarchy-sync.ervice';
 
 @Module({
     imports: [
@@ -37,6 +39,7 @@ import { AutoDetectionService } from './services/auto-detection.service';
             WebhookConfig,
             SyncLog,
             BudgetData,
+            ApexInput,
             BudgetDataChangeLog,
             Activity,
             Department,
@@ -61,6 +64,8 @@ import { AutoDetectionService } from './services/auto-detection.service';
         GoogleAuthService,
         WebhookService,
         AutoDetectionService,
+        HierarchySyncService
+
     ],
     exports: [GoogleSheetsService, RealtimeNotifierService],
 })
