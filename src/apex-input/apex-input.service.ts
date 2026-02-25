@@ -774,7 +774,7 @@ export class ApexInputService {
         `SELECT COALESCE(SUM(depense), 0) AS total_realisation FROM transaction WHERE centreId = ? AND deletedAt IS NULL`,
         [rhBudget?.id || 0],
       );
-      result.realisation += Number(rhRenumeration && rhRenumeration[0] ? rhRenumeration[0].total_realisation || 0 : 0);
+      // result.realisation += Number(rhRenumeration && rhRenumeration[0] ? rhRenumeration[0].total_realisation || 0 : 0);
 
     }
     const rh = rhBudgetQuery.filter((b: any) => b.assigned_department_id === departmentId).reduce((sum: number, b: any) => sum + Number(b.total_budget_usd || 0), 0);
