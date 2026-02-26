@@ -148,9 +148,18 @@ export class DepartmentService {
                 // .andWhere('activity.code IS NOT NULL')
                 .getMany();
 
-            if (departmentCode === "RH") {
-                acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
-            }
+            // if (departmentCode === "RH") {
+            //     const newActs = JSON.parse(JSON.stringify(acts));
+            //     acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
+            //     const excluded = new Set([
+            //         "Renumeration_Acces a la justice",
+            //         "Renumeration_Ressources humaines",
+            //         "Renumeration_Securite"
+            //     ].map(n => n.toLowerCase()));
+            //     const renum = newActs?.filter(x => excluded.has(x.name?.toLowerCase() || "")) || null;
+            //     acts = renum ? [...acts, ...renum] : acts;
+            // }
+
 
             return acts.map(a => ({
                 id: a.id,
