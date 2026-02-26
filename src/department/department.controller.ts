@@ -21,6 +21,11 @@ export class DepartmentController {
         return this.service.getActivities(departmentCode);
     }
 
+    @Get('activities-all')
+    async activitiesAll(@Query('departmentCode') departmentCode?: string) {
+        return this.service.getActivitiesAll(departmentCode);
+    }
+
     @Get('sous')
     @ApiQuery({ name: 'activityId', required: false })
     @ApiQuery({ name: 'departmentCode', required: false })
@@ -39,6 +44,6 @@ export class DepartmentController {
         return this.service.getTaches(sid, aid, departmentCode);
     }
 
- 
+
 
 }
