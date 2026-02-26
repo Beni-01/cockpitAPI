@@ -148,9 +148,92 @@ export class DepartmentService {
                 // .andWhere('activity.code IS NOT NULL')
                 .getMany();
 
-            if (departmentCode === "RH") {
-                acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
+            // if (departmentCode === "RH") {
+            //     const newActs = JSON.parse(JSON.stringify(acts));
+            //     acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
+            //     const excluded = new Set([
+            //         "Renumeration_Acces a la justice",
+            //         "Renumeration_Ressources humaines",
+            //         "Renumeration_Securite"
+            //     ].map(n => n.toLowerCase()));
+            //     const renum = newActs?.filter(x => excluded.has(x.name?.toLowerCase() || "")) || null;
+            //     acts = renum ? [...acts, ...renum] : acts;
+            // }
+
+
+            return acts.map(a => ({
+                id: a.id,
+                name: a.name || null,
+                departmentId: a.departmentId || null,
+                departmentCode: a.department?.code || null,
+                departmentName: a.department?.name || null
+            }));
+        }
+        return []
+    }
+
+
+
+    async getActivitiesWithoutRH(departmentCode: string) {
+        if (departmentCode) {
+            // Get all related codes using the helper method
+            const codes = await this.getRelatedCodes(departmentCode);
+
+            console.log("Related department codes:", codes);
+            // If DG or PM, fetch all activities from all departments
+            if (codes === 'ALL') {
+                const acts = await this.activityRepo
+                    .createQueryBuilder('activity')
+                    .where('activity.code IS NOT NULL')
+                    .leftJoinAndSelect('activity.department', 'department')
+                    .getMany();
+
+                return acts.map(a => ({
+                    id: a.id,
+                    name: a.name || null,
+                    departmentId: a.departmentId || null,
+                    departmentCode: a.department?.code || null,
+                    departmentName: a.department?.name || null
+                }));
             }
+
+            if (!codes || codes.length === 0) {
+                throw new NotFoundException(`Department with code ${departmentCode} not found`);
+            }
+
+            // Query departments by those codes
+            const departments = await this.departmentRepo
+                .createQueryBuilder('department')
+                .where('department.code IN (:...codes)', { codes })
+                .getMany();
+
+            if (!departments || departments.length === 0) {
+                throw new NotFoundException(`No departments found for codes ${codes.join(', ')}`);
+            }
+
+            const departmentIds = departments.map(d => d.id);
+            console.log("Department IDs:", departmentIds);
+
+            // Fetch activities from all related departments
+            let acts = await this.activityRepo
+                .createQueryBuilder('activity')
+                .leftJoinAndSelect('activity.department', 'department')
+                .where('activity.department_id IN (:...ids)', { ids: departmentIds })
+                // .andWhere('activity.code IS NOT NULL')
+                .getMany();
+
+            if (departmentCode === "RH") {
+                const newActs = JSON.parse(JSON.stringify(acts));
+                acts = acts?.filter(x => !x.name?.toLowerCase()?.includes("renumeration")) || [];
+                const excluded = new Set([
+                    // "Renumeration_Acces a la justice",
+                    "Renumeration_Ressources humaines",
+                    // "Renumeration_Securite"
+                ].map(n => n.toLowerCase()));
+                const renum = newActs?.filter(x => excluded.has(x.name?.toLowerCase() || "")) || null;
+                acts = renum ? [...acts, ...renum] : acts;
+            }
+
 
             return acts.map(a => ({
                 id: a.id,
