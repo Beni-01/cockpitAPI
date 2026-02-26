@@ -313,7 +313,7 @@ export class ApexInputService {
       qb.andWhere('a.cost_center = :cost_center', { cost_center: query.cost_center });
     }
 
-    qb.andWhere('a.deletedAt IS NULL');
+    qb.andWhere('a.deleted_at IS NULL');
 
     const totalExpr = `(
       COALESCE(a.jan,0)+COALESCE(a.feb,0)+COALESCE(a.mar,0)+COALESCE(a.apr,0)+COALESCE(a.may,0)+COALESCE(a.jun,0)+
