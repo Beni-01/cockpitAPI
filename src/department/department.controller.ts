@@ -21,9 +21,9 @@ export class DepartmentController {
         return this.service.getActivities(departmentCode);
     }
 
-    @Get('activities-all')
-    async activitiesAll(@Query('departmentCode') departmentCode?: string) {
-        return this.service.getActivitiesAll(departmentCode);
+    @Get('activities-without-rh')
+    async activitiesWithoutRH(@Query('departmentCode') departmentCode?: string) {
+        return this.service.getActivitiesWithoutRH(departmentCode);
     }
 
     @Get('sous')
