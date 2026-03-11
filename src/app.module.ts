@@ -34,6 +34,7 @@ import { DepartmentModule } from './department/department.module';
 import { BudgetModule } from './budget/budget.module';
 import ApexInputModule from './apex-input/apex-input.module';
 import { CategoryModule } from './category/category.module';
+import { Activite26Module } from './activite-26/activite-26.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -101,6 +102,7 @@ import { CategoryModule } from './category/category.module';
     BudgetModule,
     ApexInputModule,
     CategoryModule,
+    Activite26Module,
 
   ],
   controllers: [AppController],
