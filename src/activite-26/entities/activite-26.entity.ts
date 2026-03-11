@@ -5,7 +5,7 @@ import { Column, Entity, Index, PrimaryGeneratedColumn } from "typeorm";
 @Entity({
     name: 'activite_26'
 })
-@Index(['direction', 'objectif', 'activite'])
+@Index(['direction'])
 export class Activite26 extends Timestamp{
 
     @PrimaryGeneratedColumn()
