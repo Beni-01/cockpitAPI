@@ -108,10 +108,10 @@ import { Activite26Module } from './activite-26/activite-26.module';
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
 
     {
       provide: APP_INTERCEPTOR,

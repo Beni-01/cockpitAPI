@@ -28,14 +28,14 @@ export class Activite26Controller {
 
   @Post()
   async create(
-    @Body(new ValidationPipe({ whitelist: true })) dto: CreateActivite26Dto,
+    @Body() dto: CreateActivite26Dto,
   ) {
     return this.activiteService.create(dto);
   }
 
   @Post('bulk')
   async bulkCreate(
-    @Body(new ValidationPipe({ whitelist: true })) dtos: CreateActivite26Dto[],
+    @Body() dtos: CreateActivite26Dto[],
   ) {
     return this.activiteService.bulkCreate(dtos);
   }

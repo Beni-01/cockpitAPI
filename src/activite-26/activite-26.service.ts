@@ -1,15 +1,10 @@
-import {
-  Injectable,
-  NotFoundException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { CreateActivite26Dto } from './dto/create-activite-26.dto';
 import { UpdateActivite26Dto } from './dto/update-activite-26.dto';
 import { Activite26 } from './entities/activite-26.entity';
-
-
 
 @Injectable()
 export class Activite26Service {
@@ -20,68 +15,39 @@ export class Activite26Service {
 
   /*
   ==========================
-  1. CRUD COMPLET
+  1. CRUD
   ==========================
   */
 
   async create(dto: CreateActivite26Dto): Promise<Activite26> {
-    try {
-      const activite = this.activiteRepository.create(dto);
-      return await this.activiteRepository.save(activite);
-    } catch (error) {
-      throw new InternalServerErrorException('Erreur lors de la création');
-    }
+    const entity = this.activiteRepository.create(dto);
+    return this.activiteRepository.save(entity);
   }
 
-   /**
-   * BULK CREATE
-   * @param dtos Tableau de CreateActivite26Dto
-   */
   async bulkCreate(dtos: CreateActivite26Dto[]): Promise<Activite26[]> {
-    try {
-      // Transforme chaque DTO en entité
-      const activites = this.activiteRepository.create(dtos);
-
-      // Sauvegarde toutes les entités en une seule opération
-      return await this.activiteRepository.save(activites);
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException(
-        'Erreur lors de la création en masse des activités',
-      );
-    }
+    const entities = this.activiteRepository.create(dtos);
+    return this.activiteRepository.save(entities);
   }
 
   async findAll(): Promise<Activite26[]> {
-    return this.activiteRepository.find({
-      order: { id: 'DESC' },
-    });
+    return this.activiteRepository.find();
   }
 
   async findOne(id: number): Promise<Activite26> {
-    const activite = await this.activiteRepository.findOne({
-      where: { id },
-    });
-
-    if (!activite) {
-      throw new NotFoundException(`Activité ${id} introuvable`);
-    }
-
-    return activite;
+    const entity = await this.activiteRepository.findOneBy({ id });
+    if (!entity) throw new NotFoundException(`Activite26 #${id} not found`);
+    return entity;
   }
 
   async update(id: number, dto: UpdateActivite26Dto): Promise<Activite26> {
-    const activite = await this.findOne(id);
-
-    Object.assign(activite, dto);
-
-    return this.activiteRepository.save(activite);
+    const entity = await this.findOne(id);
+    Object.assign(entity, dto);
+    return this.activiteRepository.save(entity);
   }
 
   async remove(id: number): Promise<void> {
-    const activite = await this.findOne(id);
-
-    await this.activiteRepository.remove(activite);
+    const entity = await this.findOne(id);
+    await this.activiteRepository.remove(entity);
   }
 
   /*
@@ -93,8 +59,23 @@ export class Activite26Service {
   async filterAll(filters: any): Promise<Activite26[]> {
     const qb = this.activiteRepository.createQueryBuilder('a');
 
+    const allowedFilters = [
+      'direction',
+      'objectif',
+      'activite',
+      'T1',
+      'T2',
+      'T3',
+      'T4',
+      'T5',
+      'budget',
+      'observation',
+      'createdAt',
+      'updatedAt',
+    ];
+
     Object.keys(filters).forEach((key) => {
-      if (filters[key] !== undefined) {
+      if (allowedFilters.includes(key) && filters[key] !== undefined) {
         qb.andWhere(`a.${key} = :${key}`, { [key]: filters[key] });
       }
     });
@@ -111,8 +92,24 @@ export class Activite26Service {
   async filterAllPaginated(filters: any, page = 1, limit = 10) {
     const qb = this.activiteRepository.createQueryBuilder('a');
 
+    const allowedFilters = [
+      'direction',
+      'objectif',
+      'activite',
+      'T1',
+      'T2',
+      'T3',
+      'T4',
+      'T5',
+      'budget',
+      'observation',
+      'observation',
+      'createdAt',
+      'updatedAt',
+    ];
+
     Object.keys(filters).forEach((key) => {
-      if (filters[key] !== undefined) {
+      if (allowedFilters.includes(key) && filters[key] !== undefined) {
         qb.andWhere(`a.${key} = :${key}`, { [key]: filters[key] });
       }
     });
@@ -135,42 +132,60 @@ export class Activite26Service {
 
   /*
   ==========================
-  4. GROUPE PAR DIRECTION
+  4. GROUP BY DIRECTION (toutes les colonnes)
   ==========================
   */
 
   async groupByDirection() {
     return this.activiteRepository
       .createQueryBuilder('a')
-      .select('a.direction', 'direction')
-      .addSelect('COUNT(a.id)', 'total')
-      .groupBy('a.direction')
+      .select([
+        'a.id',
+        'a.objectif',
+        'a.activite',
+        'a.T1',
+        'a.T2',
+        'a.T3',
+        'a.T4',
+        'a.T5',
+        'a.budget',
+        'a.direction',
+        'a.observation',
+        'a.createdAt',
+        'a.updatedAt',
+      ])
+      .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction)', 'totalByDirection')
       .getRawMany();
   }
-
-  /*
-  ==========================
-  5. GROUPE PAR DIRECTION + PAGINATION
-  ==========================
-  */
 
   async groupByDirectionPaginated(page = 1, limit = 10) {
     const qb = this.activiteRepository
       .createQueryBuilder('a')
-      .select('a.direction', 'direction')
-      .addSelect('COUNT(a.id)', 'total')
-      .groupBy('a.direction');
+      .select([
+        'a.id',
+        'a.objectif',
+        'a.activite',
+        'a.T1',
+        'a.T2',
+        'a.T3',
+        'a.T4',
+        'a.T5',
+        'a.budget',
+        'a.direction',
+        'a.observation',
+        'a.createdAt',
+        'a.updatedAt',
+      ])
+      .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction)', 'totalByDirection')
+      .skip((page - 1) * limit)
+      .take(limit);
 
-    qb.skip((page - 1) * limit).take(limit);
-
-    const data = await qb.getRawMany();
-
-    const total = data.length;
-
+    const [data, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
     return {
       data,
+      total,
       totalPages,
       currentPage: page,
       hasNextPage: page < totalPages,
@@ -180,46 +195,60 @@ export class Activite26Service {
 
   /*
   ==========================
-  6. GROUPE PAR DIRECTION + OBJECTIF
+  5. GROUP BY DIRECTION + OBJECTIF (toutes les colonnes)
   ==========================
   */
 
   async groupByDirectionAndObjectif() {
     return this.activiteRepository
       .createQueryBuilder('a')
-      .select('a.direction', 'direction')
-      .addSelect('a.objectif', 'objectif')
-      .addSelect('COUNT(a.id)', 'total')
-      .groupBy('a.direction')
-      .addGroupBy('a.objectif')
+      .select([
+        'a.id',
+        'a.objectif',
+        'a.activite',
+        'a.T1',
+        'a.T2',
+        'a.T3',
+        'a.T4',
+        'a.T5',
+        'a.budget',
+        'a.direction',
+        'a.observation',
+        'a.createdAt',
+        'a.updatedAt',
+      ])
+      .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction, a.objectif)', 'totalByDirectionObjectif')
       .getRawMany();
   }
-
-  /*
-  ==========================
-  7. GROUPE PAR DIRECTION + OBJECTIF + PAGINATION
-  ==========================
-  */
 
   async groupByDirectionAndObjectifPaginated(page = 1, limit = 10) {
     const qb = this.activiteRepository
       .createQueryBuilder('a')
-      .select('a.direction', 'direction')
-      .addSelect('a.objectif', 'objectif')
-      .addSelect('COUNT(a.id)', 'total')
-      .groupBy('a.direction')
-      .addGroupBy('a.objectif');
+      .select([
+        'a.id',
+        'a.objectif',
+        'a.activite',
+        'a.T1',
+        'a.T2',
+        'a.T3',
+        'a.T4',
+        'a.T5',
+        'a.budget',
+        'a.direction',
+        'a.observation',
+        'a.createdAt',
+        'a.updatedAt',
+      ])
+      .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction, a.objectif)', 'totalByDirectionObjectif')
+      .skip((page - 1) * limit)
+      .take(limit);
 
-    qb.skip((page - 1) * limit).take(limit);
-
-    const data = await qb.getRawMany();
-
-    const total = data.length;
-
+    const [data, total] = await qb.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
     return {
       data,
+      total,
       totalPages,
       currentPage: page,
       hasNextPage: page < totalPages,
