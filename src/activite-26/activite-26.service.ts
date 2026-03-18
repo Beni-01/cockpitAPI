@@ -136,27 +136,69 @@ export class Activite26Service {
   ==========================
   */
 
-  async groupByDirection() {
-    return this.activiteRepository
-      .createQueryBuilder('a')
-      .select([
-        'id',
-        'objectif',
-        'activite',
-        'T1',
-        'T2',
-        'T3',
-        'T4',
-        'T5',
-        'budget',
-        'direction',
-        'observation',
-        'createdAt',
-        'updatedAt',
-      ])
-      .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction)', 'totalByDirection')
-      .getRawMany();
+  async groupByDirection(direction?: string) {
+  const qb = this.activiteRepository
+    .createQueryBuilder('a')
+    .select([
+      'a.id',
+      'a.objectif',
+      'a.activite',
+      'a.T1',
+      'a.T2',
+      'a.T3',
+      'a.T4',
+      'a.T5',
+      'a.budget',
+      'a.direction',
+      'a.observation',
+      'a.createdAt',
+      'a.updatedAt',
+    ]);
+
+  if (direction) {
+    qb.where('a.direction = :direction', { direction });
   }
+
+  const data = await qb.getRawMany();
+
+  // 🔥 Transformation EXACTE demandée
+  const grouped = data.reduce((acc, item) => {
+    const dir = item.a_direction;
+    const obj = item.a_objectif;
+
+    // 1. Trouver ou créer la direction
+    let directionEntry = acc.find(d => d[dir]);
+    if (!directionEntry) {
+      directionEntry = { [dir]: {} };
+      acc.push(directionEntry);
+    }
+
+    // 2. Trouver ou créer l'objectif
+    if (!directionEntry[dir][obj]) {
+      directionEntry[dir][obj] = [];
+    }
+
+    // 3. Ajouter l'activité
+    directionEntry[dir][obj].push({
+      id: item.a_id,
+      activite: item.a_activite,
+      T1: item.a_T1,
+      T2: item.a_T2,
+      T3: item.a_T3,
+      T4: item.a_T4,
+      T5: item.a_T5,
+      budget: item.a_budget,
+      observation: item.a_observation,
+      createdAt: item.a_createdAt,
+      updatedAt: item.a_updatedAt,
+    });
+
+    return acc;
+  }, []);
+
+  return grouped;
+}
+
 
   async groupByDirectionPaginated(page = 1, limit = 10) {
     const qb = this.activiteRepository

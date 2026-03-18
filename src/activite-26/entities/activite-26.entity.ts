@@ -47,7 +47,13 @@ export class Activite26 extends Timestamp{
     })
     T4:string;
 
+    @Column({
+        default:'En attente',
+        type: 'varchar',
+        name: 'status',
 
+    })
+    status:string
 
     @Column({
         type:'decimal',

@@ -91,11 +91,10 @@ export class Activite26Controller {
   ==========================
   */
 
-  // Group by direction
-  @Get('group/direction')
-  async groupByDirection() {
-    return this.activiteService.groupByDirection();
-  }
+@Get('group/direction/:direction')
+async groupByDirection(@Param('direction') direction: string) {
+  return this.activiteService.groupByDirection(direction);
+}
 
   // Group by direction + pagination
   @Get('group/direction-paginated')
