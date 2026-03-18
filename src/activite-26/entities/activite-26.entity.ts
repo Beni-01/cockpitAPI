@@ -47,11 +47,7 @@ export class Activite26 extends Timestamp{
     })
     T4:string;
 
-    @Column({
-        type: 'varchar',
-        name: 'T5',
-    })
-    T5:string;
+
 
     @Column({
         type:'decimal',

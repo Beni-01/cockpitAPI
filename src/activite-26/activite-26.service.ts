@@ -140,19 +140,19 @@ export class Activite26Service {
     return this.activiteRepository
       .createQueryBuilder('a')
       .select([
-        'a.id',
-        'a.objectif',
-        'a.activite',
-        'a.T1',
-        'a.T2',
-        'a.T3',
-        'a.T4',
-        'a.T5',
-        'a.budget',
-        'a.direction',
-        'a.observation',
-        'a.createdAt',
-        'a.updatedAt',
+        'id',
+        'objectif',
+        'activite',
+        'T1',
+        'T2',
+        'T3',
+        'T4',
+        'T5',
+        'budget',
+        'direction',
+        'observation',
+        'createdAt',
+        'updatedAt',
       ])
       .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction)', 'totalByDirection')
       .getRawMany();
@@ -162,19 +162,18 @@ export class Activite26Service {
     const qb = this.activiteRepository
       .createQueryBuilder('a')
       .select([
-        'a.id',
-        'a.objectif',
-        'a.activite',
-        'a.T1',
-        'a.T2',
-        'a.T3',
-        'a.T4',
-        'a.T5',
-        'a.budget',
-        'a.direction',
-        'a.observation',
-        'a.createdAt',
-        'a.updatedAt',
+        'id',
+        'objectif',
+        'activite',
+        'T1',
+        'T2',
+        'T3',
+        'T4',
+        'budget',
+        'direction',
+        'observation',
+        'createdAt',
+        'updatedAt',
       ])
       .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction)', 'totalByDirection')
       .skip((page - 1) * limit)
@@ -199,60 +198,135 @@ export class Activite26Service {
   ==========================
   */
 
-  async groupByDirectionAndObjectif() {
-    return this.activiteRepository
-      .createQueryBuilder('a')
-      .select([
-        'a.id',
-        'a.objectif',
-        'a.activite',
-        'a.T1',
-        'a.T2',
-        'a.T3',
-        'a.T4',
-        'a.T5',
-        'a.budget',
-        'a.direction',
-        'a.observation',
-        'a.createdAt',
-        'a.updatedAt',
-      ])
-      .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction, a.objectif)', 'totalByDirectionObjectif')
-      .getRawMany();
-  }
+async groupByDirectionAndObjectif() {
+  const data = await this.activiteRepository
+    .createQueryBuilder('a')
+    .select([
+      'a.id',
+      'a.objectif',
+      'a.activite',
+      'a.T1',
+      'a.T2',
+      'a.T3',
+      'a.T4',
+      'a.budget',
+      'a.direction',
+      'a.observation',
+      'a.createdAt',
+      'a.updatedAt',
+    ])
+    .addSelect(
+      'COUNT(a.id) OVER (PARTITION BY a.direction, a.objectif)',
+      'totalByDirectionObjectif'
+    )
+    .getRawMany();
 
-  async groupByDirectionAndObjectifPaginated(page = 1, limit = 10) {
-    const qb = this.activiteRepository
-      .createQueryBuilder('a')
-      .select([
-        'a.id',
-        'a.objectif',
-        'a.activite',
-        'a.T1',
-        'a.T2',
-        'a.T3',
-        'a.T4',
-        'a.T5',
-        'a.budget',
-        'a.direction',
-        'a.observation',
-        'a.createdAt',
-        'a.updatedAt',
-      ])
-      .addSelect('COUNT(a.id) OVER (PARTITION BY a.direction, a.objectif)', 'totalByDirectionObjectif')
-      .skip((page - 1) * limit)
-      .take(limit);
+  // Transformation ici 👇
+  const result = data.reduce((acc, item) => {
+    const direction = item.a_direction;
+    const objectif = item.a_objectif;
 
-    const [data, total] = await qb.getManyAndCount();
-    const totalPages = Math.ceil(total / limit);
+    // 1. Initialiser direction
+    if (!acc[direction]) {
+      acc[direction] = {};
+    }
 
-    return {
-      data,
-      total,
-      totalPages,
-      currentPage: page,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    };
-  }
+    // 2. Initialiser objectif
+    if (!acc[direction][objectif]) {
+      acc[direction][objectif] = [];
+    }
+
+    // 3. Ajouter l'activité
+    acc[direction][objectif].push({
+      id: item.a_id,
+      activite: item.a_activite,
+      T1: item.a_T1,
+      T2: item.a_T2,
+      T3: item.a_T3,
+      T4: item.a_T4,
+      budget: item.a_budget,
+      observation: item.a_observation,
+      createdAt: item.a_createdAt,
+      updatedAt: item.a_updatedAt,
+      total: item.totalByDirectionObjectif,
+    });
+
+    return acc;
+  }, {});
+
+  return result;
+}
+
+async groupByDirectionAndObjectifPaginated(page = 1, limit = 10) {
+  const qb = this.activiteRepository
+    .createQueryBuilder('a')
+    .select([
+      'a.id',
+      'a.objectif',
+      'a.activite',
+      'a.T1',
+      'a.T2',
+      'a.T3',
+      'a.T4',
+      'a.budget',
+      'a.direction',
+      'a.observation',
+      'a.createdAt',
+      'a.updatedAt',
+    ])
+    .addSelect(
+      'COUNT(a.id) OVER (PARTITION BY a.direction, a.objectif)',
+      'totalByDirectionObjectif'
+    )
+    .skip((page - 1) * limit)
+    .take(limit);
+
+  const data = await qb.getRawMany();
+
+  // ⚠️ total global sans pagination
+  const total = await this.activiteRepository.count();
+
+  const totalPages = Math.ceil(total / limit);
+
+  // 🔥 Transformation (grouping)
+  const grouped = data.reduce((acc, item) => {
+    const direction = item.a_direction;
+    const objectif = item.a_objectif;
+
+    if (!acc[direction]) {
+      acc[direction] = {};
+    }
+
+    if (!acc[direction][objectif]) {
+      acc[direction][objectif] = [];
+    }
+
+    acc[direction][objectif].push({
+      id: item.a_id,
+      activite: item.a_activite,
+      T1: item.a_T1,
+      T2: item.a_T2,
+      T3: item.a_T3,
+      T4: item.a_T4,
+      budget: item.a_budget,
+      observation: item.a_observation,
+      createdAt: item.a_createdAt,
+      updatedAt: item.a_updatedAt,
+      total: item.totalByDirectionObjectif,
+    });
+
+    return acc;
+  }, {});
+
+  return {
+    data: Object.keys(grouped).map(direction => ({
+      [direction]: grouped[direction],
+    })),
+    total,
+    totalPages,
+    currentPage: page,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
+  };
+}
 }

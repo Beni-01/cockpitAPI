@@ -26,10 +26,6 @@ export class CreateActivite26Dto {
   @IsOptional()
   T4: string;
 
-  @IsString()
-  @IsOptional()
-  T5: string;
-
   @IsNumber()
   budget: number;
 
