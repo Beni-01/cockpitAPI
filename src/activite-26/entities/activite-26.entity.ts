@@ -51,7 +51,6 @@ export class Activite26 extends Timestamp{
         default:'En attente',
         type: 'varchar',
         name: 'status',
-
     })
     status:string
 
