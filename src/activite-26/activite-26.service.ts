@@ -56,33 +56,68 @@ export class Activite26Service {
   ==========================
   */
 
-  async filterAll(filters: any): Promise<Activite26[]> {
-    const qb = this.activiteRepository.createQueryBuilder('a');
+async filterAll(filters: any): Promise<any[]> {
+  const qb = this.activiteRepository.createQueryBuilder('a');
 
-    const allowedFilters = [
-      'direction',
-      'objectif',
-      'activite',
-      'status',
-      'T1',
-      'T2',
-      'T3',
-      'T4',
-      'T5',
-      'budget',
-      'observation',
-      'createdAt',
-      'updatedAt',
-    ];
+  const allowedFilters = [
+    'direction',
+    'objectif',
+    'activite',
+    'status',
+    'T1',
+    'T2',
+    'T3',
+    'T4',
+   
+    'budget',
+    'observation',
+    'createdAt',
+    'updatedAt',
+  ];
 
-    Object.keys(filters).forEach((key) => {
-      if (allowedFilters.includes(key) && filters[key] !== undefined) {
-        qb.andWhere(`a.${key} = :${key}`, { [key]: filters[key] });
-      }
+  Object.keys(filters).forEach((key) => {
+    if (allowedFilters.includes(key) && filters[key] !== undefined) {
+      qb.andWhere(`a.${key} = :${key}`, { [key]: filters[key] });
+    }
+  });
+
+  const data = await qb.getMany();
+
+  // 🔥 Transformation hiérarchique
+  const grouped = data.reduce((acc, item) => {
+    const dir = item.direction;
+    const obj = item.objectif;
+
+    let directionEntry = acc.find(d => d[dir]);
+    if (!directionEntry) {
+      directionEntry = { [dir]: {} };
+      acc.push(directionEntry);
+    }
+
+    if (!directionEntry[dir][obj]) {
+      directionEntry[dir][obj] = [];
+    }
+
+    directionEntry[dir][obj].push({
+      id: item.id,
+      activite: item.activite,
+      T1: item.T1,
+      T2: item.T2,
+      T3: item.T3,
+      T4: item.T4,
+   
+      budget: item.budget,
+      observation: item.observation,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      status: item.status,
     });
 
-    return qb.getMany();
-  }
+    return acc;
+  }, []);
+
+  return grouped;
+}
 
   /*
   ==========================
@@ -90,47 +125,79 @@ export class Activite26Service {
   ==========================
   */
 
-  async filterAllPaginated(filters: any, page = 1, limit = 10) {
-    const qb = this.activiteRepository.createQueryBuilder('a');
+async filterAllPaginated(filters: any, page = 1, limit = 10) {
+  const qb = this.activiteRepository.createQueryBuilder('a');
 
-    const allowedFilters = [
-      'direction',
-      'objectif',
-      'activite',
-      'status',
-      'T1',
-      'T2',
-      'T3',
-      'T4',
-      'T5',
-      'budget',
-      'observation',
-      'observation',
-      'createdAt',
-      'updatedAt',
-    ];
+  const allowedFilters = [
+    'direction',
+    'objectif',
+    'activite',
+    'status',
+    'T1',
+    'T2',
+    'T3',
+    'T4',
+  
+    'budget',
+    'observation',
+    'createdAt',
+    'updatedAt',
+  ];
 
-    Object.keys(filters).forEach((key) => {
-      if (allowedFilters.includes(key) && filters[key] !== undefined) {
-        qb.andWhere(`a.${key} = :${key}`, { [key]: filters[key] });
-      }
+  Object.keys(filters).forEach((key) => {
+    if (allowedFilters.includes(key) && filters[key] !== undefined) {
+      qb.andWhere(`a.${key} = :${key}`, { [key]: filters[key] });
+    }
+  });
+
+  qb.skip((page - 1) * limit).take(limit);
+
+  const [data, total] = await qb.getManyAndCount();
+
+  const totalPages = Math.ceil(total / limit);
+
+  // 🔥 Transformation hiérarchique
+  const grouped = data.reduce((acc, item) => {
+    const dir = item.direction;
+    const obj = item.objectif;
+
+    let directionEntry = acc.find(d => d[dir]);
+    if (!directionEntry) {
+      directionEntry = { [dir]: {} };
+      acc.push(directionEntry);
+    }
+
+    if (!directionEntry[dir][obj]) {
+      directionEntry[dir][obj] = [];
+    }
+
+    directionEntry[dir][obj].push({
+      id: item.id,
+      activite: item.activite,
+      T1: item.T1,
+      T2: item.T2,
+      T3: item.T3,
+      T4: item.T4,
+     
+      budget: item.budget,
+      observation: item.observation,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      status: item.status,
     });
 
-    qb.skip((page - 1) * limit).take(limit);
+    return acc;
+  }, []);
 
-    const [data, total] = await qb.getManyAndCount();
-
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data,
-      total,
-      totalPages,
-      currentPage: page,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    };
-  }
+  return {
+    data: grouped,
+    total,
+    totalPages,
+    currentPage: page,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
+  };
+}
 
   /*
   ==========================
