@@ -217,7 +217,6 @@ async filterAllPaginated(filters: any, page = 1, limit = 10) {
       'a.T2',
       'a.T3',
       'a.T4',
-      'a.T5',
       'a.budget',
       'a.direction',
       'a.observation',
