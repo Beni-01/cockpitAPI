@@ -82,6 +82,51 @@ export class LivrableService {
       );
     }
   }
+
+  /**
+   * Retourne un résumé global des livrables par catégories (Total, Soumis, En attente, Conformes, Non conformes)
+   * Tel qu'affiché dans le tableau de bord.
+   */
+  async getSummary(): Promise<any> {
+    try {
+      const counts = await this.livrableRepository
+        .createQueryBuilder('livrable')
+        .select('livrable.status', 'status')
+        .addSelect('COUNT(*)', 'count')
+        .groupBy('livrable.status')
+        .getRawMany();
+
+      const total = counts.reduce((acc, curr) => acc + Number(curr.count), 0);
+      
+      const summary = {
+        total: total,
+        soumis: 0,
+        enAttente: 0,
+        conformes: 0,
+        nonConformes: 0
+      };
+
+      counts.forEach(c => {
+        const status = (c.status || '').toLowerCase();
+        
+        if (status === 'soumis' || status === 'envoyé') {
+          summary.soumis += Number(c.count);
+        } else if (status === 'en attente') {
+          summary.enAttente += Number(c.count);
+        } else if (status === 'conforme' || status === 'validé' || status === 'approuvé' || status === 'cloturé') {
+          summary.conformes += Number(c.count);
+        } else if (status === 'non conforme' || status === 'rejeté' || status === 'retourné') {
+          summary.nonConformes += Number(c.count);
+        }
+      });
+
+      return summary;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Une erreur est survenue lors du calcul du résumé des livrables.',
+      );
+    }
+  }
   
 
   async findOne(id: number): Promise<Livrable> {

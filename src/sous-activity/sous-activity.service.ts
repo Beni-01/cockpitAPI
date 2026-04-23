@@ -8,6 +8,7 @@ import { UpdateSousActivityDto } from './dto/update-sous-activity.dto';
 import { ActivityService } from 'src/activity/activity.service';
 
 import { Livrable } from 'src/livrable/entities/livrable.entity';
+import { UserActivitiesAssignment } from 'src/user-activities-assignment/entities/user-activities-assignment.entity';
 import { DataSource } from 'typeorm';
 
 @Injectable()
@@ -21,7 +22,10 @@ export class SousActivityService {
     @InjectRepository(Livrable)
     private readonly livrableRepository: Repository<Livrable>,
 
-    private dataSource:DataSource
+    @InjectRepository(UserActivitiesAssignment)
+    private readonly assignmentRepository: Repository<UserActivitiesAssignment>,
+
+    private dataSource: DataSource
 
    
   ) {}
@@ -29,93 +33,115 @@ export class SousActivityService {
   // Create
   async create(createSousActivityDto: CreateSousActivityDto): Promise<SousActivity> {
     try {
-
-      let budgetActivity:number=0;
+      let budgetActivity: number = 0;
       
-      const { livrable, typelivrable, ...subActivityData } = createSousActivityDto;
+      const { livrable, typelivrable, userActivitiesAssignments, ...subActivityData } = createSousActivityDto;
       const sousActivity = this.sousActivityRepository.create(subActivityData);
 
-      if(livrable){
-        const createLivrableSubLivraison= this.livrableRepository.create({livrable, typelivrable})
-        const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
-        sousActivity.livrable=savedLivrableSubLivraison
-    }
+      if (livrable) {
+        const createLivrableSub = this.livrableRepository.create({ livrable, typelivrable });
+        const savedLivrableSub = await this.livrableRepository.save(createLivrableSub);
+        sousActivity.livrable = savedLivrableSub;
+      }
 
-      const subactivitySaved=  await this.sousActivityRepository.save(sousActivity);
+      const subactivitySaved = await this.sousActivityRepository.save(sousActivity);
+
+      // Gérer les assignations d'utilisateurs
+      if (userActivitiesAssignments && userActivitiesAssignments.length > 0) {
+        const assignments = userActivitiesAssignments.map(assign => {
+          return this.assignmentRepository.create({
+            userId: assign.userId,
+            sousActivityId: subactivitySaved.id,
+            sousActivity: subactivitySaved
+          });
+        });
+        await this.assignmentRepository.save(assignments);
+      }
 
       // Trouver l'activité associée avec toutes ses sous-activités
       const activity = await this.activityRepository.findOne(createSousActivityDto.activityId);
 
-      const result = activity.subactivities.reduce((acc, activity) => {
-        // Comparer les dates pour trouver la plus ancienne et la plus récente
-        acc.minDebut = acc.minDebut ? (new Date(activity.debut) < new Date(acc.minDebut) ? activity.debut : acc.minDebut) : activity.debut;
-        acc.maxFin = acc.maxFin ? (new Date(activity.fin) > new Date(acc.maxFin) ? activity.fin : acc.maxFin) : activity.fin;
+      const result = activity.subactivities.reduce((acc, sub) => {
+        if (sub.debut) {
+          acc.minDebut = acc.minDebut ? (new Date(sub.debut) < new Date(acc.minDebut) ? sub.debut : acc.minDebut) : sub.debut;
+        }
+        if (sub.fin) {
+          acc.maxFin = acc.maxFin ? (new Date(sub.fin) > new Date(acc.maxFin) ? sub.fin : acc.maxFin) : sub.fin;
+        }
         return acc;
-    }, { minDebut: null, maxFin: null });
+      }, { minDebut: null, maxFin: null });
 
+      activity.subactivities.forEach((sub: any) => {
+        budgetActivity += (sub.budget || 0);
+      });
 
-        activity.subactivities.forEach((subactivity:any)=>{
-          budgetActivity+=subactivity.budget
-        })
+      activity.budget = budgetActivity;
+      activity.dateDebut = result.minDebut;
+      activity.dateFin = result.maxFin;
 
-        activity.budget=budgetActivity;
-        activity.dateDebut= result.minDebut
-        activity.dateFin=result.maxFin
+      // Enregistrer les modifications sur l'activité
+      await this.activityRepository.update(createSousActivityDto.activityId, { 
+        budget: activity.budget, 
+        dateDebut: activity.dateDebut, 
+        dateFin: activity.dateFin 
+      });
 
-     // Enregistrer les modifications sur l'activité
-      await this.activityRepository.update(createSousActivityDto.activityId, { budget:activity.budget, dateDebut:activity.dateDebut, dateFin:activity.dateFin });
-
-
-      return subactivitySaved
+      return subactivitySaved;
     } catch (error) {
+      console.error('Erreur create subactivity:', error);
       throw new InternalServerErrorException('Erreur lors de la création de la sous-activité');
     }
   }
 
   async createMany(createSousActivityDtos: CreateSousActivityDto[]): Promise<SousActivity[]> {
-    const queryRunner = this.sousActivityRepository.manager.connection.createQueryRunner();
+    const queryRunner = this.dataSource.createQueryRunner();
     
     // Start a transaction
     await queryRunner.startTransaction();
   
     try {
-      const sousActivities: SousActivity[] = [];
+      const savedSousActivities: SousActivity[] = [];
   
       for (const dto of createSousActivityDtos) {
-        const { livrable, typelivrable, ...subActivityData } = dto;
+        const { livrable, typelivrable, userActivitiesAssignments, ...subActivityData } = dto;
   
         // Create the SousActivity entity
-        const sousActivity = this.sousActivityRepository.create(subActivityData);
+        const sousActivity = queryRunner.manager.create(SousActivity, subActivityData);
   
         if (livrable) {
           // Create the Livrable entity
-          const createLivrableSubLivraison = this.livrableRepository.create({ livrable, typelivrable });
-  
-          // Save the Livrable within the same transaction
-          const savedLivrableSubLivraison = await queryRunner.manager.save(createLivrableSubLivraison);
-          
-          // Assign saved livrable to sousActivity
-          sousActivity.livrable = savedLivrableSubLivraison;
+          const createLivrableSub = queryRunner.manager.create(Livrable, { livrable, typelivrable });
+          const savedLivrableSub = await queryRunner.manager.save(createLivrableSub);
+          sousActivity.livrable = savedLivrableSub;
         }
   
-        sousActivities.push(sousActivity);
+        const savedSousActivity = await queryRunner.manager.save(SousActivity, sousActivity);
+        
+        // Gérer les assignations d'utilisateurs
+        if (userActivitiesAssignments && userActivitiesAssignments.length > 0) {
+          const assignments = userActivitiesAssignments.map(assign => {
+            return queryRunner.manager.create(UserActivitiesAssignment, {
+              userId: assign.userId,
+              sousActivityId: savedSousActivity.id,
+            });
+          });
+          await queryRunner.manager.save(UserActivitiesAssignment, assignments);
+        }
+
+        savedSousActivities.push(savedSousActivity);
       }
-  
-      // Save all SousActivity entities within the transaction
-      await queryRunner.manager.save(SousActivity, sousActivities);
   
       // Commit the transaction
       await queryRunner.commitTransaction();
       
-      return sousActivities;
+      return savedSousActivities;
     } catch (error) {
       // Rollback the transaction in case of error
       await queryRunner.rollbackTransaction();
-      console.log('inserer eror', error)
+      console.log('inserer error', error);
       throw new InternalServerErrorException(`Erreur lors de la création des sous-activités ${error}`);
-
     } finally {
-      // Release the query runner to allow other operations
+      // Release the query runner
       await queryRunner.release();
     }
   }

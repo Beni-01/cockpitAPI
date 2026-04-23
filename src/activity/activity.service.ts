@@ -6,6 +6,7 @@ import { CreateActivityDto } from './dto/create-activity.dto';
 import { UpdateActivityDto } from './dto/update-activity.dto';
 import { SousActivity } from 'src/sous-activity/entities/sous-activity.entity';
 import { Livrable } from 'src/livrable/entities/livrable.entity';
+import { UserActivitiesAssignment } from 'src/user-activities-assignment/entities/user-activities-assignment.entity';
 import { groupBy } from 'lodash'; 
 @Injectable()
 export class ActivityService {
@@ -18,80 +19,87 @@ export class ActivityService {
 
         @InjectRepository(Livrable)
         private readonly livrableRepository: Repository<Livrable>,
+
+        @InjectRepository(UserActivitiesAssignment)
+        private readonly assignmentRepository: Repository<UserActivitiesAssignment>,
     ) {}
 
     async create(createActivityDto: CreateActivityDto): Promise<Activity> {
       try {
-
-          let budgetActivity:number=0;
-
+          let budgetActivity: number = 0;
           const { subactivities, livrable, typelivrable, ...activityData } = createActivityDto;
 
-        
-          subactivities.forEach((subactivity:any)=>{
-            budgetActivity+=subactivity.budget
-          })
-
-
-          const result = subactivities.reduce((acc, activity) => {
-            // Comparer les dates pour trouver la plus ancienne et la plus récente
-            acc.minDebut = acc.minDebut ? (new Date(activity.debut) < new Date(acc.minDebut) ? activity.debut : acc.minDebut) : activity.debut;
-            acc.maxFin = acc.maxFin ? (new Date(activity.fin) > new Date(acc.maxFin) ? activity.fin : acc.maxFin) : activity.fin;
-            return acc;
-        }, { minDebut: null, maxFin: null });
-
-        const activity = this.activityRepository.create(activityData);
-
-        if(livrable){
-            const createLivrable= this.livrableRepository.create({livrable, typelivrable})
-            const savedLivrable= await this.livrableRepository.save(createLivrable)
-            activity.livrable=savedLivrable
-        }
-
-          // Créer une nouvelle instance d'Activity à partir des données fournies
-          activity.budget= createActivityDto.budget ? createActivityDto.budget :  budgetActivity
-
-          activity.dateDebut= createActivityDto.dateDebut ? createActivityDto.dateDebut : result.minDebut
-          activity.dateFin=createActivityDto.dateFin ? createActivityDto.dateFin : result.maxFin
-
-          // Sauvegarder l'activité principale dans la base de données
-          const savedActivity = await this.activityRepository.save(activity);
-
-          // Gérer les sous-activités si elles sont présentes
           if (subactivities && subactivities.length > 0) {
-              const sousActivityPromises = subactivities.map(async (subactivity) => {
-                const { livrable, typelivrable, ...subActivityData } = subactivity;
-
-                const sousActivity = this.subActivityRepository.create({
-                    ...subActivityData ,
-                    activity: savedActivity, // Associer la sous-activité à l'activité principale
-                });
-
-                if(livrable){
-                    const createLivrableSubLivraison= this.livrableRepository.create({livrable, typelivrable})
-                    const savedLivrableSubLivraison= await this.livrableRepository.save(createLivrableSubLivraison)
-                    sousActivity.livrable=savedLivrableSubLivraison
-                }
-         
-                  await this.subActivityRepository.save(sousActivity);
+              subactivities.forEach((subactivity: any) => {
+                  budgetActivity += (subactivity.budget || 0);
               });
-
-              // Attendre que toutes les sous-activités soient sauvegardées
-              await Promise.all(sousActivityPromises);
           }
 
-          // Retourner l'activité complète, y compris les sous-activités
+          const result = (subactivities || []).reduce((acc, sub) => {
+              if (sub.debut) {
+                  acc.minDebut = acc.minDebut ? (new Date(sub.debut) < new Date(acc.minDebut) ? sub.debut : acc.minDebut) : sub.debut;
+              }
+              if (sub.fin) {
+                  acc.maxFin = acc.maxFin ? (new Date(sub.fin) > new Date(acc.maxFin) ? sub.fin : acc.maxFin) : sub.fin;
+              }
+              return acc;
+          }, { minDebut: null, maxFin: null });
+
+          const activity = this.activityRepository.create(activityData);
+
+          if (livrable) {
+              const createLivrable = this.livrableRepository.create({ livrable, typelivrable });
+              const savedLivrable = await this.livrableRepository.save(createLivrable);
+              activity.livrable = savedLivrable;
+          }
+
+          activity.budget = createActivityDto.budget !== undefined ? createActivityDto.budget : budgetActivity;
+          activity.dateDebut = createActivityDto.dateDebut ? createActivityDto.dateDebut : result.minDebut;
+          activity.dateFin = createActivityDto.dateFin ? createActivityDto.dateFin : result.maxFin;
+
+          const savedActivity = await this.activityRepository.save(activity);
+
+          if (subactivities && subactivities.length > 0) {
+              for (const subactivity of subactivities) {
+                  const { livrable: subLivrable, typelivrable: subTypeLivrable, userActivitiesAssignments, ...subActivityData } = subactivity;
+
+                  const sousActivity = this.subActivityRepository.create({
+                      ...subActivityData,
+                      activity: savedActivity,
+                  });
+
+                  if (subLivrable) {
+                      const createLivrableSub = this.livrableRepository.create({ livrable: subLivrable, typelivrable: subTypeLivrable });
+                      const savedLivrableSub = await this.livrableRepository.save(createLivrableSub);
+                      sousActivity.livrable = savedLivrableSub;
+                  }
+
+                  const savedSousActivity = await this.subActivityRepository.save(sousActivity);
+
+                  // Gérer les assignations d'utilisateurs si présentes
+                  if (userActivitiesAssignments && userActivitiesAssignments.length > 0) {
+                      const assignments = userActivitiesAssignments.map(assign => {
+                          return this.assignmentRepository.create({
+                              userId: assign.userId,
+                              sousActivityId: savedSousActivity.id,
+                              sousActivity: savedSousActivity
+                          });
+                      });
+                      await this.assignmentRepository.save(assignments);
+                  }
+              }
+          }
+
           return await this.activityRepository.findOne({
               where: { id: savedActivity.id },
-              relations: ['subactivities'],
+              relations: ['subactivities', 'subactivities.userActivitiesAssignments'],
           });
       } catch (error) {
-          // Gestion des erreurs avec un message explicite
           throw new BadRequestException(
               `Échec de la création de l'activité: ${error.message}`,
           );
       }
-  }
+    }
 
     // Récupérer toutes les activités
 async findAll(annee?: number): Promise<Activity[]> {

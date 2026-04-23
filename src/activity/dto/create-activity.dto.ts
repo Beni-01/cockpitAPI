@@ -1,7 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';  // Pour Swagger
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsNotEmpty, IsArray, ValidateNested, IsNumber } from 'class-validator';  // Pour class-validator
-import { UpdateSousActivityDto } from 'src/sous-activity/dto/update-sous-activity.dto';
+import { IsString, IsOptional, IsDateString, IsInt, Min, Max, IsNotEmpty, IsArray, ValidateNested, IsNumber } from 'class-validator';
+import { CreateSousActivityDto } from 'src/sous-activity/dto/create-sous-activity.dto';
 
 export class CreateActivityDto {
     @ApiProperty({
@@ -9,146 +9,139 @@ export class CreateActivityDto {
         type: String,
         example: 'Réunion de travail',
     })
-    @IsString()  // Vérifie que le champ est une chaîne de caractères
-    @IsNotEmpty()  // Le titre ne peut pas être vide
+    @IsString()
+    @IsNotEmpty()
     titre: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'La description de l\'activité',
         type: String,
         example: 'Réunion pour discuter des projets futurs',
-        required: false,  // Ce champ est optionnel
     })
-    @IsOptional()  // Le champ est optionnel
-    @IsString()  // Vérifie que c\'est une chaîne de caractères
+    @IsOptional()
+    @IsString()
     description?: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'La date de début de l\'activité',
         type: String,
         format: 'date',
         example: '2024-11-20',
-        required: false,  // Ce champ est optionnel
     })
-    @IsOptional()  // Le champ est optionnel
-    @IsDateString()  // Vérifie que la valeur est une date valide
+    @IsOptional()
+    @IsDateString()
     dateDebut?: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'La date de fin de l\'activité',
         type: String,
         format: 'date',
         example: '2024-11-22',
-        required: false,  // Ce champ est optionnel
     })
-    @IsOptional()  // Le champ est optionnel
-    @IsDateString()  // Vérifie que la valeur est une date valide
+    @IsOptional()
+    @IsDateString()
     dateFin?: string;
 
-
+    @ApiPropertyOptional({ description: 'Taux de deadline' })
     @IsOptional() 
     @IsNumber()
-    deadlineRate:number
+    deadlineRate?: number;
 
-
+    @ApiPropertyOptional({ description: 'Nombre de ressources' })
     @IsOptional() 
     @IsNumber()
-    nbre_ressource:number
+    nbre_ressource?: number;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'Le statut de l\'activité',
         type: String,
         example: 'En cours',
-        required: false,  // Ce champ est optionnel
     })
-    @IsOptional()  // Le champ est optionnel
-    @IsString()  // Vérifie que c\'est une chaîne de caractères
+    @IsOptional()
+    @IsString()
     status?: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'L\'etat de l\'activité',
         type: String,
         example: 'En cours',
-        required: false,  // Ce champ est optionnel
     })
-    @IsOptional()  // Le champ est optionnel
-    @IsString()  // Vérifie que c\'est une chaîne de caractères
+    @IsOptional()
+    @IsString()
     etat?: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         description: 'direction',
         type: String,
         example: 'Finances',
-        required: false,  // Ce champ est optionnel
     })
-    @IsOptional()  // Le champ est optionnel
+    @IsOptional()
     @IsString() 
-    direction?:string
+    direction?: string;
 
-    @ApiProperty({ description: 'Budget alloué à la sous-activité', example: 10000 })
+    // Budget alloué rendu optionnel
+    @ApiPropertyOptional({ description: 'Budget alloué à l\'activité', example: 10000 })
     @IsOptional()
     @IsNumber()
-    budget: number;
+    budget?: number;
   
-    @ApiProperty({ description: 'Livrable attendu de la sous-activité', example: 'Rapport final' })
+    @ApiPropertyOptional({ description: 'Livrable attendu', example: 'Rapport final' })
     @IsOptional()
     @IsString()
-    livrable: string;
+    livrable?: string;
 
-    @ApiProperty({ description: 'Type de Livrable attendu de la sous-activité', example: 'Rapport final' })
+    @ApiPropertyOptional({ description: 'Type de Livrable attendu', example: 'Document' })
     @IsOptional()
     @IsString()
-    typelivrable: string;
+    typelivrable?: string;
 
     @ApiProperty({
         description: 'L\'ID de l\'utilisateur associé à l\'activité',
         type: Number,
         example: 1,
     })
-    @IsNumber()  // Vérifie que la valeur est un entier
-    @Min(1)  // L\'ID doit être supérieur ou égal à 1
+    @IsNumber()
+    @Min(1)
     userId: number;
 
-
     @ApiPropertyOptional({
-        description: 'Les SousActivité',
-        type: [UpdateSousActivityDto],
+        description: 'Les Sous-activités associées',
+        type: [CreateSousActivityDto],
     })
     @IsOptional()
     @ValidateNested({ each: true })
     @IsArray()
-    @Type(() =>  UpdateSousActivityDto)
-    subactivities: UpdateSousActivityDto[]
+    @Type(() => CreateSousActivityDto)
+    subactivities?: CreateSousActivityDto[];
 
-    @ApiProperty({ description: 'Date fin réel activité'})
+    @ApiPropertyOptional({ description: 'Date fin réelle activité' })
     @IsOptional()
     @IsString()
-    dateFinReel:string
+    dateFinReel?: string;
   
-    @ApiProperty({ description: 'Resultat obtenus'})
+    @ApiPropertyOptional({ description: 'Résultats obtenus' })
     @IsOptional()
     @IsString()
-    resultatObtenu:string
+    resultatObtenu?: string;
   
-    @ApiProperty({ description: 'Budget consommé activité', example: 5000 })
+    // Budget consommé rendu optionnel
+    @ApiPropertyOptional({ description: 'Budget consommé activité', example: 5000 })
     @IsOptional()
     @IsNumber()
-    budgetConsomme:number
+    budgetConsomme?: number;
 
-    @ApiProperty({ description: 'Résultat activité', example: 'Objectifs atteints' })
+    @ApiPropertyOptional({ description: 'Résultat activité', example: 'Objectifs atteints' })
     @IsOptional()
     @IsString()
-    resultat: string;
+    resultat?: string;
   
-    @ApiProperty({ description: 'Province activité', example: 'Kinshasa' })
+    @ApiPropertyOptional({ description: 'Province activité', example: 'Kinshasa' })
     @IsOptional()
     @IsString()
-    province: string;
+    province?: string;
   
-    @ApiProperty({ description: 'Responsable activité', example: 'John Doe' })
+    @ApiPropertyOptional({ description: 'Responsable activité', example: 'John Doe' })
     @IsOptional()
     @IsString()
     responsable?: string;
-
 }
-

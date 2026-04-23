@@ -1,8 +1,25 @@
-
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsString, IsOptional, IsInt, IsNumber, IsArray, ValidateNested } from 'class-validator';
-import { UpdateSousActivityDto } from './update-sous-activity.dto';
+import {
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+
+// ── DTO pour les userId à assigner à une sous-activité ───────────────────────
+
+export class SousActivityAssignmentDto {
+  @ApiProperty({ description: "ID de l'utilisateur à assigner à la sous-activité", example: 3 })
+  @IsInt()
+  @IsNotEmpty()
+  userId: number;
+}
+
+// ── DTO de création d'une sous-activité (embarquée dans l'activité) ──────────
 
 export class CreateSousActivityDto {
   @ApiProperty({ description: 'Titre de la sous-activité', example: 'Formation' })
@@ -25,81 +42,104 @@ export class CreateSousActivityDto {
   @IsString()
   responsable: string;
 
-  @ApiProperty({ description: 'Autre service lié à la sous-activité', example: 'N/A', required: false })
+  @ApiPropertyOptional({ description: 'Autre service lié', example: 'N/A' })
   @IsOptional()
   @IsString()
-  autreService: string;
+  autreService?: string;
 
-  @ApiProperty({ description: 'Date de début de la sous-activité', example: '2024-11-01' })
+  @ApiPropertyOptional({ description: 'Date de début', example: '2024-11-01' })
   @IsOptional()
   @IsString()
-  debut: string;
+  debut?: string;
 
-  @ApiProperty({ description: 'Date de fin de la sous-activité', example: '2024-11-30' })
+  @ApiPropertyOptional({ description: 'Date de fin', example: '2024-11-30' })
   @IsOptional()
   @IsString()
-  fin: string;
+  fin?: string;
 
-  @ApiProperty({ description: 'Indicateur de la sous-activité', example: 'Achèvement' })
+  @ApiPropertyOptional({ description: 'Indicateur', example: 'Achèvement' })
   @IsOptional()
   @IsString()
-  indicateur: string;
+  indicateur?: string;
 
-  @ApiProperty({ description: 'Budget alloué à la sous-activité', example: 10000 })
+  // ── Champs budget — tous OPTIONNELS ─────────────────────────────────────
+
+  @ApiPropertyOptional({ description: 'Budget alloué à la sous-activité', example: 10000 })
   @IsOptional()
   @IsNumber()
-  budget: number;
+  budget?: number;
 
-  @ApiProperty({
-    description: 'Le statut de l\'activité',
-    type: String,
-    example: 'En cours',
-    required: false,  // Ce champ est optionnel
-})
-@IsOptional()  // Le champ est optionnel
-@IsString()  // Vérifie que c\'est une chaîne de caractères
-status?: string;
+  @ApiPropertyOptional({ description: 'Budget consommé à la sous-activité', example: 5000 })
+  @IsOptional()
+  @IsNumber()
+  budgetConsomme?: number;
 
-  @ApiProperty({ description: 'Livrable attendu de la sous-activité', example: 'Rapport final' })
+  @ApiPropertyOptional({ description: 'Observations ou commentaires', example: 'Besoin de plus de temps pour la validation' })
+  @IsOptional()
+  @IsString()
+  observations?: string;
+
+  // ── Autres champs optionnels ─────────────────────────────────────────────
+
+  @ApiPropertyOptional({ description: 'Statut', example: 'En cours' })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({ description: 'Livrable attendu', example: 'Rapport final' })
+  @IsOptional()
+  @IsString()
+  livrable?: string;
+
+  @ApiPropertyOptional({ description: 'Type de livrable', example: 'Rapport' })
+  @IsOptional()
+  @IsString()
+  typelivrable?: string;
+
+  @ApiProperty({ description: "ID de l'utilisateur créateur de la sous-activité", example: 12 })
   @IsNotEmpty()
-  @IsString()
-  livrable: string;
-
-  @ApiProperty({ description: 'Type de Livrable attendu de la sous-activité', example: 'Rapport final' })
-  @IsOptional()
-  @IsString()
-  typelivrable: string;
-
-  @ApiProperty({ description: 'User qui crée la sous activité', example: 12 })
-  @IsNotEmpty()
   @IsNumber()
-  userId:number
+  userId: number;
 
-  @ApiProperty({ description: 'ID  activité principale', example: 12 })
-  @IsNotEmpty()
-  @IsNumber()
-  activityId:number
-
-  @ApiProperty({ description: 'Date fin réel sous activité'})
-  @IsOptional()
-  @IsString()
-  dateFinReel:string
-
-  @ApiProperty({ description: 'Resultat obtenus'})
-  @IsOptional()
-  @IsString()
-  resultatObtenu:string
-
-  @IsOptional() 
-  @IsNumber()
-  deadlineRate:number
-
-  @IsOptional() 
-  @IsNumber()
-  nbre_ressource:number
-
-  @ApiProperty({ description: 'Budget consommé à la sous-activité', example: 5000 })
+  @ApiPropertyOptional({ description: "ID de l'activité principale (auto-injecté si non fourni)", example: 12 })
   @IsOptional()
   @IsNumber()
-  budgetConsomme:number
+  activityId?: number;
+
+  @ApiPropertyOptional({ description: 'Date fin réelle' })
+  @IsOptional()
+  @IsString()
+  dateFinReel?: string;
+
+  @ApiPropertyOptional({ description: 'Résultat obtenu' })
+  @IsOptional()
+  @IsString()
+  resultatObtenu?: string;
+
+  @ApiPropertyOptional({ description: 'Taux de deadline' })
+  @IsOptional()
+  @IsNumber()
+  deadlineRate?: number;
+
+  @ApiPropertyOptional({ description: 'Nombre de ressources' })
+  @IsOptional()
+  @IsNumber()
+  nbre_ressource?: number;
+
+  /**
+   * Liste des userId à assigner à cette sous-activité.
+   * Après création de la sous-activité, un UserActivitiesAssignment sera
+   * automatiquement créé pour chaque userId avec le sousActivityId généré.
+   */
+  @ApiPropertyOptional({
+    description:
+      'Utilisateurs à assigner automatiquement à cette sous-activité après sa création.',
+    type: [SousActivityAssignmentDto],
+    example: [{ userId: 1 }, { userId: 2 }],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SousActivityAssignmentDto)
+  userActivitiesAssignments?: SousActivityAssignmentDto[];
 }

@@ -8,7 +8,8 @@ import { AnnotationActivity } from "src/annotation-activity/entities/annotation-
 import { UserLivrable } from "src/user-livrable/entities/user-livrable.entity";
 import { DemandeUser } from "src/demande-user/entities/demande-user.entity";
 import { AuditLog } from "src/audit-log/entities/audit-log.entity";
-import { PassationMarche } from "src/passation-marche/entities/passation-marche.entity";
+
+import { UserActivitiesAssignment } from "src/user-activities-assignment/entities/user-activities-assignment.entity";
 
 @Entity({ name:'user' })
 export class User extends Timestamp {
@@ -143,7 +144,8 @@ export class User extends Timestamp {
 
   auditable: AuditLog[];
 
-  @OneToMany(() => PassationMarche, (passation) => passation.user)
 
-  passations: PassationMarche[];
+
+  @OneToMany(() => UserActivitiesAssignment, (assignment) => assignment.user)
+  userActivitiesAssignments: UserActivitiesAssignment[];
 }

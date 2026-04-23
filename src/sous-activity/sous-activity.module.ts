@@ -7,10 +7,12 @@ import { SousActivity } from './entities/sous-activity.entity';
 import { ActivityModule } from 'src/activity/activity.module';
 import { Livrable } from 'src/livrable/entities/livrable.entity';
 
+import { UserActivitiesAssignment } from 'src/user-activities-assignment/entities/user-activities-assignment.entity';
+
 @Module({
   imports: [
     // Enregistrement de l'entité dans TypeOrm
-    TypeOrmModule.forFeature([SousActivity, User, Livrable]),
+    TypeOrmModule.forFeature([SousActivity, User, Livrable, UserActivitiesAssignment]),
     ActivityModule
   ],
   controllers: [SousActivityController],

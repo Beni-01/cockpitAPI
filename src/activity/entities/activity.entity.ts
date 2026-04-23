@@ -69,8 +69,12 @@ export class Activity extends Timestamp {
     status:string
 
     @ApiProperty({ description: "État d'avancement général", example: "Terminé", default: "En attente" })
-    @Column({ name:'etat', type:'varchar', nullable:true, default:'En attente' })
+    @Column({ name:'etat', type:'varchar', nullable:true })
     etat:string
+
+    @ApiProperty({ description: "État d'avancement général", example: "Terminé", default: "En attente" })
+    @Column({ name:'priorite', type:'varchar', nullable:true, default:'En attente' })
+    priorite:string
 
     @ApiProperty({ description: "Taux de respect de la deadline (0-100%)", example: 75, nullable:true })
     @Column({ name:'deadlineRate', type:'int', nullable:true, width:3 })
@@ -88,6 +92,7 @@ export class Activity extends Timestamp {
     @ManyToOne(()=>User, (user)=>user.activities, {eager:true})
     user:User
 
+    
    
     @OneToOne(()=>Livrable, (livrable)=>livrable.activity, {eager:true})
     @JoinColumn({ name: 'livrableId' })
@@ -95,10 +100,12 @@ export class Activity extends Timestamp {
 
  
     @OneToMany(()=>SousActivity, (subactivities)=>subactivities.activity, {eager:true})
+    @ApiProperty({ description: "Sous-activités" })
     subactivities:SousActivity[]
 
   
     @OneToMany(()=>DemandeProlongation, (demande)=>demande.activity, {eager:true})
+    @ApiProperty({ description: "Demandes de prolongation" })
     demandes:DemandeProlongation[]
 
 

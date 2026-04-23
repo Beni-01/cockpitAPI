@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, OneToOne, JoinColumn } from "typeorm";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { User } from "src/user/entities/user.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { Livrable } from "src/livrable/entities/livrable.entity";
+import { UserActivitiesAssignment } from "src/user-activities-assignment/entities/user-activities-assignment.entity";
+import { ChatSousActivity } from "src/chat-sous-activity/entities/chat-sous-activity.entity";
 
 @Entity({ name: 'sousActivity' })
 export class SousActivity extends Timestamp {
@@ -89,16 +91,27 @@ export class SousActivity extends Timestamp {
     @ApiPropertyOptional({ description: 'Nombre de ressources engagées' })
     nbre_ressource: number;
 
+    @Column({ name: 'observations', type: 'text', nullable: true })
+    @ApiPropertyOptional({ description: 'Observations ou commentaires sur la sous-activité' })
+    observations: string;
+
     @ManyToOne(() => User, (user) => user.subactivities, { eager: true })
-  
+    @ApiProperty({ description: "Utilisateur responsable" })
     user: User;
 
     @ManyToOne(() => Activity, (activity) => activity.subactivities)
-
+    @ApiProperty({ description: "Activité parente" })
     activity: Activity;
 
     @OneToOne(() => Livrable, (livrable) => livrable.subActivity, { eager: true })
     @JoinColumn({ name: 'livrableId' })
-  
+    @ApiProperty({ description: "Livrable lié" })
     livrable: Livrable;
+
+    @OneToMany(() => UserActivitiesAssignment, (assignment) => assignment.sousActivity, { eager: true })
+    @ApiProperty({ description: "Assignations utilisateur-activité" })
+    userActivitiesAssignments: UserActivitiesAssignment[];
+
+    @OneToMany(() => ChatSousActivity, (chat) => chat.sousActivity)
+    chatMessages: ChatSousActivity[];
 }

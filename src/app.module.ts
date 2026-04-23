@@ -23,18 +23,23 @@ import { RequestContextMiddleware } from './user/request-context.middleware';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditLogService } from './audit-log/audit-log.service';
 import { AuditInterceptor } from './audit-log/audti-log.interceptor';
-import { PassationMarcheModule } from './passation-marche/passation-marche.module';
+
 import { JwtAuthGuard } from './auth/guards/jwt.guard';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { GoogleSheetsModule } from './google-sheets/google-sheets.module';
-import { MasterDataModule } from './master-data/master-data.module';
-import { DisbursementModule } from './disbursement/disbursement.module';
-import { TransactionsModule } from './transactions/transactions.module';
-import { DepartmentModule } from './department/department.module';
-import { BudgetModule } from './budget/budget.module';
-import ApexInputModule from './apex-input/apex-input.module';
-import { CategoryModule } from './category/category.module';
-import { Activite26Module } from './activite-26/activite-26.module';
+
+
+
+import { TresorerieModule } from './tresorerie/tresorerie.module';
+import { UserActivitiesAssignmentModule } from './user-activities-assignment/user-activities-assignment.module';
+import { CoordinationModule } from './coordination/coordination.module';
+import { AntenneModule } from './antenne/antenne.module';
+import { PresenceModule } from './presence/presence.module';
+import { PerformanceModule } from './performance/performance.module';
+import { CharroiModule } from './charroi/charroi.module';
+import { ProjectCopirModule } from './project-copir/project-copir.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ChatSousActivityModule } from './chat-sous-activity/chat-sous-activity.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -92,18 +97,17 @@ import { Activite26Module } from './activite-26/activite-26.module';
     AuthModule,
     UserLivrableModule,
     DemandeUserModule,
-    PassationMarcheModule,
-    GoogleSheetsModule,
-    MasterDataModule,
-    DisbursementModule,
-    TransactionsModule,
-    DisbursementModule,
-    DepartmentModule,
-    BudgetModule,
-    ApexInputModule,
-    CategoryModule,
-    Activite26Module,
-
+   
+    TresorerieModule,
+    UserActivitiesAssignmentModule,
+    CoordinationModule,
+    AntenneModule,
+    PresenceModule,
+    PerformanceModule,
+    CharroiModule,
+    ProjectCopirModule,
+    DashboardModule,
+    ChatSousActivityModule,
   ],
   controllers: [AppController],
   providers: [

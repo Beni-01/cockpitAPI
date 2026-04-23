@@ -18,10 +18,17 @@ export class LivrableController {
   }
 
   @Get('dashboard')
-  @ApiOperation({ summary: 'Récupérer tous les livrables' })
-  @ApiResponse({ status: 200, description: 'Liste des livrables récupérée avec succès.' })
+  @ApiOperation({ summary: 'Récupérer les statistiques des livrables par statut' })
+  @ApiResponse({ status: 200, description: 'Statistiques récupérées avec succès.' })
   getStatLivrableByStatus() {
     return this.livrableService.getStatLivrableByStatus();
+  }
+
+  @Get('summary')
+  @ApiOperation({ summary: 'Récupérer le résumé global des livrables (Total, Soumis, En attente, etc.)' })
+  @ApiResponse({ status: 200, description: 'Résumé récupéré avec succès.' })
+  getSummary() {
+    return this.livrableService.getSummary();
   }
 
   @Get('dashboard/advanced')
