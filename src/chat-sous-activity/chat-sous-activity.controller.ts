@@ -1,11 +1,10 @@
 import { Controller, Post, Get, Body, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ChatSousActivityService } from './chat-sous-activity.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+
 
 @ApiTags('Chat Collaboratif (Sous-activités)')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('chat-sous-activity')
 export class ChatSousActivityController {
   constructor(private readonly chatService: ChatSousActivityService) {}
