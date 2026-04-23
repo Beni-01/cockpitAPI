@@ -6,10 +6,10 @@ import { UpdateActivityDto } from './dto/update-activity.dto';
 import { Activity } from './entities/activity.entity';
 
 // Annotation Swagger pour regrouper les routes sous la catégorie 'Activité'
-@ApiTags('Activité') 
+@ApiTags('Activité')
 @Controller('activity')
 export class ActivityController {
-  constructor(private readonly activityService: ActivityService) {}
+  constructor(private readonly activityService: ActivityService) { }
 
   // Route pour créer une nouvelle activité
   @Post()
@@ -26,7 +26,7 @@ export class ActivityController {
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   findAll(
-     @Query('annee') annee?: string,
+    @Query('annee') annee?: string,
   ) {
     return this.activityService.findAll(+annee);
   }
@@ -37,12 +37,12 @@ export class ActivityController {
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   getDirectionProgress(
-  @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
-  @Query('dateFin') dateFin?: string, 
-  @Query('periode') periode?: string,
-  @Query('annee') annee?: string,
+    @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
+    @Query('dateFin') dateFin?: string,
+    @Query('periode') periode?: string,
+    @Query('annee') annee?: string,
   ) {
-    return this.activityService.getDirectionGlobalProgressPlafone(dateDebut,dateFin,periode,+annee);
+    return this.activityService.getDirectionGlobalProgressPlafone(dateDebut, dateFin, periode, +annee);
   }
 
 
@@ -50,27 +50,27 @@ export class ActivityController {
   @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
   @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
   getDirectionStats(
-     @Query('annee') annee?: string,
+    @Query('annee') annee?: string,
   ) {
     return this.activityService.getDirectionStats(+annee);
   }
 
 
-    // Route pour récupérer toutes les activités
-    @Get('dashboard/echeances/:year')
-    @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
-    @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-    echeanceActivity(@Param('year', ParseIntPipe) year:number) {
-      return this.activityService.echeanceActyvity(year);
-    }
+  // Route pour récupérer toutes les activités
+  @Get('dashboard/echeances/:year')
+  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+  echeanceActivity(@Param('year', ParseIntPipe) year: number) {
+    return this.activityService.echeanceActyvity(year);
+  }
 
-    // Route pour récupérer toutes les activités
-    @Get('dashboard/budget/:year')
-    @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
-    @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-    totalBudget(@Param('year', ParseIntPipe) year:number) {
-        return this.activityService.totalBudget(year);
-    }
+  // Route pour récupérer toutes les activités
+  @Get('dashboard/budget/:year')
+  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+  totalBudget(@Param('year', ParseIntPipe) year: number) {
+    return this.activityService.totalBudget(year);
+  }
 
 
   @Get('direction')
@@ -96,7 +96,7 @@ export class ActivityController {
   })
   async getGroupedActivities(
     @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
-    @Query('dateFin') dateFin?: string,   
+    @Query('dateFin') dateFin?: string,
     @Query('etat') etat?: string,
     @Query('status') status?: string,
     @Query('responsable') responsable?: string,
@@ -105,16 +105,16 @@ export class ActivityController {
     @Query('titre') titre?: string,
     @Query('page') page: string = '1', // Page actuelle (par défaut 1)
     @Query('limit') limit: string = '10',
-      @Query('annee') annee?: string  // Nombre d'éléments par page (par défaut 7)
+    @Query('annee') annee?: string  // Nombre d'éléments par page (par défaut 7)
   ): Promise<{
     activites: Record<string, Activity[]>;
     totalCount: number;
     totalPages: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-}>  {
+  }> {
     try {
-  
+
       const groupedActivities = await this.activityService.findAllGroupedByDirection(etat, status, direction, province, titre, dateDebut, dateFin, page, +limit, +annee);
       return groupedActivities;
     } catch (error) {
@@ -146,7 +146,7 @@ export class ActivityController {
   })
   async getGroupedActivitiesDivision(
     @Query('dateDebut') dateDebut?: string,  // Filtre optionnel par date de début
-    @Query('dateFin') dateFin?: string,   
+    @Query('dateFin') dateFin?: string,
     @Query('etat') etat?: string,
     @Query('status') status?: string,
     @Query('responsable') responsable?: string,
@@ -161,24 +161,24 @@ export class ActivityController {
     totalPages: number;
     hasNextPage: boolean;
     hasPrevPage: boolean;
-}> {
+  }> {
     try {
-  
+
       const groupedActivities = await this.activityService.findAllGroupedByDirectionAndResponsible(etat, status, direction, responsable, province, titre, dateDebut, dateFin, page, +limit);
       return groupedActivities;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
-    
-    // Route pour récupérer toutes les activités
-    @Get('etat/:etat')
-    @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
-    @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
-    findAllDraft(@Param('etat') etat:string) {
-      return this.activityService.findAllByStatus(etat);
-    }
-     
+
+  // Route pour récupérer toutes les activités
+  @Get('etat/:etat')
+  @ApiOperation({ summary: 'Récupérer la liste de toutes les activités' })
+  @ApiResponse({ status: 200, description: 'Liste des activités récupérée avec succès.' })
+  findAllDraft(@Param('etat') etat: string) {
+    return this.activityService.findAllByStatus(etat);
+  }
+
   // Route pour récupérer une activité spécifique par son ID
   @Get(':id')
   @ApiOperation({ summary: "Récupérer une activité par son ID" })
@@ -188,7 +188,7 @@ export class ActivityController {
   findOne(@Param('id') id: string) {
     return this.activityService.findOne(+id);
   }
-   
+
   // Route pour mettre à jour une activité existante
   @Patch(':id')
   @ApiOperation({ summary: 'Mettre à jour une activité' })
@@ -196,7 +196,7 @@ export class ActivityController {
   @ApiBody({ type: UpdateActivityDto })
   @ApiResponse({ status: 200, description: 'Activité mise à jour avec succès.' })
   @ApiResponse({ status: 404, description: 'Activité non trouvée.' })
-  update(@Param('id') id: string, @Body() updateActivityDto: UpdateActivityDto, @Query('idLivrable') idLivrable:string) {
+  update(@Param('id') id: string, @Body() updateActivityDto: UpdateActivityDto, @Query('idLivrable') idLivrable: string) {
     return this.activityService.update(+id, updateActivityDto, +idLivrable);
   }
 
@@ -211,12 +211,12 @@ export class ActivityController {
   }
 
 
-  @Get('all/actualisation')  
+  @Get('all/actualisation')
   actualisationActivities() {
     return this.activityService.updateAllActivities();
   }
 
-  @Get('one/actualisation/:id')  
+  @Get('one/actualisation/:id')
   actualisationActivitie(@Param('idActivity') idActivity: string) {
     return this.activityService.updateActivityFromSubactivitiesById(+idActivity);
   }

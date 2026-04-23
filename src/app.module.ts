@@ -39,9 +39,13 @@ import { CharroiModule } from './charroi/charroi.module';
 import { ProjectCopirModule } from './project-copir/project-copir.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ChatSousActivityModule } from './chat-sous-activity/chat-sous-activity.module';
+import { NotificationModule } from './notification/notification.module';
+import { ReminderModule } from './reminder/reminder.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
@@ -108,6 +112,8 @@ import { ChatSousActivityModule } from './chat-sous-activity/chat-sous-activity.
     ProjectCopirModule,
     DashboardModule,
     ChatSousActivityModule,
+    NotificationModule,
+    ReminderModule,
   ],
   controllers: [AppController],
   providers: [

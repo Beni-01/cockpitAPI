@@ -344,7 +344,88 @@ async findAll(annee?: number): Promise<Activity[]> {
         } catch (error) {
             throw new BadRequestException(`Échec de la récupération des activités : ${error.message}`);
         }
+    }    async findAllGroupedByProvince(
+        etat?: string,
+        status?: string,
+        direction?: string,
+        province?: string,
+        titre?: string,
+        dateDebut?: string,
+        dateFin?: string,
+        page: string = '1',
+        limit: number = 10,
+        annee?: number
+    ): Promise<{
+        activites: Record<string, Activity[]>;
+        totalCount: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+    }> {
+        try {
+            const currentYear = annee || new Date().getFullYear();
+
+            const queryBuilder = this.activityRepository.createQueryBuilder('activity')
+                .leftJoinAndSelect('activity.subactivities', 'subactivities')
+                .leftJoinAndSelect('subactivities.livrable', 'subactivityLivrable')
+                .leftJoinAndSelect('activity.livrable', 'activityLivrable')
+                .leftJoinAndSelect('subactivityLivrable.agentValidateur', 'subactivityLivrableAgentValidateur')
+                .leftJoinAndSelect('subactivityLivrableAgentValidateur.user', 'subactivityLivrableAgentValidateurUser')
+                .leftJoinAndSelect('activity.annotations', 'annotations')
+                .leftJoinAndSelect('activity.demandes', 'demandes')
+                .where('YEAR(activity.createdAt) = :year', { year: currentYear });
+
+            if (etat) queryBuilder.andWhere('activity.etat = :etat', { etat });
+            if (status) queryBuilder.andWhere('activity.status = :status', { status });
+            if (direction) queryBuilder.andWhere('activity.direction = :direction', { direction });
+            if (province) queryBuilder.andWhere('activity.province = :province', { province });
+            if (titre) queryBuilder.andWhere('activity.titre LIKE :titre', { titre: `%${titre}%` });
+
+            if (dateDebut && dateFin) {
+                const nextDay = new Date(dateFin);
+                nextDay.setDate(nextDay.getDate() + 1);
+                queryBuilder.andWhere('(activity.dateDebut BETWEEN :dateDebut AND :dateFin)', { dateDebut, dateFin: nextDay.toISOString() });
+            } else if (dateDebut) {
+                queryBuilder.andWhere('(activity.dateDebut >= :dateDebut)', { dateDebut });
+            } else if (dateFin) {
+                const nextDay = new Date(dateFin);
+                nextDay.setDate(nextDay.getDate() + 1);
+                queryBuilder.andWhere('activity.dateFin <= :nextDay', { nextDay: nextDay.toISOString() });
+            }
+
+            const [activities, totalCount] = await queryBuilder
+                .take(limit)
+                .skip((parseInt(page, 10) - 1) * limit)
+                .getManyAndCount();
+
+            for (const activity of activities) {
+                await this.updateActivityFromSubactivities(activity);
+            }
+
+            // Groupement par province
+            const grouped = activities.reduce((acc, activity) => {
+                const prov = activity.province || 'Non définie';
+                acc[prov] = acc[prov] || [];
+                acc[prov].push(activity);
+                return acc;
+            }, {} as Record<string, Activity[]>);
+
+            const totalPages = Math.ceil(totalCount / limit);
+            const hasNextPage = parseInt(page, 10) < totalPages;
+            const hasPrevPage = parseInt(page, 10) > 1;
+
+            return {
+                activites: grouped,
+                totalCount,
+                totalPages,
+                hasNextPage,
+                hasPrevPage,
+            };
+        } catch (error) {
+            throw new BadRequestException(`Échec de la récupération par province : ${error.message}`);
+        }
     }
+
 
     private async updateActivityFromSubactivities(activity: Activity){
         if (!activity.subactivities || activity.subactivities.length === 0) return;

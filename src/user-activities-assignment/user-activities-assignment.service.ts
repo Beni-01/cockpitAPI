@@ -12,6 +12,10 @@ import { UserActivitiesAssignment } from './entities/user-activities-assignment.
 import { CreateUserActivitiesAssignmentDto } from './dto/create-user-activities-assignment.dto';
 import { UpdateUserActivitiesAssignmentDto } from './dto/update-user-activities-assignment.dto';
 
+import { SousActivity } from 'src/sous-activity/entities/sous-activity.entity';
+import { NotificationService } from 'src/notification/notification.service';
+import { NotificationType } from 'src/notification/entities/notification.entity';
+
 @Injectable()
 export class UserActivitiesAssignmentService {
   private readonly logger = new Logger(UserActivitiesAssignmentService.name);
@@ -19,6 +23,9 @@ export class UserActivitiesAssignmentService {
   constructor(
     @InjectRepository(UserActivitiesAssignment)
     private readonly assignmentRepository: Repository<UserActivitiesAssignment>,
+    @InjectRepository(SousActivity)
+    private readonly saRepository: Repository<SousActivity>,
+    private readonly notificationService: NotificationService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -40,6 +47,18 @@ export class UserActivitiesAssignmentService {
 
         const assignment = manager.create(UserActivitiesAssignment, dto);
         const saved = await manager.save(UserActivitiesAssignment, assignment);
+
+        // Envoyer une notification
+        const sa = await manager.findOne(SousActivity, { where: { id: dto.sousActivityId } });
+        if (sa) {
+          await this.notificationService.create(
+            dto.userId,
+            'Nouvelle assignation',
+            `Vous avez été assigné à la tâche : "${sa.titre}"`,
+            NotificationType.ASSIGNMENT,
+            `/sous-activity/${dto.sousActivityId}`
+          );
+        }
 
         this.logger.log(
           `Assignation créée : ID=${saved.id} | User=${saved.userId} → SousActivité=${saved.sousActivityId}`,
