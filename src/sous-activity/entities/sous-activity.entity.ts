@@ -95,6 +95,14 @@ export class SousActivity extends Timestamp {
     @ApiPropertyOptional({ description: 'Observations ou commentaires sur la sous-activité' })
     observations: string;
 
+    @Column({ name: 'coordination', type: 'varchar', nullable: true })
+    @ApiPropertyOptional({ description: 'Coordination responsable' })
+    coordination: string;
+
+    @Column({ name: 'lieuExecution', type: 'varchar', nullable: true })
+    @ApiPropertyOptional({ description: 'Lieu d\'exécution de la sous-activité' })
+    lieuExecution: string;
+
     @ManyToOne(() => User, (user) => user.subactivities, { eager: true })
     @ApiProperty({ description: "Utilisateur responsable" })
     user: User;

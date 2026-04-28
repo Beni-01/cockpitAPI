@@ -40,6 +40,8 @@ export class Activity extends Timestamp {
     @Column({ name:'direction', type:'varchar', nullable:true })
     direction?:string;
 
+    
+
     @ApiProperty({ description: "Nom de la personne responsable", example: "Jean Mukendi", nullable:true })
     @Column({ name:'responsable', type:'varchar', nullable:true })
     responsable?:string
@@ -87,6 +89,14 @@ export class Activity extends Timestamp {
     @ApiProperty({ description: "ID de l'utilisateur créateur", example: 12 })
     @Column({ name:'userId', type:'int', nullable:true })
     userId:number
+
+    @ApiProperty({ description: "Coordination responsable", example: "Coordination Nord-Kivu", nullable:true })
+    @Column({ name:'coordination', type:'varchar', nullable:true })
+    coordination?:string
+
+    @ApiProperty({ description: "Lieu d'exécution de l'activité", example: "Goma", nullable:true })
+    @Column({ name:'lieuExecution', type:'varchar', nullable:true })
+    lieuExecution?:string
 
  
     @ManyToOne(()=>User, (user)=>user.activities, {eager:true})

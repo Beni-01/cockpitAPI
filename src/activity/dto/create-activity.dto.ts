@@ -95,6 +95,16 @@ export class CreateActivityDto {
     @IsString()
     typelivrable?: string;
 
+    @ApiPropertyOptional({ description: 'Coordination responsable', example: 'Coordination Nord-Kivu' })
+    @IsOptional()
+    @IsString()
+    coordination?: string;
+
+    @ApiPropertyOptional({ description: 'Lieu d\'exécution de l\'activité', example: 'Goma' })
+    @IsOptional()
+    @IsString()
+    lieuExecution?: string;
+
     @ApiProperty({
         description: 'L\'ID de l\'utilisateur associé à l\'activité',
         type: Number,

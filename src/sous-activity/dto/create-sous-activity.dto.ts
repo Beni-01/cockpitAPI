@@ -106,6 +106,16 @@ export class CreateSousActivityDto {
   @IsNumber()
   activityId?: number;
 
+  @ApiPropertyOptional({ description: 'Coordination responsable', example: 'Coordination Nord-Kivu' })
+  @IsOptional()
+  @IsString()
+  coordination?: string;
+
+  @ApiPropertyOptional({ description: 'Lieu d\'exécution de la sous-activité', example: 'Goma' })
+  @IsOptional()
+  @IsString()
+  lieuExecution?: string;
+
   @ApiPropertyOptional({ description: 'Date fin réelle' })
   @IsOptional()
   @IsString()
