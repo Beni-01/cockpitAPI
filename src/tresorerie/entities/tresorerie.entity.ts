@@ -153,4 +153,19 @@ export class TresorerieMouvement extends Timestamp {
     required: false,
   })
   observation: string;
+
+@Column({
+    name: 'status',
+    type: 'varchar',
+    length: 20,
+    nullable: false,
+    default: 'En attente',
+    comment: 'Statut du mouvement (ex: En attente, Approuvé, Rejeté)',
+  })
+  @ApiProperty({
+    description: 'Statut du mouvement',
+    example: 'En attente',
+    default: 'En attente',
+  })
+  status: string;
 }

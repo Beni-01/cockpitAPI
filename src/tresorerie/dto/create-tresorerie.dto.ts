@@ -113,4 +113,15 @@ export class CreateTresorerieDto {
   @IsString()
   @IsOptional()
   observation?: string;
+
+  @ApiPropertyOptional({
+    description: 'Statut de l\'opération',
+    example: 'Validé',
+    maxLength: 50,
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  status?: string;
+
 }
