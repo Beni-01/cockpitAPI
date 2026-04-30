@@ -34,6 +34,10 @@ export class User extends Timestamp {
   @ApiPropertyOptional({ description: 'Adresse e-mail de l’utilisateur' })
   email?: string;
 
+  @Column({ nullable: true })
+  @ApiPropertyOptional({ description: 'Signature de l’utilisateur' })
+  signature?: string;
+
   @Column()
   @ApiProperty({ description: 'Sexe de l’utilisateur (M/F)' })
   sexe: string;

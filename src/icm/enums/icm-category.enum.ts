@@ -1,0 +1,6 @@
+export enum IcmCategory {
+  RH = 'RH',
+  LOGISTIQUE = 'LOGISTIQUE',
+  FINANCE = 'FINANCE',
+  ADMINISTRATION = 'ADMINISTRATION',
+}

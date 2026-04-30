@@ -75,6 +75,7 @@ export class CreateUserDto {
   @IsBoolean()
   isActive:boolean=false
 
+  @IsString()
   @IsOptional()
   signature?:string;
 
