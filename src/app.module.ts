@@ -42,6 +42,7 @@ import { ChatSousActivityModule } from './chat-sous-activity/chat-sous-activity.
 import { NotificationModule } from './notification/notification.module';
 import { ReminderModule } from './reminder/reminder.module';
 import { IcmModule } from './icm/icm.module';
+import { IcmDashboardModule } from './icm-dashboard/icm-dashboard.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -116,6 +117,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     NotificationModule,
     ReminderModule,
     IcmModule,
+    IcmDashboardModule,
   ],
   controllers: [AppController],
   providers: [

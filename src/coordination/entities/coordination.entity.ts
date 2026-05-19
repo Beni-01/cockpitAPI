@@ -6,6 +6,7 @@ import { Antenne } from 'src/antenne/entities/antenne.entity';
 export enum CoordinationType {
   RECOUVREMENT = 'Recouvrement',
   ADMINISTRATIVE = 'Administrative',
+  ADMINISTRATIVE_RECOUVREMENT = 'Administrative & Recouvrement',
 }
 
 export enum CoordinationStatus {
