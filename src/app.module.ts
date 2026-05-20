@@ -44,6 +44,7 @@ import { ReminderModule } from './reminder/reminder.module';
 import { IcmModule } from './icm/icm.module';
 import { IcmDashboardModule } from './icm-dashboard/icm-dashboard.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SatviModule } from './satvi/satvi.module';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ReminderModule,
     IcmModule,
     IcmDashboardModule,
+    SatviModule,
   ],
   controllers: [AppController],
   providers: [
@@ -141,4 +143,3 @@ export class AppModule {
     consumer.apply(RequestContextMiddleware).forRoutes('*'); // Appliquer à toutes les routes   
   }
 }
-
