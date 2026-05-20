@@ -1,18 +1,38 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SelectQueryBuilder, Repository } from 'typeorm';
-import { CreateSatviDto, QuerySatviDto, SatviSortBy, UpdateSatviDto } from './dto';
+import { randomBytes } from 'crypto';
+import { Coordination } from 'src/coordination/entities/coordination.entity';
+import { MailService } from 'src/mail/mail.service';
+import { User } from 'src/user/entities/user.entity';
+import { DataSource, SelectQueryBuilder, Repository } from 'typeorm';
+import {
+  CreateSatviDto,
+  CreateSatviMissionDto,
+  QuerySatviDto,
+  QuerySatviMissionDto,
+  SatviMissionSortBy,
+  SatviSortBy,
+  SubmitSatviMissionQuestionnaireDto,
+  UpdateSatviDto,
+} from './dto';
 import {
   SatviEvaluation,
   SatviQuestionnaire,
   SatviStatus,
 } from './entities/satvi-questionnaire.entity';
+import {
+  SatviInvitationStatus,
+  SatviMission,
+  SatviMissionInvitation,
+  SatviMissionStatus,
+} from './entities';
 
 const EVALUATION_KEYS: Array<keyof SatviEvaluation> = [
   'arriveePreparee',
@@ -39,6 +59,14 @@ const SORT_COLUMNS: Record<SatviSortBy, string> = {
   [SatviSortBy.SCORE_GLOBAL]: 'q.scoreGlobal',
   [SatviSortBy.EVALUATION_AVERAGE]: 'q.evaluationAverage',
   [SatviSortBy.APPRECIATION_GLOBALE]: 'q.appreciationGlobale',
+};
+
+const MISSION_SORT_COLUMNS: Record<SatviMissionSortBy, string> = {
+  [SatviMissionSortBy.CREATED_AT]: 'mission.createdAt',
+  [SatviMissionSortBy.DATE_DEBUT]: 'mission.dateDebut',
+  [SatviMissionSortBy.DATE_FIN]: 'mission.dateFin',
+  [SatviMissionSortBy.TITRE]: 'mission.titre',
+  [SatviMissionSortBy.STATUS]: 'mission.status',
 };
 
 interface SatviCriterionDefinition {
@@ -108,6 +136,7 @@ export interface SatviDashboardOverview {
 
 export interface SatviDashboardEvaluationRow {
   id: number;
+  missionId: number;
   referenceCode: string;
   province: string;
   directionTechnique: string;
@@ -171,6 +200,52 @@ export interface SatviEvaluationDetail {
   evaluation: SatviEvaluation;
 }
 
+export interface SatviMissionRow {
+  id: number;
+  referenceCode: string;
+  titre: string;
+  description: string;
+  province: string;
+  coordination: {
+    id: number;
+    nom: string;
+  };
+  typeMission: string;
+  typeMissionLabel: string;
+  periode: {
+    du: string;
+    au: string;
+    label: string;
+    labelFr: string;
+  };
+  status: SatviMissionStatus;
+  invites: number;
+  evaluations: number;
+  scoreMoyen: number;
+  scoreLabel: string;
+  alertesActives: number;
+  createdAt: Date;
+}
+
+export interface SatviMissionPublicPayload {
+  mission: {
+    id: number;
+    referenceCode: string;
+    titre: string;
+    description: string;
+    province: string;
+    coordination: string;
+    typeMission: string;
+    typeMissionLabel: string;
+    periode: {
+      du: string;
+      au: string;
+      labelFr: string;
+    };
+  };
+  questions: any[];
+}
+
 @Injectable()
 export class SatviService {
   private readonly logger = new Logger(SatviService.name);
@@ -178,16 +253,33 @@ export class SatviService {
   constructor(
     @InjectRepository(SatviQuestionnaire)
     private readonly satviRepository: Repository<SatviQuestionnaire>,
+    @InjectRepository(SatviMission)
+    private readonly missionRepository: Repository<SatviMission>,
+    @InjectRepository(SatviMissionInvitation)
+    private readonly invitationRepository: Repository<SatviMissionInvitation>,
+    @InjectRepository(Coordination)
+    private readonly coordinationRepository: Repository<Coordination>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly mailService: MailService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateSatviDto): Promise<SatviQuestionnaire> {
     try {
-      this.validateDates(dto.periodeDu, dto.periodeAu);
+      const normalizedDto = dto.missionId
+        ? await this.withMissionIdentification(dto, dto.missionId)
+        : dto;
 
-      const computed = this.computeScores(dto.evaluation, dto.appreciationGlobale);
-      const status = dto.status ?? SatviStatus.SOUMIS;
+      this.validateDates(normalizedDto.periodeDu, normalizedDto.periodeAu);
+
+      const computed = this.computeScores(
+        normalizedDto.evaluation,
+        normalizedDto.appreciationGlobale,
+      );
+      const status = normalizedDto.status ?? SatviStatus.SOUMIS;
       const questionnaire = this.satviRepository.create({
-        ...dto,
+        ...normalizedDto,
         ...computed,
         status,
         submittedAt: status === SatviStatus.SOUMIS ? new Date() : null,
@@ -205,6 +297,363 @@ export class SatviService {
         'Impossible de creer le questionnaire SatVi.',
       );
     }
+  }
+
+  async createMission(
+    dto: CreateSatviMissionDto,
+    createdBy?: number,
+  ): Promise<{
+    mission: SatviMissionRow;
+    invitations: SatviMissionInvitation[];
+  }> {
+    try {
+      this.validateDates(dto.dateDebut, dto.dateFin);
+
+      const coordination = await this.coordinationRepository.findOne({
+        where: { id: dto.coordinationId },
+      });
+      if (!coordination) {
+        throw new NotFoundException(
+          `Coordination avec l'ID ${dto.coordinationId} introuvable.`,
+        );
+      }
+
+      const missionnaireIds = [...new Set(dto.missionnaireIds)];
+      const missionnaires = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.id IN (:...ids)', { ids: missionnaireIds })
+        .getMany();
+
+      if (missionnaires.length !== missionnaireIds.length) {
+        const foundIds = missionnaires.map((user) => user.id);
+        const missingIds = missionnaireIds.filter((id) => !foundIds.includes(id));
+        throw new BadRequestException(
+          `Missionnaire(s) introuvable(s): ${missingIds.join(', ')}.`,
+        );
+      }
+
+      const mission = this.missionRepository.create({
+        referenceCode: await this.generateMissionReferenceCode(),
+        titre: dto.titre,
+        description: dto.description,
+        dateDebut: dto.dateDebut,
+        dateFin: dto.dateFin,
+        coordinationId: coordination.id,
+        coordinationNom: coordination.nom,
+        province: coordination.province,
+        typeMission: dto.typeMission,
+        typeMissionAutre: dto.typeMissionAutre,
+        status: SatviMissionStatus.ACTIVE,
+        createdBy,
+        sentAt: new Date(),
+      });
+
+      const savedMission = await this.missionRepository.save(mission);
+
+      const invitations = await Promise.all(
+        missionnaires.map(async (missionnaire) => {
+          const token = await this.generateInvitationToken();
+          const invitation = this.invitationRepository.create({
+            missionId: savedMission.id,
+            userId: missionnaire.id,
+            nomComplet: this.getUserFullName(missionnaire),
+            email: missionnaire.email,
+            direction: missionnaire.direction ?? missionnaire.service,
+            token,
+            invitationLink: this.buildInvitationLink(token, dto.publicBaseUrl),
+            status: SatviInvitationStatus.PREPAREE,
+          });
+
+          return await this.invitationRepository.save(invitation);
+        }),
+      );
+
+      const sentInvitations = await Promise.all(
+        invitations.map((invitation) => this.sendMissionInvitation(savedMission, invitation)),
+      );
+
+      return {
+        mission: await this.getMissionRow(savedMission.id),
+        invitations: sentInvitations,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      this.logger.error('Erreur creation mission SatVi', error?.stack);
+      throw new InternalServerErrorException(
+        'Impossible de creer la mission SatVi.',
+      );
+    }
+  }
+
+  async findMissions(
+    query: QuerySatviMissionDto,
+  ): Promise<SatviPaginatedResult<SatviMissionRow>> {
+    try {
+      const page = Math.max(1, query.page ?? 1);
+      const limit = Math.min(100, Math.max(1, query.limit ?? 10));
+      const skip = (page - 1) * limit;
+
+      const qb = this.missionRepository.createQueryBuilder('mission');
+      this.applyMissionFilters(qb, query);
+
+      const sortBy = query.sortBy ?? SatviMissionSortBy.CREATED_AT;
+      const sortColumn =
+        MISSION_SORT_COLUMNS[sortBy] ??
+        MISSION_SORT_COLUMNS[SatviMissionSortBy.CREATED_AT];
+      const sortOrder = query.sortOrder ?? 'DESC';
+
+      qb.orderBy(sortColumn, sortOrder)
+        .addOrderBy('mission.id', 'DESC')
+        .skip(skip)
+        .take(limit);
+
+      const [missions, totalItems] = await qb.getManyAndCount();
+      const data = await Promise.all(
+        missions.map((mission) => this.toMissionRow(mission)),
+      );
+
+      return {
+        data,
+        pagination: {
+          page,
+          limit,
+          totalItems,
+          totalPages: Math.max(1, Math.ceil(totalItems / limit)),
+        },
+      };
+    } catch (error) {
+      this.logger.error('Erreur liste missions SatVi', error?.stack);
+      throw new InternalServerErrorException(
+        'Impossible de recuperer les missions SatVi.',
+      );
+    }
+  }
+
+  async findMissionOne(id: number) {
+    const mission = await this.missionRepository.findOne({
+      where: { id },
+      relations: ['invitations'],
+    });
+
+    if (!mission) {
+      throw new NotFoundException(`Mission SatVi avec l'ID ${id} introuvable.`);
+    }
+
+    const row = await this.toMissionRow(mission);
+    return {
+      ...row,
+      invitations: mission.invitations,
+    };
+  }
+
+  async getMissionPublicByToken(token: string): Promise<SatviMissionPublicPayload> {
+    const invitation = await this.invitationRepository.findOne({
+      where: { token },
+      relations: ['mission'],
+    });
+
+    if (!invitation || !invitation.mission) {
+      throw new NotFoundException('Lien SatVi invalide ou introuvable.');
+    }
+
+    if (
+      invitation.status === SatviInvitationStatus.UTILISEE ||
+      invitation.usedAt
+    ) {
+      throw new ConflictException(
+        'Ce lien SatVi a deja ete utilise. Chaque lien est valable une seule fois.',
+      );
+    }
+
+    const mission = invitation.mission;
+    if (mission.status !== SatviMissionStatus.ACTIVE) {
+      throw new BadRequestException('Cette mission SatVi n est pas active.');
+    }
+
+    return {
+      mission: {
+        id: mission.id,
+        referenceCode: mission.referenceCode,
+        titre: mission.titre,
+        description: mission.description,
+        province: mission.province,
+        coordination: mission.coordinationNom,
+        typeMission: mission.typeMission,
+        typeMissionLabel: this.getMissionTypeLabel(mission.typeMission),
+        periode: {
+          du: mission.dateDebut,
+          au: mission.dateFin,
+          labelFr: `${this.formatDateFr(mission.dateDebut)} -> ${this.formatDateFr(mission.dateFin)}`,
+        },
+      },
+      questions: this.getQuestions(),
+    };
+  }
+
+  async submitMissionQuestionnaire(
+    token: string,
+    dto: SubmitSatviMissionQuestionnaireDto,
+    requestMeta?: { ipAddress?: string; userAgent?: string },
+  ): Promise<SatviEvaluationDetail> {
+    const questionnaire = await this.dataSource.transaction(async (manager) => {
+      const invitation = await manager.findOne(SatviMissionInvitation, {
+        where: { token },
+        relations: ['mission'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!invitation || !invitation.mission) {
+        throw new NotFoundException('Lien SatVi invalide ou introuvable.');
+      }
+
+      if (
+        invitation.status === SatviInvitationStatus.UTILISEE ||
+        invitation.usedAt
+      ) {
+        throw new ConflictException(
+          'Ce lien SatVi a deja ete utilise. Chaque lien est valable une seule fois.',
+        );
+      }
+
+      const mission = invitation.mission;
+      if (mission.status !== SatviMissionStatus.ACTIVE) {
+        throw new BadRequestException('Cette mission SatVi n est pas active.');
+      }
+
+      const payload: CreateSatviDto = {
+        ...dto,
+        missionId: mission.id,
+        directionMetier: mission.coordinationNom,
+        provinceVisitee: mission.province,
+        periodeDu: mission.dateDebut,
+        periodeAu: mission.dateFin,
+        typeMission: mission.typeMission,
+        typeMissionAutre: mission.typeMissionAutre,
+        ipAddress: requestMeta?.ipAddress,
+        userAgent: requestMeta?.userAgent,
+      };
+
+      this.validateDates(payload.periodeDu, payload.periodeAu);
+      const computed = this.computeScores(
+        payload.evaluation,
+        payload.appreciationGlobale,
+      );
+      const status = payload.status ?? SatviStatus.SOUMIS;
+
+      const questionnaireToSave = manager.create(SatviQuestionnaire, {
+        ...payload,
+        ...computed,
+        status,
+        referenceCode: await this.generateReferenceCode(),
+        submittedAt: status === SatviStatus.SOUMIS ? new Date() : null,
+      });
+
+      const savedQuestionnaire = await manager.save(
+        SatviQuestionnaire,
+        questionnaireToSave,
+      );
+
+      invitation.status = SatviInvitationStatus.UTILISEE;
+      invitation.usedAt = new Date();
+      await manager.save(SatviMissionInvitation, invitation);
+
+      return savedQuestionnaire;
+    });
+
+    return this.toEvaluationDetail(questionnaire);
+  }
+
+  async archiveMission(id: number): Promise<SatviMissionRow> {
+    const mission = await this.missionRepository.findOne({ where: { id } });
+    if (!mission) {
+      throw new NotFoundException(`Mission SatVi avec l'ID ${id} introuvable.`);
+    }
+
+    mission.status = SatviMissionStatus.ARCHIVEE;
+    await this.missionRepository.save(mission);
+    return this.toMissionRow(mission);
+  }
+
+  async closeMission(id: number): Promise<SatviMissionRow> {
+    const mission = await this.missionRepository.findOne({ where: { id } });
+    if (!mission) {
+      throw new NotFoundException(`Mission SatVi avec l'ID ${id} introuvable.`);
+    }
+
+    mission.status = SatviMissionStatus.CLOTUREE;
+    await this.missionRepository.save(mission);
+    return this.toMissionRow(mission);
+  }
+
+  async getMissionFormOptions(search?: string) {
+    const [coordinations, missionnaires] = await Promise.all([
+      this.searchCoordinations(search),
+      this.searchMissionnaires(search),
+    ]);
+
+    return {
+      coordinations,
+      missionnaires,
+      typesMission: [
+        { value: 'suivi', label: 'Suivi' },
+        { value: 'appui_technique', label: 'Appui technique' },
+        { value: 'controle', label: 'Controle' },
+        { value: 'autre', label: 'Autre' },
+      ],
+    };
+  }
+
+  async searchCoordinations(search?: string) {
+    const qb = this.coordinationRepository
+      .createQueryBuilder('coordination')
+      .orderBy('coordination.nom', 'ASC')
+      .take(20);
+
+    if (search) {
+      qb.where(
+        '(coordination.nom LIKE :search OR coordination.province LIKE :search OR coordination.type LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const rows = await qb.getMany();
+    return rows.map((coordination) => ({
+      id: coordination.id,
+      nom: coordination.nom,
+      province: coordination.province,
+      type: coordination.type,
+      status: coordination.status,
+    }));
+  }
+
+  async searchMissionnaires(search?: string) {
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.status = :status', { status: true })
+      .orderBy('user.nom', 'ASC')
+      .take(50);
+
+    if (search) {
+      qb.andWhere(
+        '(user.nom LIKE :search OR user.postnom LIKE :search OR user.prenom LIKE :search OR user.email LIKE :search OR user.direction LIKE :search OR user.service LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const rows = await qb.getMany();
+    return rows.map((user) => ({
+      id: user.id,
+      nomComplet: this.getUserFullName(user),
+      email: user.email,
+      direction: user.direction ?? user.service,
+      fonction: user.fonction,
+    }));
   }
 
   async findAll(query: QuerySatviDto): Promise<SatviPaginatedResult<SatviQuestionnaire>> {
@@ -435,11 +884,12 @@ export class SatviService {
   }
 
   async getDashboard(query: QuerySatviDto) {
-    const [overview, evaluations, parProvince, provinces] = await Promise.all([
+    const [overview, evaluations, parProvince, provinces, missions] = await Promise.all([
       this.getDashboardOverview(query),
       this.getDashboardEvaluations(query),
       this.getDashboardByProvince(query),
       this.getProvinces(query),
+      this.findMissions({ page: query.page, limit: query.limit }),
     ]);
 
     return {
@@ -447,6 +897,7 @@ export class SatviService {
       evaluations,
       parProvince,
       provinces,
+      missions,
     };
   }
 
@@ -670,6 +1121,63 @@ export class SatviService {
     }
   }
 
+  private applyMissionFilters(
+    qb: SelectQueryBuilder<SatviMission>,
+    query: QuerySatviMissionDto,
+  ): void {
+    if (query.search) {
+      qb.andWhere(
+        '(mission.titre LIKE :search OR mission.referenceCode LIKE :search OR mission.province LIKE :search OR mission.coordinationNom LIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+
+    if (query.province) {
+      qb.andWhere('mission.province LIKE :province', {
+        province: `%${query.province}%`,
+      });
+    }
+
+    if (query.coordinationId) {
+      qb.andWhere('mission.coordinationId = :coordinationId', {
+        coordinationId: query.coordinationId,
+      });
+    }
+
+    if (query.typeMission) {
+      qb.andWhere('mission.typeMission = :typeMission', {
+        typeMission: query.typeMission,
+      });
+    }
+
+    if (query.status) {
+      qb.andWhere('mission.status = :status', { status: query.status });
+    }
+
+    if (query.dateDebut) {
+      qb.andWhere('mission.dateDebut >= :dateDebut', {
+        dateDebut: query.dateDebut,
+      });
+    }
+
+    if (query.dateFin) {
+      qb.andWhere('mission.dateFin <= :dateFin', { dateFin: query.dateFin });
+    }
+
+    if (query.avecAlerte !== undefined) {
+      const subQuery = this.satviRepository
+        .createQueryBuilder('questionnaire')
+        .select('questionnaire.missionId')
+        .where('questionnaire.dysfonctionnementMajeur = :avecAlerte', {
+          avecAlerte: query.avecAlerte,
+        });
+
+      qb.andWhere(`mission.id IN (${subQuery.getQuery()})`).setParameters(
+        subQuery.getParameters(),
+      );
+    }
+  }
+
   private computeScores(
     evaluation: Partial<SatviEvaluation>,
     appreciationGlobale: number,
@@ -726,6 +1234,167 @@ export class SatviService {
     }
   }
 
+  private async withMissionIdentification(
+    dto: CreateSatviDto,
+    missionId: number,
+  ): Promise<CreateSatviDto> {
+    const mission = await this.missionRepository.findOne({
+      where: { id: missionId },
+    });
+
+    if (!mission) {
+      throw new NotFoundException(`Mission SatVi avec l'ID ${missionId} introuvable.`);
+    }
+
+    return {
+      ...dto,
+      missionId: mission.id,
+      directionMetier: dto.directionMetier ?? mission.coordinationNom,
+      provinceVisitee: dto.provinceVisitee ?? mission.province,
+      periodeDu: dto.periodeDu ?? mission.dateDebut,
+      periodeAu: dto.periodeAu ?? mission.dateFin,
+      typeMission: dto.typeMission ?? mission.typeMission,
+      typeMissionAutre: dto.typeMissionAutre ?? mission.typeMissionAutre,
+    };
+  }
+
+  private async getMissionRow(id: number): Promise<SatviMissionRow> {
+    const mission = await this.missionRepository.findOne({ where: { id } });
+    if (!mission) {
+      throw new NotFoundException(`Mission SatVi avec l'ID ${id} introuvable.`);
+    }
+
+    return this.toMissionRow(mission);
+  }
+
+  private async toMissionRow(mission: SatviMission): Promise<SatviMissionRow> {
+    const [invites, responseStats] = await Promise.all([
+      this.invitationRepository.count({ where: { missionId: mission.id } }),
+      this.satviRepository
+        .createQueryBuilder('questionnaire')
+        .select('COUNT(questionnaire.id)', 'evaluations')
+        .addSelect('AVG(questionnaire.scoreGlobal)', 'scoreMoyen')
+        .addSelect(
+          'SUM(CASE WHEN questionnaire.dysfonctionnementMajeur = true THEN 1 ELSE 0 END)',
+          'alertesActives',
+        )
+        .where('questionnaire.missionId = :missionId', { missionId: mission.id })
+        .getRawOne(),
+    ]);
+
+    const scoreMoyen = this.round(Number(responseStats?.scoreMoyen) || 0);
+
+    return {
+      id: mission.id,
+      referenceCode: mission.referenceCode,
+      titre: mission.titre,
+      description: mission.description,
+      province: mission.province,
+      coordination: {
+        id: mission.coordinationId,
+        nom: mission.coordinationNom,
+      },
+      typeMission: mission.typeMission,
+      typeMissionLabel: this.getMissionTypeLabel(mission.typeMission),
+      periode: {
+        du: mission.dateDebut,
+        au: mission.dateFin,
+        label: `${mission.dateDebut} -> ${mission.dateFin}`,
+        labelFr: `${this.formatDateFr(mission.dateDebut)} -> ${this.formatDateFr(mission.dateFin)}`,
+      },
+      status: mission.status,
+      invites,
+      evaluations: Number(responseStats?.evaluations) || 0,
+      scoreMoyen,
+      scoreLabel: this.getScoreLabel(scoreMoyen),
+      alertesActives: Number(responseStats?.alertesActives) || 0,
+      createdAt: mission.createdAt,
+    };
+  }
+
+  private async sendMissionInvitation(
+    mission: SatviMission,
+    invitation: SatviMissionInvitation,
+  ): Promise<SatviMissionInvitation> {
+    if (!invitation.email) {
+      invitation.status = SatviInvitationStatus.PREPAREE;
+      invitation.sendError = 'Email missionnaire indisponible.';
+      return await this.invitationRepository.save(invitation);
+    }
+
+    const message = [
+      `Bonjour ${invitation.nomComplet},`,
+      '',
+      `Vous etes invite a remplir le questionnaire SatVi pour la mission "${mission.titre}".`,
+      `Lien anonyme: ${invitation.invitationLink}`,
+      '',
+      'Votre reponse sera rattachee a la mission, sans enregistrer votre identite dans le questionnaire.',
+    ].join('\n');
+
+    const result = await this.mailService.sendTemplateEmail(
+      invitation.email,
+      `Questionnaire SatVi - ${mission.titre}`,
+      message,
+    );
+
+    invitation.status = result?.success === false
+      ? SatviInvitationStatus.ECHEC
+      : SatviInvitationStatus.ENVOYEE;
+    invitation.sentAt = invitation.status === SatviInvitationStatus.ENVOYEE
+      ? new Date()
+      : null;
+    invitation.sendError = result?.success === false ? result.error : null;
+
+    return await this.invitationRepository.save(invitation);
+  }
+
+  private buildInvitationLink(token: string, publicBaseUrl?: string): string {
+    const baseUrl =
+      publicBaseUrl ??
+      process.env.SATVI_PUBLIC_BASE_URL ??
+      process.env.FRONTEND_URL ??
+      'https://cockpit.fonarev.cd/satvi/questionnaire';
+
+    return `${baseUrl.replace(/\/$/, '')}/${token}`;
+  }
+
+  private getUserFullName(user: User): string {
+    return [user.prenom, user.nom, user.postnom].filter(Boolean).join(' ');
+  }
+
+  private async generateMissionReferenceCode(): Promise<string> {
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const randomPart = randomBytes(3).toString('hex').toUpperCase();
+      const referenceCode = `SATVI-M-${datePart}-${randomPart}`;
+      const exists = await this.missionRepository.exist({ where: { referenceCode } });
+
+      if (!exists) {
+        return referenceCode;
+      }
+    }
+
+    throw new InternalServerErrorException(
+      'Impossible de generer une reference mission SatVi unique.',
+    );
+  }
+
+  private async generateInvitationToken(): Promise<string> {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const token = randomBytes(32).toString('hex');
+      const exists = await this.invitationRepository.exist({ where: { token } });
+
+      if (!exists) {
+        return token;
+      }
+    }
+
+    throw new InternalServerErrorException(
+      'Impossible de generer un token invitation SatVi unique.',
+    );
+  }
+
   private async generateReferenceCode(): Promise<string> {
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
@@ -755,6 +1424,7 @@ export class SatviService {
 
     return {
       id: questionnaire.id,
+      missionId: questionnaire.missionId,
       referenceCode: questionnaire.referenceCode,
       province: questionnaire.provinceVisitee,
       directionTechnique: questionnaire.directionMetier,

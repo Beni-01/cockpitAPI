@@ -109,6 +109,14 @@ export class SatviEvaluationDto {
 }
 
 export class CreateSatviDto {
+  @ApiPropertyOptional({
+    description: 'Mission SatVi rattachee. Aucun agent repondant n est enregistre.',
+    example: 1,
+  })
+  @IsInt()
+  @IsOptional()
+  missionId?: number;
+
   @ApiProperty({
     description: 'Direction metier qui a realise ou concerne la mission',
     example: 'Direction des coordinations',

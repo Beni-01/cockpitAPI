@@ -4,8 +4,11 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { SatviMission } from './satvi-mission.entity';
 
 export enum SatviTypeMission {
   SUIVI = 'suivi',
@@ -46,6 +49,7 @@ export interface SatviEvaluation {
 @Index('IDX_satvi_status', ['status'])
 @Index('IDX_satvi_periode', ['periodeDu', 'periodeAu'])
 @Index('IDX_satvi_dysfonctionnement', ['dysfonctionnementMajeur'])
+@Index('IDX_satvi_questionnaire_mission', ['missionId'])
 export class SatviQuestionnaire extends Timestamp {
   @PrimaryGeneratedColumn()
   @ApiProperty({ description: 'ID unique du questionnaire SatVi', example: 1 })
@@ -62,6 +66,13 @@ export class SatviQuestionnaire extends Timestamp {
     example: 'SATVI-20260519-8K4P2A',
   })
   referenceCode: string;
+
+  @Column({ name: 'mission_id', type: 'int', nullable: true })
+  @ApiPropertyOptional({
+    description: 'Mission SatVi rattachee. La reponse reste anonyme.',
+    example: 1,
+  })
+  missionId: number;
 
   @Column({ name: 'direction_metier', type: 'varchar', length: 150 })
   @ApiProperty({
@@ -84,8 +95,8 @@ export class SatviQuestionnaire extends Timestamp {
 
   @Column({
     name: 'type_mission',
-    type: 'enum',
-    enum: SatviTypeMission,
+    type: 'varchar',
+    length: 50,
   })
   @ApiProperty({
     description: 'Type de mission',
@@ -160,8 +171,8 @@ export class SatviQuestionnaire extends Timestamp {
 
   @Column({
     name: 'status',
-    type: 'enum',
-    enum: SatviStatus,
+    type: 'varchar',
+    length: 30,
     default: SatviStatus.SOUMIS,
   })
   @ApiProperty({
@@ -182,4 +193,8 @@ export class SatviQuestionnaire extends Timestamp {
   @Column({ name: 'user_agent', type: 'varchar', length: 500, nullable: true })
   @ApiPropertyOptional({ description: 'User-agent optionnel du visiteur anonyme' })
   userAgent: string;
+
+  @ManyToOne(() => SatviMission, { eager: false })
+  @JoinColumn({ name: 'mission_id' })
+  mission: SatviMission;
 }

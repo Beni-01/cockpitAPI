@@ -21,7 +21,14 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { CreateSatviDto, QuerySatviDto, UpdateSatviDto } from './dto';
+import {
+  CreateSatviDto,
+  CreateSatviMissionDto,
+  QuerySatviDto,
+  QuerySatviMissionDto,
+  SubmitSatviMissionQuestionnaireDto,
+  UpdateSatviDto,
+} from './dto';
 import { SatviQuestionnaire } from './entities/satvi-questionnaire.entity';
 import { SatviService } from './satvi.service';
 
@@ -81,6 +88,110 @@ export class SatviController {
   })
   findAll(@Query() query: QuerySatviDto) {
     return this.satviService.findAll(query);
+  }
+
+  @Post('missions')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Creer une mission SatVi et generer les invitations',
+    description:
+      'Cree la mission, selectionne la coordination cible, genere un lien unique par missionnaire et tente l envoi email.',
+  })
+  @ApiBody({ type: CreateSatviMissionDto })
+  createMission(
+    @Body() createMissionDto: CreateSatviMissionDto,
+    @Request() req: any,
+  ) {
+    return this.satviService.createMission(
+      createMissionDto,
+      req.user?.id,
+    );
+  }
+
+  @Get('missions')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Lister les missions SatVi pour l onglet Missions',
+  })
+  findMissions(@Query() query: QuerySatviMissionDto) {
+    return this.satviService.findMissions(query);
+  }
+
+  @Get('missions/form-options')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Options du formulaire de creation mission SatVi',
+    description:
+      'Retourne coordinations, missionnaires et types de mission pour alimenter le formulaire.',
+  })
+  getMissionFormOptions(@Query('search') search?: string) {
+    return this.satviService.getMissionFormOptions(search);
+  }
+
+  @Get('missions/coordinations')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Rechercher les coordinations pour une mission SatVi' })
+  searchMissionCoordinations(@Query('search') search?: string) {
+    return this.satviService.searchCoordinations(search);
+  }
+
+  @Get('missions/missionnaires')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Rechercher les missionnaires pour une mission SatVi' })
+  searchMissionnaires(@Query('search') search?: string) {
+    return this.satviService.searchMissionnaires(search);
+  }
+
+  @Get('missions/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Detail d une mission SatVi avec invitations' })
+  @ApiParam({ name: 'id', example: 1 })
+  findMissionOne(@Param('id', ParseIntPipe) id: number) {
+    return this.satviService.findMissionOne(id);
+  }
+
+  @Patch('missions/:id/close')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Cloturer une mission SatVi' })
+  @ApiParam({ name: 'id', example: 1 })
+  closeMission(@Param('id', ParseIntPipe) id: number) {
+    return this.satviService.closeMission(id);
+  }
+
+  @Patch('missions/:id/archive')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Archiver une mission SatVi' })
+  @ApiParam({ name: 'id', example: 1 })
+  archiveMission(@Param('id', ParseIntPipe) id: number) {
+    return this.satviService.archiveMission(id);
+  }
+
+  @Get('public/missions/:token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Lire une mission SatVi depuis un lien public anonyme',
+  })
+  getPublicMission(@Param('token') token: string) {
+    return this.satviService.getMissionPublicByToken(token);
+  }
+
+  @Post('public/missions/:token/questionnaires')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Soumettre anonymement un questionnaire lie a une mission SatVi',
+    description:
+      'Le token sert uniquement a retrouver la mission. Le questionnaire cree ne stocke ni userId, ni invitationId.',
+  })
+  @ApiBody({ type: SubmitSatviMissionQuestionnaireDto })
+  submitPublicMissionQuestionnaire(
+    @Param('token') token: string,
+    @Body() submitDto: SubmitSatviMissionQuestionnaireDto,
+    @Request() req: any,
+  ) {
+    return this.satviService.submitMissionQuestionnaire(token, submitDto, {
+      ipAddress: req.ip,
+      userAgent: req.headers?.['user-agent'],
+    });
   }
 
   @Get('dashboard')
