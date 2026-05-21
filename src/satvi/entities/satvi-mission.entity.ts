@@ -10,7 +10,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { SatviTypeMission } from './satvi-questionnaire.entity';
+import { SatviQuestionnaire, SatviTypeMission } from './satvi-questionnaire.entity';
 import { SatviMissionInvitation } from './satvi-mission-invitation.entity';
 
 export enum SatviMissionStatus {
@@ -99,4 +99,7 @@ export class SatviMission extends Timestamp {
     cascade: true,
   })
   invitations: SatviMissionInvitation[];
+
+  @OneToMany(() => SatviQuestionnaire, (questionnaire) => questionnaire.mission)
+  questionnaires: SatviQuestionnaire[];
 }

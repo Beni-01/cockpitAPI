@@ -150,6 +150,34 @@ export class SatviController {
     return this.satviService.findMissionOne(id);
   }
 
+  @Get('missions/:id/soumissions')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Lister les soumissions SatVi rattachees a une mission',
+    description:
+      'Retourne les questionnaires soumis pour un missionId donne, avec pagination et filtres SatVi.',
+  })
+  @ApiParam({ name: 'id', example: 1 })
+  findMissionSubmissions(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: QuerySatviDto,
+  ) {
+    return this.satviService.findMissionSubmissions(id, query);
+  }
+
+  @Get('missions/:id/questionnaires')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Alias de missions/:id/soumissions',
+  })
+  @ApiParam({ name: 'id', example: 1 })
+  findMissionQuestionnaires(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() query: QuerySatviDto,
+  ) {
+    return this.satviService.findMissionSubmissions(id, query);
+  }
+
   @Patch('missions/:id/close')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Cloturer une mission SatVi' })

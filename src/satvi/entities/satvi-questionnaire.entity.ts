@@ -24,21 +24,25 @@ export enum SatviStatus {
 }
 
 export interface SatviEvaluation {
-  arriveePreparee: number;
-  programmeDisponible: number;
-  activitesBienOrganisees: number;
-  agentsDisponibles: number;
-  interlocuteursAccessibles: number;
-  equipeMobilisee: number;
-  informationsFiables: number;
-  documentsComplets: number;
-  appuiTechniqueUtile: number;
-  reponseRapideDemandes: number;
-  difficultesPrisesEnCharge: number;
-  adaptationContraintes: number;
-  communicationClaire: number;
-  feedbackDisponible: number;
-  suiviPostMissionAssure: number;
+  qualiteAccueil: number;
+  dispositionsLogistiques: number;
+  disponibiliteEquipeCoordination: number;
+  aspectAccueilAmeliorer?: string;
+  organisationGenerale: number;
+  missionPrepareeCoordonnee: number;
+  contraintesPrisesEnCharge: number;
+  difficulteOrganisationnelle?: string;
+  collaborationAgentsProvinciaux: number;
+  implicationEquipesLocales: number;
+  reactiviteEquipesLocales: number;
+  ameliorationCollaborationTerrain?: string;
+  professionnalismeCoordination: number;
+  echangesFluidesRespectueux: number;
+  dysfonctionnementMajeur?: boolean;
+  appreciationGlobale?: number;
+  pertinenceAppuiCoordination: number;
+  recommandationModeleBonnePratique: number;
+  recommandationCoordinationBonExemple: number;
 }
 
 @Entity({ name: 'satvi_questionnaire' })
@@ -114,18 +118,25 @@ export class SatviQuestionnaire extends Timestamp {
 
   @Column({ name: 'evaluation', type: 'json' })
   @ApiProperty({
-    description: 'Reponses numeriques de la section evaluation (15 notes de 1 a 5)',
+    description: 'Objet regroupant les 19 questions du questionnaire SatVi',
     type: 'object',
     additionalProperties: true,
   })
   evaluation: SatviEvaluation;
 
+  @Column({ name: 'question_count', type: 'int', default: 19 })
+  @ApiProperty({ description: 'Nombre total de questions SatVi', example: 19 })
+  questionCount: number;
+
   @Column({ name: 'evaluation_total', type: 'int', default: 0 })
   @ApiProperty({ description: 'Somme des notes de la section evaluation', example: 63 })
   evaluationTotal: number;
 
-  @Column({ name: 'evaluation_count', type: 'int', default: 15 })
-  @ApiProperty({ description: 'Nombre de questions notees', example: 15 })
+  @Column({ name: 'evaluation_count', type: 'int', default: 14 })
+  @ApiProperty({
+    description: 'Nombre de questions notees utilisees dans la moyenne',
+    example: 14,
+  })
   evaluationCount: number;
 
   @Column({
@@ -139,7 +150,10 @@ export class SatviQuestionnaire extends Timestamp {
   evaluationAverage: number;
 
   @Column({ name: 'appreciation_globale', type: 'tinyint' })
-  @ApiProperty({ description: 'Appreciation globale de 1 a 5', example: 5 })
+  @ApiProperty({
+    description: 'Niveau global de satisfaction concernant la mission',
+    example: 5,
+  })
   appreciationGlobale: number;
 
   @Column({ name: 'score_global', type: 'decimal', precision: 5, scale: 2, default: 0 })
@@ -149,6 +163,24 @@ export class SatviQuestionnaire extends Timestamp {
   @Column({ name: 'points_forts', type: 'text', nullable: true })
   @ApiPropertyOptional({ description: 'Points forts de la coordination' })
   pointsForts: string;
+
+  @Column({ name: 'aspect_accueil_ameliorer', type: 'text', nullable: true })
+  @ApiPropertyOptional({ description: "Aspect de l'accueil a ameliorer" })
+  aspectAccueilAmeliorer: string;
+
+  @Column({ name: 'difficulte_organisationnelle', type: 'text', nullable: true })
+  @ApiPropertyOptional({ description: 'Difficulte organisationnelle rencontree' })
+  difficulteOrganisationnelle: string;
+
+  @Column({
+    name: 'amelioration_collaboration_terrain',
+    type: 'text',
+    nullable: true,
+  })
+  @ApiPropertyOptional({
+    description: 'Amelioration proposee pour renforcer la collaboration terrain',
+  })
+  ameliorationCollaborationTerrain: string;
 
   @Column({ name: 'faiblesses_observees', type: 'text', nullable: true })
   @ApiPropertyOptional({ description: 'Faiblesses observees' })

@@ -35,21 +35,20 @@ import {
 } from './entities';
 
 const EVALUATION_KEYS: Array<keyof SatviEvaluation> = [
-  'arriveePreparee',
-  'programmeDisponible',
-  'activitesBienOrganisees',
-  'agentsDisponibles',
-  'interlocuteursAccessibles',
-  'equipeMobilisee',
-  'informationsFiables',
-  'documentsComplets',
-  'appuiTechniqueUtile',
-  'reponseRapideDemandes',
-  'difficultesPrisesEnCharge',
-  'adaptationContraintes',
-  'communicationClaire',
-  'feedbackDisponible',
-  'suiviPostMissionAssure',
+  'qualiteAccueil',
+  'dispositionsLogistiques',
+  'disponibiliteEquipeCoordination',
+  'organisationGenerale',
+  'missionPrepareeCoordonnee',
+  'contraintesPrisesEnCharge',
+  'collaborationAgentsProvinciaux',
+  'implicationEquipesLocales',
+  'reactiviteEquipesLocales',
+  'professionnalismeCoordination',
+  'echangesFluidesRespectueux',
+  'pertinenceAppuiCoordination',
+  'recommandationModeleBonnePratique',
+  'recommandationCoordinationBonExemple',
 ];
 
 const SORT_COLUMNS: Record<SatviSortBy, string> = {
@@ -77,33 +76,45 @@ interface SatviCriterionDefinition {
 
 const CRITERIA: SatviCriterionDefinition[] = [
   {
-    code: 'organisation_preparation',
-    label: "Organisation et preparation de l'appui",
-    keys: ['arriveePreparee', 'programmeDisponible', 'activitesBienOrganisees'],
-  },
-  {
-    code: 'disponibilite_mobilisation',
-    label: 'Disponibilite et mobilisation des equipes provinciales',
-    keys: ['agentsDisponibles', 'interlocuteursAccessibles', 'equipeMobilisee'],
-  },
-  {
-    code: 'qualite_appui',
-    label: "Qualite de l'appui technique fourni",
-    keys: ['informationsFiables', 'documentsComplets', 'appuiTechniqueUtile'],
-  },
-  {
-    code: 'reactivite_resolution',
-    label: 'Reactivite et resolution des problemes',
+    code: 'accueil_prise_en_charge',
+    label: 'Accueil et prise en charge',
     keys: [
-      'reponseRapideDemandes',
-      'difficultesPrisesEnCharge',
-      'adaptationContraintes',
+      'qualiteAccueil',
+      'dispositionsLogistiques',
+      'disponibiliteEquipeCoordination',
     ],
   },
   {
-    code: 'professionnalisme_collaboration',
-    label: 'Professionnalisme et collaboration',
-    keys: ['communicationClaire', 'feedbackDisponible', 'suiviPostMissionAssure'],
+    code: 'organisation_coordination',
+    label: 'Organisation, coordination et fonctionnement',
+    keys: [
+      'organisationGenerale',
+      'missionPrepareeCoordonnee',
+      'contraintesPrisesEnCharge',
+    ],
+  },
+  {
+    code: 'collaboration_appui_terrain',
+    label: 'Collaboration et appui terrain',
+    keys: [
+      'collaborationAgentsProvinciaux',
+      'implicationEquipesLocales',
+      'reactiviteEquipesLocales',
+    ],
+  },
+  {
+    code: 'gouvernance_professionnalisme',
+    label: 'Gouvernance et professionnalisme',
+    keys: ['professionnalismeCoordination', 'echangesFluidesRespectueux'],
+  },
+  {
+    code: 'appreciation_recommandation',
+    label: 'Appreciation globale et recommandations',
+    keys: [
+      'pertinenceAppuiCoordination',
+      'recommandationModeleBonnePratique',
+      'recommandationCoordinationBonExemple',
+    ],
   },
 ];
 
@@ -187,6 +198,9 @@ export interface SatviEvaluationDetail {
   appreciationDirecte: SatviCriterionScore;
   analyseQualitative: {
     pointsForts: string;
+    aspectAccueilAmeliorer: string;
+    difficulteOrganisationnelle: string;
+    ameliorationCollaborationTerrain: string;
     faiblessesObservees: string;
     recommandations: string;
   };
@@ -267,9 +281,10 @@ export class SatviService {
 
   async create(dto: CreateSatviDto): Promise<SatviQuestionnaire> {
     try {
-      const normalizedDto = dto.missionId
-        ? await this.withMissionIdentification(dto, dto.missionId)
-        : dto;
+      const normalizedInput = this.normalizeQuestionnaireFields(dto);
+      const normalizedDto = normalizedInput.missionId
+        ? await this.withMissionIdentification(normalizedInput, normalizedInput.missionId)
+        : normalizedInput;
 
       this.validateDates(normalizedDto.periodeDu, normalizedDto.periodeAu);
 
@@ -452,6 +467,34 @@ export class SatviService {
     };
   }
 
+  async findMissionSubmissions(
+    missionId: number,
+    query: QuerySatviDto,
+  ): Promise<{
+    mission: SatviMissionRow;
+    soumissions: SatviPaginatedResult<SatviDashboardEvaluationRow>;
+  }> {
+    const mission = await this.missionRepository.findOne({
+      where: { id: missionId },
+    });
+
+    if (!mission) {
+      throw new NotFoundException(
+        `Mission SatVi avec l'ID ${missionId} introuvable.`,
+      );
+    }
+
+    const result = await this.getDashboardEvaluations({
+      ...query,
+      missionId,
+    });
+
+    return {
+      mission: await this.toMissionRow(mission),
+      soumissions: result,
+    };
+  }
+
   async getMissionPublicByToken(token: string): Promise<SatviMissionPublicPayload> {
     const invitation = await this.invitationRepository.findOne({
       where: { token },
@@ -526,7 +569,7 @@ export class SatviService {
         throw new BadRequestException('Cette mission SatVi n est pas active.');
       }
 
-      const payload: CreateSatviDto = {
+      const payload: CreateSatviDto = this.normalizeQuestionnaireFields({
         ...dto,
         missionId: mission.id,
         directionMetier: mission.coordinationNom,
@@ -537,7 +580,7 @@ export class SatviService {
         typeMissionAutre: mission.typeMissionAutre,
         ipAddress: requestMeta?.ipAddress,
         userAgent: requestMeta?.userAgent,
-      };
+      });
 
       this.validateDates(payload.periodeDu, payload.periodeAu);
       const computed = this.computeScores(
@@ -742,21 +785,22 @@ export class SatviService {
   async update(id: number, dto: UpdateSatviDto): Promise<SatviQuestionnaire> {
     try {
       const questionnaire = await this.findOne(id);
+      const normalizedDto = this.normalizeQuestionnaireFields(dto);
 
-      const periodeDu = dto.periodeDu ?? questionnaire.periodeDu;
-      const periodeAu = dto.periodeAu ?? questionnaire.periodeAu;
+      const periodeDu = normalizedDto.periodeDu ?? questionnaire.periodeDu;
+      const periodeAu = normalizedDto.periodeAu ?? questionnaire.periodeAu;
       this.validateDates(periodeDu, periodeAu);
 
-      const evaluation = dto.evaluation
-        ? { ...questionnaire.evaluation, ...dto.evaluation }
+      const evaluation = normalizedDto.evaluation
+        ? { ...questionnaire.evaluation, ...normalizedDto.evaluation }
         : questionnaire.evaluation;
       const appreciationGlobale =
-        dto.appreciationGlobale ?? questionnaire.appreciationGlobale;
+        normalizedDto.appreciationGlobale ?? questionnaire.appreciationGlobale;
       const computed = this.computeScores(evaluation, appreciationGlobale);
-      const status = dto.status ?? questionnaire.status;
+      const status = normalizedDto.status ?? questionnaire.status;
 
       const updated = this.satviRepository.merge(questionnaire, {
-        ...dto,
+        ...normalizedDto,
         evaluation,
         ...computed,
         status,
@@ -1008,15 +1052,113 @@ export class SatviService {
   }
 
   getQuestions() {
-    return CRITERIA.map((criterion, index) => ({
-      code: `2.${index + 1}`,
-      key: criterion.code,
-      titre: criterion.label,
-      questions: criterion.keys.map((key) => ({
-        key,
-        libelle: this.getQuestionLabel(key),
-      })),
-    }));
+    return [
+      {
+        code: 'I',
+        key: 'accueil_prise_en_charge',
+        titre: 'Accueil et prise en charge',
+        questions: [
+          this.ratingQuestion(1, 'qualiteAccueil'),
+          this.ratingQuestion(2, 'dispositionsLogistiques'),
+          this.ratingQuestion(3, 'disponibiliteEquipeCoordination'),
+          {
+            key: 'aspectAccueilAmeliorer',
+            numero: 4,
+            type: 'text',
+            libelle: "Quel aspect de l'accueil pourrait etre ameliore selon vous ?",
+          },
+        ],
+      },
+      {
+        code: 'II',
+        key: 'organisation_coordination_fonctionnement',
+        titre: 'Organisation, coordination et fonctionnement',
+        questions: [
+          this.ratingQuestion(5, 'organisationGenerale'),
+          this.ratingQuestion(6, 'missionPrepareeCoordonnee'),
+          this.ratingQuestion(7, 'contraintesPrisesEnCharge'),
+          {
+            key: 'difficulteOrganisationnelle',
+            numero: 8,
+            type: 'text',
+            libelle:
+              'Avez-vous rencontre une difficulte organisationnelle ? Si oui, laquelle ?',
+          },
+        ],
+      },
+      {
+        code: 'III',
+        key: 'collaboration_appui_terrain',
+        titre: 'Collaboration et appui terrain',
+        questions: [
+          this.ratingQuestion(9, 'collaborationAgentsProvinciaux'),
+          this.ratingQuestion(10, 'implicationEquipesLocales'),
+          this.ratingQuestion(11, 'reactiviteEquipesLocales'),
+          {
+            key: 'ameliorationCollaborationTerrain',
+            numero: 12,
+            type: 'text',
+            libelle:
+              'Que pourrait-on ameliorer pour renforcer la collaboration sur le terrain ?',
+          },
+        ],
+      },
+      {
+        code: 'IV',
+        key: 'gouvernance_professionnalisme',
+        titre: 'Gouvernance et professionnalisme',
+        questions: [
+          this.ratingQuestion(13, 'professionnalismeCoordination'),
+          this.ratingQuestion(14, 'echangesFluidesRespectueux'),
+          {
+            key: 'dysfonctionnementMajeur',
+            numero: 15,
+            type: 'boolean',
+            libelle:
+              'Avez-vous observe des difficultes organisationnelles ou des vulnerabilites importantes ?',
+            detailKey: 'descriptionDysfonctionnement',
+            detailLibelle: 'Si oui, veuillez preciser.',
+          },
+        ],
+      },
+      {
+        code: 'V',
+        key: 'appreciation_globale',
+        titre: 'Appreciation globale',
+        questions: [
+          {
+            key: 'appreciationGlobale',
+            numero: 16,
+            type: 'rating',
+            min: 1,
+            max: 5,
+            libelle:
+              'Quel est votre niveau global de satisfaction concernant cette mission ?',
+          },
+          this.ratingQuestion(17, 'pertinenceAppuiCoordination'),
+          {
+            key: 'recommandationModeleBonnePratique',
+            numero: 18,
+            type: 'choice_score',
+            libelle:
+              'Recommanderiez-vous le fonctionnement actuel de cette Coordination Provinciale comme modele de bonne pratique ?',
+            options: [
+              { label: 'Non', score: 1 },
+              { label: 'Partiellement', score: 3 },
+              { label: 'Oui', score: 5 },
+            ],
+          },
+        ],
+      },
+      {
+        code: 'VI',
+        key: 'recommandations',
+        titre: 'Recommandations',
+        questions: [
+          this.ratingQuestion(19, 'recommandationCoordinationBonExemple'),
+        ],
+      },
+    ];
   }
 
   private async getGroupedStats(
@@ -1071,6 +1213,10 @@ export class SatviService {
       qb.andWhere('q.referenceCode LIKE :referenceCode', {
         referenceCode: `%${query.referenceCode}%`,
       });
+    }
+
+    if (query.missionId) {
+      qb.andWhere('q.missionId = :missionId', { missionId: query.missionId });
     }
 
     const directionMetier = query.directionMetier ?? query.direction;
@@ -1204,6 +1350,25 @@ export class SatviService {
       );
     }
 
+    const recommandationScore = Number(
+      evaluation.recommandationModeleBonnePratique,
+    );
+    if (![1, 3, 5].includes(recommandationScore)) {
+      throw new BadRequestException(
+        'La recommandation du modele de bonne pratique doit valoir 1, 3 ou 5.',
+      );
+    }
+
+    if (
+      Number.isNaN(Number(appreciationGlobale)) ||
+      Number(appreciationGlobale) < 1 ||
+      Number(appreciationGlobale) > 5
+    ) {
+      throw new BadRequestException(
+        'Le niveau global de satisfaction doit etre compris entre 1 et 5.',
+      );
+    }
+
     const evaluationTotal = values.reduce((sum, value) => sum + value, 0);
     const evaluationCount = values.length;
     const evaluationAverage = this.round(evaluationTotal / evaluationCount);
@@ -1255,6 +1420,38 @@ export class SatviService {
       periodeAu: dto.periodeAu ?? mission.dateFin,
       typeMission: dto.typeMission ?? mission.typeMission,
       typeMissionAutre: dto.typeMissionAutre ?? mission.typeMissionAutre,
+    };
+  }
+
+  private normalizeQuestionnaireFields<
+    T extends {
+      evaluation?: Partial<SatviEvaluation>;
+      appreciationGlobale?: number;
+      aspectAccueilAmeliorer?: string;
+      difficulteOrganisationnelle?: string;
+      ameliorationCollaborationTerrain?: string;
+      dysfonctionnementMajeur?: boolean;
+    },
+  >(dto: T): T {
+    const evaluation = dto.evaluation;
+    if (!evaluation) {
+      return dto;
+    }
+
+    return {
+      ...dto,
+      appreciationGlobale:
+        dto.appreciationGlobale ?? evaluation.appreciationGlobale,
+      aspectAccueilAmeliorer:
+        dto.aspectAccueilAmeliorer ?? evaluation.aspectAccueilAmeliorer,
+      difficulteOrganisationnelle:
+        dto.difficulteOrganisationnelle ??
+        evaluation.difficulteOrganisationnelle,
+      ameliorationCollaborationTerrain:
+        dto.ameliorationCollaborationTerrain ??
+        evaluation.ameliorationCollaborationTerrain,
+      dysfonctionnementMajeur:
+        dto.dysfonctionnementMajeur ?? evaluation.dysfonctionnementMajeur,
     };
   }
 
@@ -1489,6 +1686,10 @@ export class SatviService {
       },
       analyseQualitative: {
         pointsForts: questionnaire.pointsForts,
+        aspectAccueilAmeliorer: questionnaire.aspectAccueilAmeliorer,
+        difficulteOrganisationnelle: questionnaire.difficulteOrganisationnelle,
+        ameliorationCollaborationTerrain:
+          questionnaire.ameliorationCollaborationTerrain,
         faiblessesObservees: questionnaire.faiblessesObservees,
         recommandations: questionnaire.recommandations,
       },
@@ -1524,38 +1725,57 @@ export class SatviService {
     });
   }
 
+  private ratingQuestion(numero: number, key: keyof SatviEvaluation) {
+    return {
+      key,
+      numero,
+      type: 'rating',
+      min: 1,
+      max: 5,
+      libelle: this.getQuestionLabel(key),
+    };
+  }
+
   private getQuestionLabel(key: keyof SatviEvaluation): string {
     const labels: Record<keyof SatviEvaluation, string> = {
-      arriveePreparee:
-        'La coordination provinciale avait-elle prepare votre arrivee ?',
-      programmeDisponible:
-        'Un programme ou agenda de travail etait-il disponible ?',
-      activitesBienOrganisees:
-        'Les activites ont-elles ete bien organisees localement ?',
-      agentsDisponibles:
-        'Les agents de la coordination etaient-ils disponibles ?',
-      interlocuteursAccessibles:
-        'Les interlocuteurs cles etaient-ils accessibles ?',
-      equipeMobilisee:
-        "L'equipe s'est-elle mobilisee pour faciliter la mission ?",
-      informationsFiables:
-        'Les informations fournies etaient-elles fiables ?',
-      documentsComplets:
-        'Les donnees et documents etaient-ils complets ?',
-      appuiTechniqueUtile:
-        "L'appui technique a-t-il ete utile a votre mission ?",
-      reponseRapideDemandes:
-        'La coordination a-t-elle repondu rapidement a vos demandes ?',
-      difficultesPrisesEnCharge:
-        'Les difficultes rencontrees ont-elles ete prises en charge ?',
-      adaptationContraintes:
-        "L'equipe a-t-elle su s'adapter aux contraintes ?",
-      communicationClaire:
-        'La communication avec la coordination etait-elle claire ?',
-      feedbackDisponible:
-        'Un retour ou feedback etait-il disponible pendant la mission ?',
-      suiviPostMissionAssure:
-        'Le suivi post-mission a-t-il ete assure ?',
+      qualiteAccueil:
+        "Comment evaluez-vous la qualite de l'accueil qui vous a ete reserve a votre arrivee ?",
+      dispositionsLogistiques:
+        'Les dispositions logistiques minimales etaient-elles disponibles a votre arrivee ?',
+      disponibiliteEquipeCoordination:
+        'Le Coordonnateur Provincial et son equipe etaient-ils disponibles et accessibles durant votre mission ?',
+      aspectAccueilAmeliorer:
+        "Quel aspect de l'accueil pourrait etre ameliore selon vous ?",
+      organisationGenerale:
+        'Comment evaluez-vous l organisation generale de la Coordination Provinciale ?',
+      missionPrepareeCoordonnee:
+        'La mission a-t-elle ete correctement preparee et coordonnee au niveau provincial ?',
+      contraintesPrisesEnCharge:
+        'Les contraintes rencontrees ont-elles ete correctement prises en charge par la Coordination Provinciale ?',
+      difficulteOrganisationnelle:
+        'Avez-vous rencontre une difficulte organisationnelle ? Si oui, laquelle ?',
+      collaborationAgentsProvinciaux:
+        'Comment evaluez-vous la collaboration avec les agents provinciaux ?',
+      implicationEquipesLocales:
+        'Dans quelle mesure les equipes locales se sont-elles impliquees dans les activites de la mission ?',
+      reactiviteEquipesLocales:
+        'Comment evaluez-vous la reactivite des equipes locales face a vos besoins ou sollicitations ?',
+      ameliorationCollaborationTerrain:
+        'Que pourrait-on ameliorer pour renforcer la collaboration sur le terrain ?',
+      professionnalismeCoordination:
+        'Comment evaluez-vous le niveau de professionnalisme de la Coordination Provinciale ?',
+      echangesFluidesRespectueux:
+        'Les echanges avec la Coordination Provinciale ont-ils ete fluides et respectueux des circuits de communication ?',
+      dysfonctionnementMajeur:
+        'Avez-vous observe des difficultes organisationnelles ou des vulnerabilites importantes ?',
+      appreciationGlobale:
+        'Quel est votre niveau global de satisfaction concernant cette mission ?',
+      pertinenceAppuiCoordination:
+        "Dans quelle mesure l'appui recu de la Coordination Provinciale a-t-il ete pertinent ?",
+      recommandationModeleBonnePratique:
+        'Recommanderiez-vous le fonctionnement actuel de cette Coordination Provinciale comme modele de bonne pratique ?',
+      recommandationCoordinationBonExemple:
+        'Seriez-vous pret(e) a recommander cette Coordination comme un bon exemple de pratique ?',
     };
 
     return labels[key];

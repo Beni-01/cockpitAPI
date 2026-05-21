@@ -48,6 +48,12 @@ export class QuerySatviDto {
   @IsString()
   referenceCode?: string;
 
+  @ApiPropertyOptional({ description: 'Filtrer par mission SatVi', example: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  missionId?: number;
+
   @ApiPropertyOptional({ description: 'Filtrer par direction metier', example: 'Direction des coordinations' })
   @IsOptional()
   @IsString()

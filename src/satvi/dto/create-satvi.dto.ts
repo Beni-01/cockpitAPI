@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsDateString,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -21,91 +22,121 @@ export class SatviEvaluationDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  arriveePreparee: number;
+  qualiteAccueil: number;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  programmeDisponible: number;
+  dispositionsLogistiques: number;
 
   @ApiProperty({ example: 5, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  activitesBienOrganisees: number;
+  disponibiliteEquipeCoordination: number;
+
+  @ApiPropertyOptional({ description: "Aspect de l'accueil a ameliorer" })
+  @IsString()
+  @IsOptional()
+  aspectAccueilAmeliorer?: string;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  agentsDisponibles: number;
+  organisationGenerale: number;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  interlocuteursAccessibles: number;
+  missionPrepareeCoordonnee: number;
 
   @ApiProperty({ example: 5, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  equipeMobilisee: number;
+  contraintesPrisesEnCharge: number;
+
+  @ApiPropertyOptional({ description: 'Difficulte organisationnelle rencontree' })
+  @IsString()
+  @IsOptional()
+  difficulteOrganisationnelle?: string;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  informationsFiables: number;
+  collaborationAgentsProvinciaux: number;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  documentsComplets: number;
+  implicationEquipesLocales: number;
 
   @ApiProperty({ example: 5, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  appuiTechniqueUtile: number;
+  reactiviteEquipesLocales: number;
+
+  @ApiPropertyOptional({
+    description: 'Amelioration proposee pour renforcer la collaboration terrain',
+  })
+  @IsString()
+  @IsOptional()
+  ameliorationCollaborationTerrain?: string;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  reponseRapideDemandes: number;
+  professionnalismeCoordination: number;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  difficultesPrisesEnCharge: number;
+  echangesFluidesRespectueux: number;
+
+  @ApiPropertyOptional({
+    description: 'Dysfonctionnement majeur signale',
+    example: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  dysfonctionnementMajeur?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Niveau global de satisfaction concernant cette mission',
+    example: 5,
+    minimum: 1,
+    maximum: 5,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  @IsOptional()
+  appreciationGlobale?: number;
 
   @ApiProperty({ example: 5, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  adaptationContraintes: number;
+  pertinenceAppuiCoordination: number;
+
+  @ApiProperty({ example: 5, enum: [1, 3, 5] })
+  @IsInt()
+  @IsIn([1, 3, 5])
+  recommandationModeleBonnePratique: number;
 
   @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
   @IsInt()
   @Min(1)
   @Max(5)
-  communicationClaire: number;
-
-  @ApiProperty({ example: 4, minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  feedbackDisponible: number;
-
-  @ApiProperty({ example: 5, minimum: 1, maximum: 5 })
-  @IsInt()
-  @Min(1)
-  @Max(5)
-  suiviPostMissionAssure: number;
+  recommandationCoordinationBonExemple: number;
 }
 
 export class CreateSatviDto {
@@ -172,8 +203,8 @@ export class CreateSatviDto {
   @Type(() => SatviEvaluationDto)
   evaluation: SatviEvaluationDto;
 
-  @ApiProperty({
-    description: 'Appreciation globale de la coordination provinciale',
+  @ApiPropertyOptional({
+    description: 'Niveau global de satisfaction concernant cette mission',
     example: 5,
     minimum: 1,
     maximum: 5,
@@ -181,12 +212,30 @@ export class CreateSatviDto {
   @IsInt()
   @Min(1)
   @Max(5)
-  appreciationGlobale: number;
+  @IsOptional()
+  appreciationGlobale?: number;
 
   @ApiPropertyOptional({ description: 'Points forts observes' })
   @IsString()
   @IsOptional()
   pointsForts?: string;
+
+  @ApiPropertyOptional({ description: "Aspect de l'accueil a ameliorer" })
+  @IsString()
+  @IsOptional()
+  aspectAccueilAmeliorer?: string;
+
+  @ApiPropertyOptional({ description: 'Difficulte organisationnelle rencontree' })
+  @IsString()
+  @IsOptional()
+  difficulteOrganisationnelle?: string;
+
+  @ApiPropertyOptional({
+    description: 'Amelioration proposee pour renforcer la collaboration terrain',
+  })
+  @IsString()
+  @IsOptional()
+  ameliorationCollaborationTerrain?: string;
 
   @ApiPropertyOptional({ description: 'Faiblesses observees' })
   @IsString()
@@ -198,13 +247,14 @@ export class CreateSatviDto {
   @IsOptional()
   recommandations?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Dysfonctionnement majeur signale',
     example: false,
     default: false,
   })
   @IsBoolean()
-  dysfonctionnementMajeur: boolean;
+  @IsOptional()
+  dysfonctionnementMajeur?: boolean;
 
   @ApiPropertyOptional({ description: 'Description du dysfonctionnement signale' })
   @ValidateIf((dto) => dto.dysfonctionnementMajeur === true)
