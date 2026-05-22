@@ -24,7 +24,117 @@
 | Chat | `Chat Collaboratif (Sous-activités)` | `/chat-sous-activity` |
 | Demandes Prolongation | `Demande Prolongation` | `/demande-prolongation` |
 | Performance | `Suivi des Performances` | `/performance` |
+| SATVI | `SatVi - Satisfaction visiteurs` | `/satvi` |
 | Audit & Logs | - | `/audit-log` |
+
+---
+
+## 📝 SATVI - Satisfaction visiteurs
+
+Base path: `/satvi`
+
+### Endpoints ajoutés
+
+---
+
+#### GET `/satvi?missionId={missionId}` - Lister les soumissions SATVI par mission
+**Description:** Retourne les questionnaires SATVI filtrés par `missionId`, avec les filtres et la pagination déjà supportés par la liste globale.
+
+**Query params:**
+```text
+missionId=1
+page=1
+limit=10
+sortBy=createdAt
+sortOrder=DESC
+```
+
+**Response 200:**
+```json
+{
+  "data": [
+    {
+      "id": 12,
+      "missionId": 1,
+      "referenceCode": "SATVI-20260521-ABC123",
+      "provinceVisitee": "Kinshasa",
+      "directionMetier": "Coordination de Kinshasa",
+      "evaluationAverage": 4.36,
+      "scoreGlobal": 4.4,
+      "questionCount": 19,
+      "evaluationCount": 14,
+      "status": "soumis"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "totalItems": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+#### GET `/satvi/missions/{id}/soumissions` - Soumissions d'une mission SATVI
+**Description:** Retourne la mission SATVI et ses soumissions paginées.
+
+**Path params:**
+```text
+id=1
+```
+
+**Query params:**
+```text
+page=1
+limit=10
+sortBy=createdAt
+sortOrder=DESC
+```
+
+**Response 200:**
+```json
+{
+  "mission": {
+    "id": 1,
+    "referenceCode": "SATVI-M-20260521-A1B2C3",
+    "titre": "Mission de suivi Kinshasa",
+    "province": "Kinshasa",
+    "evaluations": 3,
+    "scoreMoyen": 4.2,
+    "alertesActives": 0
+  },
+  "soumissions": {
+    "data": [
+      {
+        "id": 12,
+        "missionId": 1,
+        "referenceCode": "SATVI-20260521-ABC123",
+        "province": "Kinshasa",
+        "directionTechnique": "Coordination de Kinshasa",
+        "score": 4.4,
+        "scoreLabel": "Bien",
+        "statut": "OK",
+        "status": "soumis"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "totalItems": 3,
+      "totalPages": 1
+    }
+  }
+}
+```
+
+---
+
+#### GET `/satvi/missions/{id}/questionnaires` - Alias des soumissions d'une mission
+**Description:** Alias de `/satvi/missions/{id}/soumissions`, utile si le front préfère le terme `questionnaires`.
+
+**Response 200:** Même format que `GET /satvi/missions/{id}/soumissions`.
 
 ---
 
