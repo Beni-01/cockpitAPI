@@ -10,7 +10,12 @@ import {
 } from 'typeorm';
 import { SatviMission } from './satvi-mission.entity';
 
-
+export enum SatviTypeMission {
+  SUIVI = 'suivi',
+  APPUI_TECHNIQUE = 'appui_technique',
+  CONTROLE = 'controle',
+  AUTRE = 'autre',
+}
 
 export enum SatviStatus {
   BROUILLON = 'brouillon',
@@ -99,10 +104,10 @@ export class SatviQuestionnaire extends Timestamp {
   })
   @ApiProperty({
     description: 'Type de mission',
-    example: 'Mission de suivi',
-  
+    enum: SatviTypeMission,
+    example: SatviTypeMission.APPUI_TECHNIQUE,
   })
-  typeMission: string;
+  typeMission: SatviTypeMission;
 
   @Column({ name: 'type_mission_autre', type: 'varchar', length: 150, nullable: true })
   @ApiPropertyOptional({

@@ -10,7 +10,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { SatviQuestionnaire } from './satvi-questionnaire.entity';
+import { SatviQuestionnaire, SatviTypeMission } from './satvi-questionnaire.entity';
 import { SatviMissionInvitation } from './satvi-mission-invitation.entity';
 
 export enum SatviMissionStatus {
@@ -42,8 +42,8 @@ export class SatviMission extends Timestamp {
   @ApiPropertyOptional({ description: 'Description ou objectifs de la mission' })
   description: string;
 
-  @Column({ name: 'direction', type: 'varchar', nullable: true })
-  @ApiPropertyOptional({ description: 'Direction' })
+  @Column({ name: 'description', type: 'varchar', nullable: true })
+  @ApiPropertyOptional({ description: 'Description ou objectifs de la mission' })
   direction: string;
 
   @Column({ name: 'date_debut', type: 'date' })
@@ -71,8 +71,8 @@ export class SatviMission extends Timestamp {
     type: 'varchar',
     length: 50,
   })
-  @ApiProperty({ description: 'Type de mission', example: 'Mission de suivi'})
-  typeMission: string;
+  @ApiProperty({ description: 'Type de mission', enum: SatviTypeMission })
+  typeMission: SatviTypeMission;
 
   @Column({ name: 'type_mission_autre', type: 'varchar', length: 150, nullable: true })
   @ApiPropertyOptional({ description: 'Precision si le type vaut autre' })

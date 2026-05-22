@@ -12,7 +12,7 @@ import {
   MaxLength,
   ValidateIf,
 } from 'class-validator';
-
+import { SatviTypeMission } from '../entities';
 import { CreateSatviDto } from './create-satvi.dto';
 
 export class CreateSatviMissionDto {
@@ -56,11 +56,12 @@ export class CreateSatviMissionDto {
   @IsInt()
   coordinationId: number;
 
-  @ApiProperty({ description: 'Type de mission' })
-  @IsString()
-  typeMission: string;
+  @ApiProperty({ description: 'Type de mission', enum: SatviTypeMission })
+  @IsEnum(SatviTypeMission)
+  typeMission: SatviTypeMission;
 
   @ApiPropertyOptional({ description: 'Precision si le type vaut autre' })
+  @ValidateIf((dto) => dto.typeMission === SatviTypeMission.AUTRE)
   @IsString()
   @IsNotEmpty()
   @MaxLength(150)
