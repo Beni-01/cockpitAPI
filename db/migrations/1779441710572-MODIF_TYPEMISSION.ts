@@ -8,7 +8,7 @@ export class MODIFTYPEMISSION1779441710572 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-
+        await queryRunner.query(`ALTER TABLE \`satvi_mission\` DROP COLUMN \`direction\``);
     }
 
 }

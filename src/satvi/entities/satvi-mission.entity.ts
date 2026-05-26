@@ -42,8 +42,8 @@ export class SatviMission extends Timestamp {
   @ApiPropertyOptional({ description: 'Description ou objectifs de la mission' })
   description: string;
 
-  @Column({ name: 'description', type: 'varchar', nullable: true })
-  @ApiPropertyOptional({ description: 'Description ou objectifs de la mission' })
+  @Column({ name: 'direction', type: 'varchar', length: 255, nullable: true })
+  @ApiPropertyOptional({ description: 'Direction concernee par la mission' })
   direction: string;
 
   @Column({ name: 'date_debut', type: 'date' })

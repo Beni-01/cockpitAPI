@@ -219,6 +219,7 @@ export interface SatviMissionRow {
   referenceCode: string;
   titre: string;
   description: string;
+  direction: string;
   province: string;
   coordination: {
     id: number;
@@ -247,6 +248,7 @@ export interface SatviMissionPublicPayload {
     referenceCode: string;
     titre: string;
     description: string;
+    direction: string;
     province: string;
     coordination: string;
     typeMission: string;
@@ -351,6 +353,7 @@ export class SatviService {
         referenceCode: await this.generateMissionReferenceCode(),
         titre: dto.titre,
         description: dto.description,
+        direction: dto.direction,
         dateDebut: dto.dateDebut,
         dateFin: dto.dateFin,
         coordinationId: coordination.id,
@@ -525,6 +528,7 @@ export class SatviService {
         referenceCode: mission.referenceCode,
         titre: mission.titre,
         description: mission.description,
+        direction: mission.direction,
         province: mission.province,
         coordination: mission.coordinationNom,
         typeMission: mission.typeMission,
@@ -572,7 +576,7 @@ export class SatviService {
       const payload: CreateSatviDto = this.normalizeQuestionnaireFields({
         ...dto,
         missionId: mission.id,
-        directionMetier: mission.coordinationNom,
+        directionMetier: mission.direction ?? mission.coordinationNom,
         provinceVisitee: mission.province,
         periodeDu: mission.dateDebut,
         periodeAu: mission.dateFin,
@@ -1414,7 +1418,7 @@ export class SatviService {
     return {
       ...dto,
       missionId: mission.id,
-      directionMetier: dto.directionMetier ?? mission.coordinationNom,
+      directionMetier: dto.directionMetier ?? mission.direction ?? mission.coordinationNom,
       provinceVisitee: dto.provinceVisitee ?? mission.province,
       periodeDu: dto.periodeDu ?? mission.dateDebut,
       periodeAu: dto.periodeAu ?? mission.dateFin,
@@ -1486,6 +1490,7 @@ export class SatviService {
       referenceCode: mission.referenceCode,
       titre: mission.titre,
       description: mission.description,
+      direction: mission.direction,
       province: mission.province,
       coordination: {
         id: mission.coordinationId,
