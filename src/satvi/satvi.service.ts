@@ -859,7 +859,23 @@ export class SatviService {
       return { message: `Questionnaire SatVi ID=${id} supprime avec succes.` };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Erreur remove SatVi id=${id}`, error?.stack);
+      this.logger.error(`Erreur remove SatVi id=${id}`, error instanceof Error ? error.stack : String(error));
+      throw new InternalServerErrorException(
+        'Impossible de supprimer le questionnaire SatVi.',
+      );
+    }
+  }
+
+
+    async removeMission(id: number): Promise<{ message: string }> {
+    try {
+    
+      await this.missionRepository.softDelete(id);
+      this.logger.log(`Mission supprime: ID=${id}`);
+      return { message: `Mission ID=${id} supprime avec succes.` };
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      this.logger.error(`Erreur remove Mission id=${id}`, error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException(
         'Impossible de supprimer le questionnaire SatVi.',
       );
@@ -878,7 +894,7 @@ export class SatviService {
       return { message: `Questionnaire SatVi ID=${id} restaure avec succes.` };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      this.logger.error(`Erreur restore SatVi id=${id}`, error?.stack);
+      this.logger.error(`Erreur restore SatVi id=${id}`, error instanceof Error ? error.stack : String(error));
       throw new InternalServerErrorException(
         'Impossible de restaurer le questionnaire SatVi.',
       );

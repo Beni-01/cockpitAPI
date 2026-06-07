@@ -423,6 +423,14 @@ export class SatviController {
     return this.satviService.remove(id);
   }
 
+  @Delete('mission/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Supprimer une mission (soft delete)' })
+  @ApiParam({ name: 'id', example: 1 })
+  removeMission(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+    return this.satviService.removeMission(id);
+  }
+
   @Patch(':id/restore')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Restaurer un questionnaire SatVi supprime' })
