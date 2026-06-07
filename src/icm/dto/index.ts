@@ -1,6 +1,12 @@
 export { CreateIcmQuestionDto } from './create-icm-question.dto';
 export { UpdateIcmQuestionDto } from './update-icm-question.dto';
 export { FilterIcmQuestionDto } from './filter-icm-question.dto';
+export { CreateIcmTacheDto } from './create-icm-tache.dto';
+export { UpdateIcmTacheDto } from './update-icm-tache.dto';
+export { FilterIcmTacheDto } from './filter-icm-tache.dto';
+export { SubmitIcmTacheLivrableDto } from './submit-icm-tache-livrable.dto';
+export { ReturnIcmTacheLivrableDto } from './return-icm-tache-livrable.dto';
+export { FilterIcmTacheDashboardDto } from './filter-icm-tache-dashboard.dto';
 export { InitIcmChecklistDto } from './init-icm-checklist.dto';
 export { UpdateIcmResponseDto } from './update-icm-response.dto';
 export { UpdateIcmChecklistResponsesDto } from './update-icm-checklist-responses.dto';

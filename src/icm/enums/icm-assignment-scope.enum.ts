@@ -1,0 +1,4 @@
+export enum IcmAssignmentScope {
+  ALL_PROVINCES = 'ALL_PROVINCES',
+  SPECIFIC_PROVINCES = 'SPECIFIC_PROVINCES',
+}

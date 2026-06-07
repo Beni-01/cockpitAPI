@@ -4,4 +4,5 @@ export enum IcmPeriodicity {
   TRIMESTRIEL = 'Trimestriel',
   SEMESTRIEL = 'Semestriel',
   ANNUEL = 'Annuel',
+  JOURNALIER = 'Journalier',
 }
