@@ -101,7 +101,8 @@ export class UserService {
     }
 
     async update(username: string, updateUserDto: UpdateUserDto): Promise<User> {
-        console.log('update username ', username)
+        try{
+            console.log('update username ', username)
         const user=await this.findOneByUserName(username);
           console.log('update ', user)
         if (!user) {
@@ -109,6 +110,11 @@ export class UserService {
         }
         await this.userRepository.update(user.id, updateUserDto);
         return this.findOne(user.id);
+        }
+        catch(err){
+            throw new BadRequestException(`Une erreur est survenue lors de la mise à jour de l'utilisateur : ${err.message}`);
+        }
+
     }
 
     async softRemove(id: number): Promise<void> {
