@@ -104,6 +104,9 @@ export class UserService {
         console.log('update username ', username)
         const user=await this.findOneByUserName(username);
           console.log('update ', user)
+        if (!user) {
+            throw new NotFoundException(`User with username ${username} not found`);
+        }
         await this.userRepository.update(user.id, updateUserDto);
         return this.findOne(user.id);
     }

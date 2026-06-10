@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, JoinColumn } from "typeorm";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
@@ -41,7 +41,7 @@ export class User extends Timestamp {
 
   @Column({ name: 'coordinationId', type: 'int', nullable: true })
   @ApiProperty({ description: 'ID de la coordination associée à l’utilisateur' })
-  coordinationId: number;
+  coordinationId?: number;
 
   @Column()
   @ApiProperty({ description: 'Sexe de l’utilisateur (M/F)' })
@@ -154,6 +154,7 @@ export class User extends Timestamp {
   auditable: AuditLog[];
 
   @ManyToOne(() => Coordination, (coordination)=>coordination.user, { eager: true })
+  @JoinColumn({ name: 'coordinationId' })
   coordination: Coordination;
 
   @OneToMany(() => UserActivitiesAssignment, (assignment) => assignment.user)
