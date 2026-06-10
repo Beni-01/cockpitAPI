@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Timestamp } from 'src/timestime-entity/timestamp.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Antenne } from 'src/antenne/entities/antenne.entity';
+import { User } from "src/user/entities/user.entity";
 
 export enum CoordinationType {
   RECOUVREMENT = 'Recouvrement',
@@ -88,4 +89,7 @@ export class Coordination extends Timestamp {
 
   @OneToMany(() => Antenne, (antenne) => antenne.coordination)
   antennes: Antenne[];
+
+  @OneToMany(() => User, (user) => user.coordination)
+  user: User[];
 }

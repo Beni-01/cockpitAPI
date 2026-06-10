@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Timestamp } from "src/timestime-entity/timestamp.entity";
 import { Activity } from "src/activity/entities/activity.entity";
 import { SousActivity } from "src/sous-activity/entities/sous-activity.entity";
@@ -10,6 +10,7 @@ import { DemandeUser } from "src/demande-user/entities/demande-user.entity";
 import { AuditLog } from "src/audit-log/entities/audit-log.entity";
 
 import { UserActivitiesAssignment } from "src/user-activities-assignment/entities/user-activities-assignment.entity";
+import { Coordination } from "src/coordination/entities/coordination.entity";
 
 @Entity({ name:'user' })
 export class User extends Timestamp {
@@ -37,6 +38,10 @@ export class User extends Timestamp {
   @Column({ nullable: true })
   @ApiPropertyOptional({ description: 'Signature de l’utilisateur' })
   signature?: string;
+
+  @Column({ name: 'coordinationId', type: 'int', nullable: true })
+  @ApiProperty({ description: 'ID de la coordination associée à l’utilisateur' })
+  coordinationId: number;
 
   @Column()
   @ApiProperty({ description: 'Sexe de l’utilisateur (M/F)' })
@@ -148,7 +153,8 @@ export class User extends Timestamp {
 
   auditable: AuditLog[];
 
-
+  @ManyToOne(() => Coordination, (coordination)=>coordination.user, { eager: true })
+  coordination: Coordination;
 
   @OneToMany(() => UserActivitiesAssignment, (assignment) => assignment.user)
   userActivitiesAssignments: UserActivitiesAssignment[];

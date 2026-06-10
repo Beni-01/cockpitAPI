@@ -18,6 +18,10 @@ export class CreateUserDto {
   @IsOptional()
   prenom:string;
 
+  @IsNumber()
+  @IsOptional()
+  coordinationId: number;
+
   @IsString()
   @IsNotEmpty()
   sexe: string;
